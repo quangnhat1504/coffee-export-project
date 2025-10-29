@@ -12,42 +12,53 @@ function initializeApp() {
     setupScrollAnimations();
     setupCounterAnimations();
     initializeCharts();
+    setupMarketMeta();
+    setupCommodityHighlighting();
     setupTrendButtons();
     setupFormHandling();
     setupSmoothScrolling();
+    setupSidebarNavigation();
+    enableScrollSnap();
+    startRealTimeUpdates();
 }
 
-// Navigation Setup
-function setupNavigation() {
-    const navbar = document.querySelector('.navbar');
-    const hamburger = document.querySelector('.hamburger');
-    const navMenu = document.querySelector('.nav-menu');
-    const navLinks = document.querySelectorAll('.nav-link');
+// Sidebar Navigation Active State
+function setupSidebarNavigation() {
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    if (!sidebarLinks.length) return;
 
-    // Navbar scroll effect
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-        }
-    });
-
-    // Mobile menu toggle
-    hamburger.addEventListener('click', () => {
-        hamburger.classList.toggle('active');
-        navMenu.classList.toggle('active');
-    });
-
-    // Close mobile menu when clicking on links
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            hamburger.classList.remove('active');
-            navMenu.classList.remove('active');
+    const setActive = () => {
+        let current = '';
+        const sections = document.querySelectorAll('section');
+        const scrollPos = window.scrollY + window.innerHeight / 3;
+        sections.forEach(section => {
+            if (scrollPos >= section.offsetTop) {
+                current = section.id;
+            }
         });
-    });
+        sidebarLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    };
+    window.addEventListener('scroll', setActive, { passive: true });
+    setActive();
+}
 
-    // Active link highlighting
+
+// Enable Scroll Snap (optional toggleable)
+function enableScrollSnap() {
+    // For now always enable; could be toggled via user setting later
+    document.body.classList.add('enable-snap');
+}
+
+// Navigation Setup - Simplified for desktop only
+function setupNavigation() {
+    const navLinks = document.querySelectorAll('.sidebar-link');
+
+    // Active link highlighting on scroll
     window.addEventListener('scroll', () => {
         let current = '';
         const sections = document.querySelectorAll('section');
@@ -132,15 +143,19 @@ function setupCounterAnimations() {
 function initializeCharts() {
     initializePriceChart();
     initializeExportPieChart();
-    initializeClimateChart();
+    initializeWeatherDualChart();
     initializeTrendsChart();
     initializeForecastChart();
 }
+
 
 // Price Chart
 function initializePriceChart() {
     const ctx = document.getElementById('priceChart');
     if (!ctx) return;
+    const styles = getComputedStyle(document.documentElement);
+    const textColor = styles.getPropertyValue('--text-secondary') || '#514338';
+    const gridColor = styles.getPropertyValue('--border-color') || '#e6d9cc';
 
     const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(218, 165, 32, 0.3)');
@@ -195,31 +210,31 @@ function initializePriceChart() {
             plugins: {
                 legend: {
                     labels: {
-                        color: '#E8E8E8',
+                        color: textColor.trim(),
                         font: { family: 'Inter' }
                     }
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(30, 35, 41, 0.95)',
-                    titleColor: '#E8E8E8',
-                    bodyColor: '#B0B0B0',
-                    borderColor: '#333840',
+                    backgroundColor: '#ffffff',
+                    titleColor: textColor.trim(),
+                    bodyColor: textColor.trim(),
+                    borderColor: gridColor.trim(),
                     borderWidth: 1
                 }
             },
             scales: {
                 x: {
-                    ticks: { color: '#B0B0B0' },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+                    ticks: { color: textColor.trim() },
+                    grid: { color: gridColor.trim() }
                 },
                 y: {
                     ticks: { 
-                        color: '#B0B0B0',
+                        color: textColor.trim(),
                         callback: function(value) {
                             return '$' + value;
                         }
                     },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+                    grid: { color: gridColor.trim() }
                 }
             },
             animation: {
@@ -230,10 +245,94 @@ function initializePriceChart() {
     });
 }
 
+// Populate dynamic date for Market Overview cards
+function setupMarketMeta() {
+    const dateSpans = document.querySelectorAll('.price-card .dynamic-date');
+    if (!dateSpans.length) return;
+    const now = new Date();
+    const formatted = now.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    dateSpans.forEach(span => span.textContent = formatted);
+}
+
+// Commodity highlighting interaction
+function setupCommodityHighlighting() {
+    const cards = document.querySelectorAll('.price-card');
+    if (!cards.length || !priceChart) return;
+
+    cards.forEach(card => {
+        card.addEventListener('click', () => {
+            const commodity = card.getAttribute('data-commodity');
+            activateCommodity(commodity);
+        });
+        card.style.cursor = 'pointer';
+    });
+    // Default active first card
+    activateCommodity('arabica');
+}
+
+function activateCommodity(commodity) {
+    const cards = document.querySelectorAll('.price-card');
+    cards.forEach(c => {
+        if (c.getAttribute('data-commodity') === commodity) {
+            c.classList.add('active');
+            c.classList.remove('dimmed');
+        } else {
+            c.classList.remove('active');
+            c.classList.add('dimmed');
+        }
+    });
+
+    if (!priceChart) return;
+    // Adjust dataset opacities
+    priceChart.data.datasets.forEach(ds => {
+        const isMatch = ds.label.toLowerCase() === commodity;
+        ds.borderWidth = isMatch ? 3 : 2;
+        ds.borderColor = adjustAlpha(ds.borderColor, isMatch ? 1 : 0.5);
+        ds.backgroundColor = adjustFillAlpha(ds.backgroundColor, isMatch ? 0.35 : 0.1);
+        ds.pointRadius = isMatch ? 5 : 3;
+        ds.pointBackgroundColor = adjustAlpha(ds.pointBackgroundColor, isMatch ? 1 : 0.45);
+    });
+    priceChart.update();
+}
+
+// Utility: adjust rgba/hex alpha
+function adjustAlpha(color, alpha) {
+    // If already rgba
+    if (color.startsWith('rgba')) {
+        return color.replace(/rgba\(([^,]+),([^,]+),([^,]+),[^)]+\)/, (m, r, g, b) => `rgba(${r},${g},${b},${alpha})`);
+    }
+    // Hex to rgba
+    if (color.startsWith('#')) {
+        const bigint = parseInt(color.slice(1), 16);
+        let r, g, b;
+        if (color.length === 7) {
+            r = (bigint >> 16) & 255;
+            g = (bigint >> 8) & 255;
+            b = bigint & 255;
+        } else {
+            // shorthand #abc
+            r = parseInt(color[1] + color[1], 16);
+            g = parseInt(color[2] + color[2], 16);
+            b = parseInt(color[3] + color[3], 16);
+        }
+        return `rgba(${r},${g},${b},${alpha})`;
+    }
+    return color; // fallback
+}
+
+function adjustFillAlpha(color, alpha) {
+    // For gradient keep original; simple rgba replacement otherwise
+    if (typeof color === 'object') return color;
+    return adjustAlpha(color, alpha);
+}
+
 // Export Pie Chart
 function initializeExportPieChart() {
     const ctx = document.getElementById('exportPieChart');
     if (!ctx) return;
+    const styles = getComputedStyle(document.documentElement);
+    const textColor = styles.getPropertyValue('--text-secondary') || '#514338';
+    const gridColor = styles.getPropertyValue('--border-color') || '#e6d9cc';
 
     exportPieChart = new Chart(ctx, {
         type: 'doughnut',
@@ -242,35 +341,28 @@ function initializeExportPieChart() {
             datasets: [{
                 data: [22.5, 18.3, 15.7, 12.1, 9.8, 21.6],
                 backgroundColor: [
-                    '#DAA520',
-                    '#CD853F',
-                    '#8B4513',
-                    '#B8860B',
-                    '#DEB887',
-                    '#D2691E'
+                    '#d29a52', // US
+                    '#b77b40', // Germany
+                    '#9c6644', // Japan
+                    '#c69253', // Italy
+                    '#e3b17a', // France
+                    '#d8c2a6'  // Others
                 ],
-                borderColor: '#1e2329',
-                borderWidth: 3,
-                hoverOffset: 10
+                borderColor: '#fff',
+                borderWidth: 2,
+                hoverOffset: 14
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: {
-                        color: '#E8E8E8',
-                        font: { family: 'Inter' },
-                        padding: 20
-                    }
-                },
+                legend: { display:false },
                 tooltip: {
-                    backgroundColor: 'rgba(30, 35, 41, 0.95)',
-                    titleColor: '#E8E8E8',
-                    bodyColor: '#B0B0B0',
-                    borderColor: '#333840',
+                    backgroundColor: '#ffffff',
+                    titleColor: textColor.trim(),
+                    bodyColor: textColor.trim(),
+                    borderColor: gridColor.trim(),
                     borderWidth: 1,
                     callbacks: {
                         label: function(context) {
@@ -282,130 +374,228 @@ function initializeExportPieChart() {
             animation: {
                 animateRotate: true,
                 duration: 2000
+            },
+            onHover: (evt, elements) => {
+                document.body.style.cursor = elements.length ? 'pointer' : 'default';
             }
         }
     });
+
+    buildDonutLegend();
 }
 
-// Climate Chart
-function initializeClimateChart() {
-    const ctx = document.getElementById('climateChart');
-    if (!ctx) return;
+function buildDonutLegend(){
+    const legendContainer = document.getElementById('donutLegend');
+    if(!legendContainer || !exportPieChart) return;
+    legendContainer.innerHTML = '';
+    const { labels, datasets } = exportPieChart.data;
+    const colors = datasets[0].backgroundColor;
+    labels.forEach((label, idx) => {
+        const entry = document.createElement('div');
+        entry.className = 'legend-entry';
+        entry.innerHTML = `<span class="color-box" style="background:${colors[idx]}"></span><span>${label}</span><strong>${datasets[0].data[idx]}%</strong>`;
+        entry.addEventListener('click', () => toggleSlice(idx));
+        legendContainer.appendChild(entry);
+    });
+}
+
+function toggleSlice(index){
+    if(!exportPieChart) return;
+    const meta = exportPieChart.getDatasetMeta(0);
+    const slice = meta.data[index];
+    slice.outerRadius = slice.outerRadius === slice.options.radius + 20 ? slice.options.radius + 10 : slice.options.radius + 20;
+    exportPieChart.draw();
+}
+
+// Weather Dual Axis Chart
+function initializeWeatherDualChart(){
+    const ctx = document.getElementById('weatherDualChart');
+    if(!ctx) return;
+    const styles = getComputedStyle(document.documentElement);
+    const textColor = styles.getPropertyValue('--text-secondary') || '#4b2e05';
+    const gridColor = '#f4e9dd';
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    const rainfallData = [15, 20, 45, 120, 180, 220, 250, 280, 200, 150, 80, 25];
+    const tempData = [22, 24, 26, 28, 27, 25, 24, 24, 25, 26, 24, 22];
+
+    const gradientLine = ctx.getContext('2d').createLinearGradient(0,0,0,300);
+    gradientLine.addColorStop(0,'rgba(216,156,58,0.5)');
+    gradientLine.addColorStop(1,'rgba(216,156,58,0.05)');
 
     climateChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [
+        type:'bar',
+        data:{
+            labels: months,
+            datasets:[
                 {
-                    label: 'Rainfall (mm)',
-                    data: [15, 20, 45, 120, 180, 220, 250, 280, 200, 150, 80, 25],
-                    backgroundColor: 'rgba(100, 149, 237, 0.7)',
-                    borderColor: '#6495ED',
-                    borderWidth: 1,
-                    yAxisID: 'y'
+                    label:'Rainfall (mm)',
+                    data: rainfallData,
+                    backgroundColor:'rgba(132,170,242,0.65)',
+                    borderColor:'#84aaf2',
+                    borderWidth:1,
+                    yAxisID:'y'
                 },
                 {
-                    label: 'Temperature (°C)',
-                    data: [22, 24, 26, 28, 27, 25, 24, 24, 25, 26, 24, 22],
-                    type: 'line',
-                    borderColor: '#DAA520',
-                    backgroundColor: 'rgba(218, 165, 32, 0.1)',
-                    tension: 0.4,
-                    yAxisID: 'y1',
-                    pointBackgroundColor: '#DAA520',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
+                    label:'Temperature (°C)',
+                    data: tempData,
+                    type:'line',
+                    borderColor:'#d89c3a',
+                    backgroundColor:gradientLine,
+                    tension:0.35,
+                    yAxisID:'y1',
+                    pointBackgroundColor:'#d89c3a',
+                    pointBorderColor:'#fff',
+                    pointBorderWidth:2,
+                    fill:true
                 }
             ]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#E8E8E8',
-                        font: { family: 'Inter' }
-                    }
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{
+                legend:{ 
+                    labels:{ 
+                        color:textColor.trim(), 
+                        font:{ family:'Inter', size: 13 },
+                        padding: 15
+                    },
+                    position: 'top'
+                },
+                tooltip:{
+                    mode:'index',
+                    intersect:false,
+                    backgroundColor:'#ffffff',
+                    titleColor:textColor.trim(),
+                    bodyColor:textColor.trim(),
+                    borderColor:'#e5c9aa',
+                    borderWidth:1
                 }
             },
-            scales: {
-                x: {
-                    ticks: { color: '#B0B0B0' },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+            scales:{
+                x:{
+                    ticks:{ color:textColor.trim(), font: { size: 12 } },
+                    grid:{ color:gridColor }
                 },
-                y: {
-                    type: 'linear',
-                    display: true,
-                    position: 'left',
-                    ticks: { color: '#B0B0B0' },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+                y:{
+                    position:'left',
+                    title: {
+                        display: true,
+                        text: 'Rainfall (mm)',
+                        color: textColor.trim()
+                    },
+                    ticks:{ color:textColor.trim(), font: { size: 12 } },
+                    grid:{ color:gridColor }
                 },
-                y1: {
-                    type: 'linear',
-                    display: true,
-                    position: 'right',
-                    ticks: { color: '#B0B0B0' },
-                    grid: { drawOnChartArea: false }
+                y1:{
+                    position:'right',
+                    title: {
+                        display: true,
+                        text: 'Temperature (°C)',
+                        color: textColor.trim()
+                    },
+                    ticks:{ color:textColor.trim(), font: { size: 12 } },
+                    grid:{ drawOnChartArea:false }
                 }
-            }
+            },
+            animation:{ duration:1200, easing:'easeOutQuart' }
         }
     });
 }
 
 // Trends Chart
-function initializeTrendsChart() {
+function initializeTrendsChart(){
     const ctx = document.getElementById('trendsChart');
-    if (!ctx) return;
+    if(!ctx) return;
+    const styles = getComputedStyle(document.documentElement);
+    const textColor = styles.getPropertyValue('--text-secondary') || '#4b2e05';
+    const gridColor = '#e9d6c3';
+    const years = Array.from({length:20},(_,i)=> (2005+i).toString());
 
-    const years = [];
-    for (let i = 2005; i <= 2024; i++) {
-        years.push(i.toString());
-    }
+    const gProd = ctx.getContext('2d').createLinearGradient(0,0,0,300);
+    gProd.addColorStop(0,'rgba(196,127,78,0.4)');
+    gProd.addColorStop(1,'rgba(196,127,78,0.05)');
+    const gArea = ctx.getContext('2d').createLinearGradient(0,0,0,300);
+    gArea.addColorStop(0,'rgba(166,94,46,0.35)');
+    gArea.addColorStop(1,'rgba(166,94,46,0.05)');
+    const gYield = ctx.getContext('2d').createLinearGradient(0,0,0,300);
+    gYield.addColorStop(0,'rgba(227,177,122,0.45)');
+    gYield.addColorStop(1,'rgba(227,177,122,0.06)');
 
     trendsChart = new Chart(ctx, {
-        type: 'line',
-        data: {
+        type:'line',
+        data:{
             labels: years,
-            datasets: [{
-                label: 'Production (Million Tons)',
-                data: generateTrendData(1.5, 2.5, 20),
-                borderColor: '#DAA520',
-                backgroundColor: 'rgba(218, 165, 32, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointBackgroundColor: '#DAA520',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#E8E8E8',
-                        font: { family: 'Inter' }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: '#B0B0B0' },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+            datasets:[
+                {
+                    label:'Production (M Tons)',
+                    data: generateTrendData(1.5, 2.5, years.length),
+                    borderColor:'#c47f4e',
+                    backgroundColor:gProd,
+                    fill:true,
+                    tension:0.35,
+                    pointBackgroundColor:'#c47f4e',
+                    pointBorderColor:'#fff',
+                    pointBorderWidth:2
                 },
-                y: {
-                    ticks: { color: '#B0B0B0' },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+                {
+                    label:'Area (K ha)',
+                    data: generateTrendData(450, 650, years.length),
+                    borderColor:'#a65e2e',
+                    backgroundColor:gArea,
+                    fill:true,
+                    tension:0.35,
+                    pointBackgroundColor:'#a65e2e',
+                    pointBorderColor:'#fff',
+                    pointBorderWidth:2
+                },
+                {
+                    label:'Yield (t/ha)',
+                    data: generateTrendData(2.2, 3.2, years.length).map(v=> (v/years.length)+(2.2 + Math.random()*1)),
+                    borderColor:'#e3b17a',
+                    backgroundColor:gYield,
+                    fill:true,
+                    tension:0.35,
+                    pointBackgroundColor:'#e3b17a',
+                    pointBorderColor:'#fff',
+                    pointBorderWidth:2
                 }
+            ]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{ legend:{ labels:{ color:textColor.trim(), font:{ family:'Inter' } } } },
+            scales:{
+                x:{ ticks:{ color:textColor.trim() }, grid:{ color:gridColor } },
+                y:{ ticks:{ color:textColor.trim() }, grid:{ color:gridColor } }
             },
-            animation: {
-                duration: 2000,
-                easing: 'easeInOutQuart'
-            }
+            animation:{ duration:1400, easing:'easeOutQuart' }
         }
+    });
+    setupProductionToggles();
+}
+
+function setupProductionToggles(){
+    const buttons = document.querySelectorAll('.prod-toggle-btn');
+    if(!buttons.length || !trendsChart) return;
+    buttons.forEach((btn,idx)=>{
+        btn.addEventListener('click',()=>{
+            buttons.forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            const focus = btn.getAttribute('data-focus');
+            trendsChart.data.datasets.forEach(ds => {
+                const match = ds.label.toLowerCase().includes(focus);
+                ds.borderWidth = match?3:2;
+                ds.borderColor = adjustAlpha(ds.borderColor, match?1:0.5);
+                ds.pointRadius = match?5:3;
+                ds.backgroundColor = ds.backgroundColor; // keep gradient
+                ds.hidden = false;
+                ds.opacity = match?1:0.5;
+            });
+            trendsChart.update();
+        });
     });
 }
 
@@ -413,8 +603,11 @@ function initializeTrendsChart() {
 function initializeForecastChart() {
     const ctx = document.getElementById('forecastChart');
     if (!ctx) return;
+    const styles = getComputedStyle(document.documentElement);
+    const textColor = styles.getPropertyValue('--text-secondary') || '#514338';
+    const gridColor = styles.getPropertyValue('--border-color') || '#e6d9cc';
 
-    const months = ['Oct 2024', 'Nov 2024', 'Dec 2024', 'Jan 2025', 'Feb 2025', 'Mar 2025', 'Apr 2025', 'May 2025'];
+    const months = ['Oct 2025', 'Nov 2025', 'Dec 2025', 'Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026'];
 
     forecastChart = new Chart(ctx, {
         type: 'line',
@@ -458,24 +651,24 @@ function initializeForecastChart() {
             plugins: {
                 legend: {
                     labels: {
-                        color: '#E8E8E8',
+                        color: textColor.trim(),
                         font: { family: 'Inter' }
                     }
                 }
             },
             scales: {
                 x: {
-                    ticks: { color: '#B0B0B0' },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+                    ticks: { color: textColor.trim() },
+                    grid: { color: gridColor.trim() }
                 },
                 y: {
                     ticks: { 
-                        color: '#B0B0B0',
+                        color: textColor.trim(),
                         callback: function(value) {
                             return '$' + value;
                         }
                     },
-                    grid: { color: 'rgba(51, 56, 64, 0.5)' }
+                    grid: { color: gridColor.trim() }
                 }
             }
         }
@@ -682,24 +875,26 @@ function updatePriceCards() {
 
 function updateWeatherData() {
     const temperature = document.querySelector('.temperature');
-    const humidity = document.querySelector('.weather-item:nth-child(1) span');
-    const rainfall = document.querySelector('.weather-item:nth-child(2) span');
+    const humiditySpan = document.querySelector('.weather-details .weather-item:nth-child(1) span');
+    const rainfallSpan = document.querySelector('.weather-details .weather-item:nth-child(2) span');
     
     if (temperature) {
         const temp = 20 + Math.random() * 10;
         temperature.textContent = Math.round(temp) + '°C';
     }
     
-    if (humidity) {
+    if (humiditySpan) {
         const hum = 60 + Math.random() * 30;
-        humidity.textContent = 'Humidity: ' + Math.round(hum) + '%';
+        humiditySpan.textContent = 'Humidity: ' + Math.round(hum) + '%';
     }
     
-    if (rainfall) {
+    if (rainfallSpan) {
         const rain = Math.random() * 100;
-        rainfall.textContent = 'Rainfall: ' + Math.round(rain) + 'mm';
+        rainfallSpan.textContent = 'Rainfall: ' + Math.round(rain) + 'mm';
     }
 }
+
+
 
 // News Card Interactions
 document.addEventListener('click', (e) => {
@@ -711,11 +906,6 @@ document.addEventListener('click', (e) => {
         // Simulate opening full article
         alert(`Opening full article: "${title}"\n\nThis would normally navigate to the full article page.`);
     }
-});
-
-// Initialize real-time updates when page loads
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(startRealTimeUpdates, 5000); // Start updates after 5 seconds
 });
 
 // Parallax Effect for Hero Section
@@ -743,19 +933,6 @@ window.addEventListener('load', () => {
     });
 });
 
-// Keyboard Navigation
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        const hamburger = document.querySelector('.hamburger');
-        const navMenu = document.querySelector('.nav-menu');
-        
-        if (navMenu.classList.contains('active')) {
-            hamburger.classList.remove('active');
-            navMenu.classList.remove('active');
-        }
-    }
-});
-
 // Performance Optimization
 const debounce = (func, wait) => {
     let timeout;
@@ -775,3 +952,36 @@ const debouncedScrollHandler = debounce(() => {
 }, 16); // ~60fps
 
 window.addEventListener('scroll', debouncedScrollHandler);
+
+// Initialize real-time updates when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(startRealTimeUpdates, 5000); // Start updates after 5 seconds
+});
+
+// Intersection reveal animations for redesigned sections
+const revealObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(entry => {
+        if(entry.isIntersecting){
+            entry.target.classList.add('in-view');
+            revealObserver.unobserve(entry.target);
+        }
+    });
+},{ threshold:0.15 });
+
+document.querySelectorAll('.reveal').forEach(el=> revealObserver.observe(el));
+
+// Sync aria-pressed state for toggle buttons (weather & production)
+function syncPressed(buttons){
+    buttons.forEach(btn => {
+        btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false');
+    });
+}
+
+// Observe activation changes
+const mutationConfig = { attributes:true, attributeFilter:['class'] };
+document.querySelectorAll('.wx-toggle-btn, .prod-toggle-btn').forEach(btn => {
+    new MutationObserver(()=>{
+        const groupButtons = btn.closest('[role="group"]').querySelectorAll('button');
+        syncPressed(groupButtons);
+    }).observe(btn, mutationConfig);
+});
