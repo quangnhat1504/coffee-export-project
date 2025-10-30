@@ -2,7 +2,7 @@
 
 A comprehensive coffee data collection, processing, and analysis system. This project includes web scraping tools for coffee price data, data processing pipelines, and MySQL database integration for storing and analyzing coffee market information.
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Project Overview](#project-overview)
 - [Features](#features)
@@ -15,7 +15,7 @@ A comprehensive coffee data collection, processing, and analysis system. This pr
 - [Requirements](#requirements)
 - [Contributing](#contributing)
 
-## 🎯 Project Overview
+## Project Overview
 
 This project provides a complete solution for:
 - **Web Scraping**: Automated collection of coffee prices from various online sources
@@ -23,27 +23,27 @@ This project provides a complete solution for:
 - **Database Management**: Storing and managing coffee data in MySQL (Aiven Cloud)
 - **Data Analysis**: Exploratory data analysis and visualization using Jupyter notebooks
 
-## ✨ Features
+## Features
 
-- 🌐 Multiple web scraping approaches (Beautiful Soup, Selenium)
-- 💾 Automated data synchronization with MySQL database
-- 📊 Data processing and transformation pipelines
-- 🔄 Fallback data generation for testing
-- 📈 Exploratory data analysis capabilities
-- 🛡️ Error handling and data validation
-- 🌍 Support for Vietnamese coffee market data
+- Multiple web scraping approaches (Beautiful Soup, Selenium)
+- Automated data synchronization with MySQL database
+- Data processing and transformation pipelines
+- Fallback data generation for testing
+- Exploratory data analysis capabilities
+- Error handling and data validation
+- Support for Vietnamese coffee market data
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 coffee_dabase/
-├── 📊 Data Files
+├── Data Files
 │   ├── Data_coffee.csv                           # Main coffee data (production, weather, export)
 │   ├── Thi_phan_3_thi_truong_chinh.csv          # Market trade data
 │   ├── coffee_prices_demo.csv                    # Demo coffee price data
 │   └── processed_coffee_data.csv                 # Processed data output
 │
-├── 🕷️ Web Scrapers
+├── Web Scrapers
 │   ├── coffee_price_scraper.py                   # Basic Beautiful Soup scraper
 │   ├── coffee_price_scraper_selenium.py         # Selenium-based scraper (bypass Cloudflare)
 │   ├── coffee_price_scraper_final.py            # Complete scraper with error handling
@@ -52,27 +52,27 @@ coffee_dabase/
 │   ├── simple_scraper.py                        # Minimal scraper implementation
 │   └── coffee_price_demo.py                     # Demo scraper with sample data
 │
-├── 💾 Database Sync
+├── Database Sync
 │   ├── sync_coffee.py                           # Main data synchronization script
 │   ├── main_coffee.ipynb                        # Notebook for database operations
 │   └── unprocessing_sql.py                      # Raw data processing script
 │
-├── 📓 Analysis Notebooks
+├── Analysis Notebooks
 │   ├── main_coffee.ipynb                        # Main analysis notebook
 │   ├── eda_data_coffee.ipynb                    # Exploratory data analysis
 │   └── beautiful_soup_4_demo.ipynb              # Beautiful Soup demonstration
 │
-├── 🧪 Testing
+├── Testing
 │   ├── test_scraper.py                          # Scraper tests
 │   ├── test_selenium.py                         # Selenium tests
 │   └── test.py                                  # General tests
 │
-└── 📚 Documentation
+└── Documentation
     ├── README.md                                 # This file
     └── HUONG_DAN_SU_DUNG_COFFEE_SCRAPER.md     # Vietnamese scraper guide
 ```
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 ### Prerequisites
 
@@ -86,31 +86,54 @@ coffee_dabase/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd coffee_dabase
+   cd coffee-export-project
    ```
 
 2. **Install dependencies**
    ```bash
-   pip install pandas pymysql sqlalchemy beautifulsoup4 selenium requests webdriver-manager python-dotenv
+   pip install -r requirements.txt
    ```
 
-3. **Configure environment variables**
+3. **⚠️ IMPORTANT: Configure environment variables**
    
-   Create a `.env` file for database credentials:
+   **NEVER commit sensitive data to Git!** Follow these steps:
+
+   a. **Copy the example file:**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   b. **Edit `.env` with your actual credentials:**
    ```env
-   HOST=your-database-host
+   # Database Configuration
+   HOST=your-actual-database-host.aivencloud.com
    PORT=3306
-   USER=your-username
-   PASSWORD=your-password
+   USER=your-actual-username
+   PASSWORD=your-actual-password
    DB=your-database-name
-   CA_PEM=/path/to/ca.pem
+   CA_PEM=C:\path\to\your\ca.pem
+   
+   # File Paths
+   CSV_PATH=C:\Users\YourName\path\to\Data_coffee.csv
+   CSV_PATH_MT=C:\Users\YourName\path\to\Thi_phan_3_thi_truong_chinh.csv
    ```
 
-4. **Update file paths**
-   
-   Edit scripts to point to your CSV file locations (especially `sync_coffee.py` and `main_coffee.ipynb`)
+   c. **Verify `.env` is in `.gitignore`:**
+   ```bash
+   git status
+   # .env should NOT appear in the list of files to commit
+   ```
 
-## 💡 Usage
+   > Security Note: The `.env` file contains sensitive credentials and is automatically ignored by Git. Only commit `.env.example` which contains template values.
+
+4. **Verify setup**
+   
+   Check that the environment variables are loaded correctly:
+   ```bash
+   python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('.env loaded!' if os.getenv('HOST') else '.env not found')"
+   ```
+
+## Usage
 
 ### Web Scraping
 
@@ -216,7 +239,7 @@ Raw data in long format (hang_muc, year, value)
 #### `market_trade`
 - Importer, year, trade_value_million_usd, quantity_tons
 
-## 📊 Data Sources
+## Data Sources
 
 1. **Coffee Price Data**: 
    - Web scraping from giacaphe.com
@@ -228,7 +251,7 @@ Raw data in long format (hang_muc, year, value)
 3. **Market Trade Data**: 
    - `Thi_phan_3_thi_truong_chinh.csv` - International trade data by importer country
 
-## 📦 Requirements
+## Requirements
 
 ### Core Dependencies
 ```
@@ -253,17 +276,60 @@ Install all requirements:
 pip install -r requirements.txt
 ```
 
-## 🔧 Configuration
+## � Security Best Practices
+
+### Protecting Sensitive Data
+
+This project uses environment variables to keep credentials secure. Follow these guidelines:
+
+1. **NEVER commit `.env` file** - It's already in `.gitignore`
+2. **Always use `.env.example`** as a template
+3. **Store credentials securely** - Don't share passwords in chat/email
+4. **Rotate credentials** if accidentally exposed
+5. **Use different passwords** for dev/staging/production
+
+### Before Every Commit
+
+Check what you're about to commit:
+```bash
+git status
+git diff
+```
+
+Verify `.env` is NOT listed. If it appears, run:
+```bash
+git rm --cached .env
+git add .gitignore
+git commit -m "Remove .env from tracking"
+```
+
+### Team Collaboration
+
+When a new team member joins:
+
+1. They clone the repo
+2. They copy `.env.example` to `.env`
+3. Team lead shares credentials securely (NOT via Git)
+4. They update `.env` with actual values
+5. They verify with `git status` that `.env` is ignored
+
+## Configuration
 
 ### Database Connection
 
 Update connection settings in:
-- `sync_coffee.py` - Uses `.env` file
-- `main_coffee.ipynb` - Hardcoded credentials (update as needed)
+- `sync_coffee.py` - Uses `.env` file (RECOMMENDED - Secure)
+- `main_coffee.ipynb` - May have hardcoded credentials (Update to use .env)
 
 ### File Paths
 
-Update CSV file paths in:
+Update CSV file paths in `.env`:
+```env
+CSV_PATH=C:\path\to\Data_coffee.csv
+CSV_PATH_MT=C:\path\to\Thi_phan_3_thi_truong_chinh.csv
+```
+
+Or update directly in scripts:
 - `sync_coffee.py` (lines ~35, ~39)
 - `main_coffee.ipynb` (line ~7, ~10)
 - `unprocessing_sql.py` (line ~105)
