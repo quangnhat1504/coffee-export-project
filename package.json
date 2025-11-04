@@ -1,0 +1,29 @@
+{
+  "name": "vietnam-coffee-data-portal",
+  "version": "1.0.0",
+  "description": "Vietnam Coffee Export Data Portal with Flask API and Frontend",
+  "main": "index.js",
+  "scripts": {
+    "install-python": "pip install -r requirements.txt",
+    "start-api": "cd wed && python api.py",
+    "start-frontend": "cd wed && npx http-server -p 8080 -o",
+    "dev": "concurrently \"npm run start-api\" \"npm run start-frontend\"",
+    "start": "npm run dev",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "coffee",
+    "vietnam",
+    "export",
+    "data",
+    "portal",
+    "flask",
+    "chart.js"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "http-server": "^14.1.1"
+  }
+}
