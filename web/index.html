@@ -23,6 +23,7 @@
             <a href="#exports" class="sidebar-link" data-tooltip="Exports"><i class="fas fa-globe-asia"></i></a>
             <a href="#weather" class="sidebar-link" data-tooltip="Weather"><i class="fas fa-cloud-sun"></i></a>
             <a href="#trends" class="sidebar-link" data-tooltip="Trends"><i class="fas fa-wave-square"></i></a>
+            <a href="#export-performance" class="sidebar-link" data-tooltip="Export Performance"><i class="fas fa-dollar-sign"></i></a>
             <a href="#forecast" class="sidebar-link" data-tooltip="AI Forecast"><i class="fas fa-brain"></i></a>
             <a href="#news" class="sidebar-link" data-tooltip="News"><i class="fas fa-newspaper"></i></a>
             <a href="#about" class="sidebar-link" data-tooltip="About"><i class="fas fa-user"></i></a>
@@ -45,12 +46,12 @@
                     <button class="cta-button secondary" onclick="scrollToSection('forecast')"><i class="fas fa-magic"></i><span>AI Insights</span></button>
                 </div>
                 <div class="mini-metrics">
-                    <div class="mini-metric"><span class="metric-label">Production</span><span class="metric-value">2M t</span></div>
-                    <div class="mini-metric"><span class="metric-label">Exports</span><span class="metric-value">40+ countries</span></div>
-                    <div class="mini-metric"><span class="metric-label">Value</span><span class="metric-value">$15B</span></div>
-                    <div class="mini-metric"><span class="metric-label">Area</span><span class="metric-value">650K ha</span></div>
-                    <div class="mini-metric"><span class="metric-label">Yield</span><span class="metric-value">3.2 t/ha</span></div>
-                    <div class="mini-metric"><span class="metric-label">Domestic Price</span><span class="metric-value">$2,650</span></div>
+                    <div class="mini-metric"><span class="metric-label">Production</span><span class="metric-value" id="hero-production">2M t</span></div>
+                    <div class="mini-metric"><span class="metric-label">Exports</span><span class="metric-value" id="hero-exports">40+ countries</span></div>
+                    <div class="mini-metric"><span class="metric-label">Value</span><span class="metric-value" id="hero-value">$15B</span></div>
+                    <div class="mini-metric"><span class="metric-label">Area</span><span class="metric-value" id="hero-area">650K ha</span></div>
+                    <div class="mini-metric"><span class="metric-label">Yield</span><span class="metric-value" id="hero-yield">3.2 t/ha</span></div>
+                    <div class="mini-metric"><span class="metric-label">Domestic Price</span><span class="metric-value" id="hero-price">$2,650</span></div>
                 </div>
             </div>
             <!-- hero-right panels removed per user request -->
@@ -64,62 +65,62 @@
             <div class="market-stack">
                 <div class="chart-card">
                         <div class="chart-card-header">
-                            <h3>Price Trends <span class="unit-label">(USD / ton)</span></h3>
+                            <h3>Export Volume & Prices (2005-2024) <span class="unit-label">Tons & USD/ton</span></h3>
                         </div>
                         <div class="chart-container">
                             <canvas id="priceChart"></canvas>
                         </div>
                 </div>
                 <div class="price-cards-row">
-                    <div class="price-card" data-commodity="arabica" role="button" tabindex="0" aria-label="Arabica coffee price card" title="Arabica price trend">
+                    <div class="price-card" data-commodity="export-value" role="button" tabindex="0" aria-label="Export value card" title="Annual coffee export value">
                         <div class="card-header">
-                            <h3 class="commodity-title">Arabica</h3>
-                            <i class="fas fa-coffee card-icon"></i>
+                            <h3 class="commodity-title">Export Value</h3>
+                            <i class="fas fa-shipping-fast card-icon"></i>
                         </div>
-                        <div class="price-value">$4,250</div>
+                        <div class="price-value">$5,620 M</div>
                         <div class="price-change positive">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+2.5%</span>
+                            <span>+32.5%</span>
                         </div>
-                        <div class="price-label">per ton</div>
+                        <div class="price-label">million USD</div>
                         <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-box"></i><span>1.2M t</span></span>
+                            <span class="meta-item volume"><i class="fas fa-calendar"></i><span>2024 Total</span></span>
                             <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-globe"></i><span>ICO / Exchange</span></span>
+                            <span class="meta-item source"><i class="fas fa-database"></i><span>Export Data</span></span>
                         </div>
                     </div>
-                    <div class="price-card" data-commodity="robusta" role="button" tabindex="0" aria-label="Robusta coffee price card" title="Robusta price trend">
+                    <div class="price-card" data-commodity="world-price" role="button" tabindex="0" aria-label="World price card" title="International coffee market price">
                         <div class="card-header">
-                            <h3 class="commodity-title">Robusta</h3>
-                            <i class="fas fa-coffee card-icon"></i>
+                            <h3 class="commodity-title">World Price</h3>
+                            <i class="fas fa-globe-americas card-icon"></i>
                         </div>
-                        <div class="price-value">$2,850</div>
-                        <div class="price-change negative">
-                            <i class="fas fa-arrow-down"></i>
-                            <span>-1.2%</span>
-                        </div>
-                        <div class="price-label">per ton</div>
-                        <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-box"></i><span>0.9M t</span></span>
-                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-globe"></i><span>ICO / Exchange</span></span>
-                        </div>
-                    </div>
-                    <div class="price-card" data-commodity="domestic" role="button" tabindex="0" aria-label="Domestic coffee price card" title="Domestic market price trend">
-                        <div class="card-header">
-                            <h3 class="commodity-title">Domestic</h3>
-                            <i class="fas fa-home card-icon"></i>
-                        </div>
-                        <div class="price-value">$2,650</div>
+                        <div class="price-value">$4,426</div>
                         <div class="price-change positive">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+0.8%</span>
+                            <span>+68.5%</span>
                         </div>
                         <div class="price-label">per ton</div>
                         <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-box"></i><span>0.6M t</span></span>
+                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>Rising Trend</span></span>
                             <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-globe"></i><span>Local Market</span></span>
+                            <span class="meta-item source"><i class="fas fa-globe"></i><span>ICO</span></span>
+                        </div>
+                    </div>
+                    <div class="price-card" data-commodity="vn-price" role="button" tabindex="0" aria-label="Vietnam price card" title="Vietnam domestic coffee price">
+                        <div class="card-header">
+                            <h3 class="commodity-title">VN Price</h3>
+                            <i class="fas fa-flag card-icon"></i>
+                        </div>
+                        <div class="price-value">$4,178</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+59.9%</span>
+                        </div>
+                        <div class="price-label">per ton</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-percentage"></i><span>94.4% vs World</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-leaf"></i><span>VICOFA</span></span>
                         </div>
                     </div>
                 </div>
@@ -130,67 +131,60 @@
     <section id="exports" class="exports-section">
         <div class="container">
             <h2 class="section-title">Export Insights</h2>
-            <div class="exports-grid enhanced-exports-grid">
-                <!-- Left: Map (60%) -->
-                <div class="export-map-card" aria-label="Global export destinations map">
+            <div class="exports-grid-new">
+                <!-- Left: Top 9 Importing Countries (50%) -->
+                <div class="countries-card-large" aria-label="Top importing countries list">
                     <div class="export-card-header">
-                        <h3 class="export-title">Global Export Destinations</h3>
-                        <div class="map-legend">
-                            <div class="legend-item"><div class="legend-color high"></div><span>High</span></div>
-                            <div class="legend-item"><div class="legend-color medium"></div><span>Medium</span></div>
-                            <div class="legend-item"><div class="legend-color low"></div><span>Low</span></div>
+                        <h3 class="export-title">Top 9 Importing Countries</h3>
+                        <div class="year-selector">
+                            <label for="exportYear">Year:</label>
+                            <select id="exportYear" class="year-dropdown">
+                                <!-- Years will be populated by JavaScript -->
+                            </select>
                         </div>
                     </div>
-                    <div id="worldMap" class="world-map"></div>
-                    <div class="map-subtext">Hover to view export share by country</div>
+                    <div class="country-list-large" id="countryList">
+                        <div class="country-row-large">
+                            <span class="country-flag-large">🇺🇸</span>
+                            <span class="country-name-large">United States</span>
+                            <span class="country-percentage-large">22.5%</span>
+                        </div>
+                        <div class="country-row-large">
+                            <span class="country-flag-large">🇩🇪</span>
+                            <span class="country-name-large">Germany</span>
+                            <span class="country-percentage-large">18.3%</span>
+                        </div>
+                        <div class="country-row-large">
+                            <span class="country-flag-large">🇯🇵</span>
+                            <span class="country-name-large">Japan</span>
+                            <span class="country-percentage-large">15.7%</span>
+                        </div>
+                        <div class="country-row-large">
+                            <span class="country-flag-large">🇮🇹</span>
+                            <span class="country-name-large">Italy</span>
+                            <span class="country-percentage-large">12.1%</span>
+                        </div>
+                        <div class="country-row-large">
+                            <span class="country-flag-large">🇫🇷</span>
+                            <span class="country-name-large">France</span>
+                            <span class="country-percentage-large">9.8%</span>
+                        </div>
+                    </div>
+                    <div class="countries-total-large" id="exportTotal">Total exports represented: <strong>78.4%</strong> of global volume</div>
+                    <div class="countries-actions">
+                        <button class="details-btn" type="button">View Details →</button>
+                    </div>
                 </div>
-                <!-- Right: Stacked Cards (40%) -->
-                <div class="export-right-stack">
-                    <div class="donut-card" aria-label="Export share donut chart">
-                        <div class="export-card-header">
-                            <h3 class="export-title">Export Share by Country</h3>
-                        </div>
-                        <div class="donut-inner">
-                            <canvas id="exportPieChart"></canvas>
-                        </div>
-                        <div class="donut-legend" id="donutLegend"></div>
+                <!-- Right: Export Share Donut (50%) -->
+                <div class="donut-card-large" aria-label="Export share donut chart">
+                    <div class="export-card-header">
+                        <h3 class="export-title">Export Share by Country</h3>
+                        <span class="selected-year-display" id="selectedYearDisplay">2024</span>
                     </div>
-                    <div class="countries-card" aria-label="Top importing countries list">
-                        <div class="export-card-header">
-                            <h3 class="export-title">Top 5 Importing Countries</h3>
-                        </div>
-                        <div class="country-list compact">
-                            <div class="country-row">
-                                <span class="country-flag">🇺🇸</span>
-                                <span class="country-name">United States</span>
-                                <span class="country-percentage">22.5%</span>
-                            </div>
-                            <div class="country-row">
-                                <span class="country-flag">🇩🇪</span>
-                                <span class="country-name">Germany</span>
-                                <span class="country-percentage">18.3%</span>
-                            </div>
-                            <div class="country-row">
-                                <span class="country-flag">🇯🇵</span>
-                                <span class="country-name">Japan</span>
-                                <span class="country-percentage">15.7%</span>
-                            </div>
-                            <div class="country-row">
-                                <span class="country-flag">🇮🇹</span>
-                                <span class="country-name">Italy</span>
-                                <span class="country-percentage">12.1%</span>
-                            </div>
-                            <div class="country-row">
-                                <span class="country-flag">🇫🇷</span>
-                                <span class="country-name">France</span>
-                                <span class="country-percentage">9.8%</span>
-                            </div>
-                        </div>
-                        <div class="countries-total">Total exports represented: <strong>78.4%</strong> of global volume</div>
-                        <div class="countries-actions">
-                            <button class="details-btn" type="button">View Details →</button>
-                        </div>
+                    <div class="donut-inner-large">
+                        <canvas id="exportPieChart"></canvas>
                     </div>
+                    <div class="donut-legend" id="donutLegend"></div>
                 </div>
             </div>
         </div>
@@ -200,12 +194,77 @@
     <section id="weather" class="weather-section">
         <div class="container">
             <h2 class="section-title">Weather & Climate Impact</h2>
-            <div class="weather-card reveal">
-                <div class="weather-card-header">
-                    <h3 class="weather-title"><span class="title-icon" aria-hidden="true">☁️</span>Monthly Weather Overview</h3>
+            <div class="weather-stack">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3>Monthly Weather Overview <span class="unit-label">(Rainfall mm / Temperature °C)</span></h3>
+                        <div class="province-selector">
+                            <label for="provinceSelect"><i class="fas fa-map-marker-alt"></i> Province:</label>
+                            <select id="provinceSelect" class="province-dropdown">
+                                <option value="DakLak">Đắk Lắk</option>
+                                <option value="GiaLai">Gia Lai</option>
+                                <option value="DakNong">Đắk Nông</option>
+                                <option value="KonTum">Kon Tum</option>
+                                <option value="LamDong">Lâm Đồng</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="weatherDualChart" aria-label="Monthly rainfall and temperature chart" role="img"></canvas>
+                    </div>
                 </div>
-                <div class="weather-chart-container">
-                    <canvas id="weatherDualChart" aria-label="Monthly rainfall and temperature chart" role="img"></canvas>
+                <div class="weather-cards-row">
+                    <div class="price-card" data-commodity="temperature" role="button" tabindex="0" aria-label="Average temperature card" title="Temperature trends">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Temperature</h3>
+                            <i class="fas fa-temperature-high card-icon"></i>
+                        </div>
+                        <div class="price-value">24.5°C</div>
+                        <div class="price-change negative">
+                            <i class="fas fa-arrow-down"></i>
+                            <span>↓13.4%</span>
+                        </div>
+                        <div class="price-label">monthly avg</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-calendar"></i><span>Range: 22-27°C</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-satellite"></i><span>Weather API</span></span>
+                        </div>
+                    </div>
+                    <div class="price-card" data-commodity="rainfall" role="button" tabindex="0" aria-label="Average rainfall card" title="Monthly rainfall trends">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Rainfall</h3>
+                            <i class="fas fa-cloud-showers-heavy card-icon"></i>
+                        </div>
+                        <div class="price-value">185 mm</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>↑11.8%</span>
+                        </div>
+                        <div class="price-label">monthly avg</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-calendar"></i><span>Peak: Jul-Aug</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-satellite"></i><span>Weather API</span></span>
+                        </div>
+                    </div>
+                    <div class="price-card" data-commodity="humidity" role="button" tabindex="0" aria-label="Humidity levels card" title="Humidity impact on coffee">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Humidity</h3>
+                            <i class="fas fa-droplet card-icon"></i>
+                        </div>
+                        <div class="price-value">78%</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>↑50.2%</span>
+                        </div>
+                        <div class="price-label">relative humidity</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-leaf"></i><span>Optimal: 60-80%</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-satellite"></i><span>Climate Data</span></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -214,19 +273,154 @@
     <!-- Production Trends -->
     <section id="trends" class="trends-section">
         <div class="container">
-            <div class="production-card reveal" aria-label="Long-term coffee production trends">
-                <div class="production-header">
-                    <h2 class="production-title"><span class="title-icon" aria-hidden="true">🌱</span>Production Trends <span class="year-range">(2005–2024)</span></h2>
-                    <div class="production-toggles" role="group" aria-label="Focus dataset">
-                        <button class="prod-toggle-btn active" data-focus="production" aria-pressed="true">Production</button>
-                        <button class="prod-toggle-btn" data-focus="area" aria-pressed="false">Area</button>
-                        <button class="prod-toggle-btn" data-focus="yield" aria-pressed="false">Yield</button>
+            <h2 class="section-title">Production Trends (2005–2024)</h2>
+            <div class="production-stack">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3>Production Trends <span class="unit-label">(Tons / ha / t/ha)</span></h3>
+                    </div>
+                    <div class="production-toggles-wrapper">
+                        <div class="production-toggles" role="group" aria-label="Focus dataset">
+                            <button class="prod-toggle-btn active" data-focus="production" aria-pressed="true">Production</button>
+                            <button class="prod-toggle-btn" data-focus="area" aria-pressed="false">Area</button>
+                            <button class="prod-toggle-btn" data-focus="yield" aria-pressed="false">Yield</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendsChart" aria-label="Production, area and yield trends" role="img"></canvas>
                     </div>
                 </div>
-                <div class="production-chart-wrapper">
-                    <canvas id="trendsChart" aria-label="Production, area and yield trends" role="img"></canvas>
+                <div class="production-cards-row">
+                    <div class="price-card" data-commodity="production" role="button" tabindex="0" aria-label="Total production card" title="Annual coffee production">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Production</h3>
+                            <i class="fas fa-seedling card-icon"></i>
+                        </div>
+                        <div class="price-value">2.5 M t</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+4.2%</span>
+                        </div>
+                        <div class="price-label">2024 total</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>Growth: 3.8%/year</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-leaf"></i><span>Ministry of Agri.</span></span>
+                        </div>
+                    </div>
+                    <div class="price-card" data-commodity="area" role="button" tabindex="0" aria-label="Cultivation area card" title="Coffee growing area">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Area</h3>
+                            <i class="fas fa-map card-icon"></i>
+                        </div>
+                        <div class="price-value">650 K ha</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+1.8%</span>
+                        </div>
+                        <div class="price-label">cultivated area</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-mountain"></i><span>Dak Lak: 45%</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-leaf"></i><span>Land Use Survey</span></span>
+                        </div>
+                    </div>
+                    <div class="price-card" data-commodity="yield" role="button" tabindex="0" aria-label="Productivity yield card" title="Coffee yield per hectare">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Yield</h3>
+                            <i class="fas fa-balance-scale card-icon"></i>
+                        </div>
+                        <div class="price-value">3.2 t/ha</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+2.4%</span>
+                        </div>
+                        <div class="price-label">per hectare</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-trophy"></i><span>Above avg: +15%</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-leaf"></i><span>Farm Statistics</span></span>
+                        </div>
+                    </div>
                 </div>
                 <div class="production-summary">Vietnam’s coffee production has grown steadily, peaking at <strong>2.5 M t</strong> in 2024.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Export Performance -->
+    <section id="export-performance" class="trends-section">
+        <div class="container">
+            <h2 class="section-title">Export Performance (2005–2024)</h2>
+            <div class="production-stack">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3>Export Value & Prices <span class="unit-label">(Million USD / USD per ton)</span></h3>
+                    </div>
+                    <div class="production-toggles-wrapper">
+                        <div class="production-toggles" role="group" aria-label="Focus dataset">
+                            <button class="export-toggle-btn active" data-focus="value" aria-pressed="true">Export Value</button>
+                            <button class="export-toggle-btn" data-focus="world-price" aria-pressed="false">World Price</button>
+                            <button class="export-toggle-btn" data-focus="vn-price" aria-pressed="false">VN Price</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="exportPerformanceChart" aria-label="Export value and price trends" role="img"></canvas>
+                    </div>
+                </div>
+                <div class="production-cards-row">
+                    <div class="price-card" data-commodity="export-value" role="button" tabindex="0" aria-label="Export value card" title="Annual export value">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Export Value</h3>
+                            <i class="fas fa-dollar-sign card-icon"></i>
+                        </div>
+                        <div class="price-value">$5.6 B</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+32.5%</span>
+                        </div>
+                        <div class="price-label">2024 total</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>CAGR: 6.2%</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-database"></i><span>Export Data</span></span>
+                        </div>
+                    </div>
+                    <div class="price-card" data-commodity="world-price" role="button" tabindex="0" aria-label="World price card" title="International market price">
+                        <div class="card-header">
+                            <h3 class="commodity-title">World Price</h3>
+                            <i class="fas fa-globe-americas card-icon"></i>
+                        </div>
+                        <div class="price-value">$4,426</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+68.5%</span>
+                        </div>
+                        <div class="price-label">per ton</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-arrow-trend-up"></i><span>Trend: Rising</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-globe"></i><span>ICO</span></span>
+                        </div>
+                    </div>
+                    <div class="price-card" data-commodity="vn-price" role="button" tabindex="0" aria-label="Vietnam price card" title="Domestic market price">
+                        <div class="card-header">
+                            <h3 class="commodity-title">VN Price</h3>
+                            <i class="fas fa-flag card-icon"></i>
+                        </div>
+                        <div class="price-value">$4,178</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+59.9%</span>
+                        </div>
+                        <div class="price-label">per ton</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-percentage"></i><span>vs World: 94.4%</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-leaf"></i><span>VICOFA</span></span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -235,37 +429,66 @@
     <section id="forecast" class="forecast-section">
         <div class="container">
             <h2 class="section-title">AI Forecast & Insights</h2>
-            <div class="forecast-grid">
-                <div class="forecast-chart">
-                    <canvas id="forecastChart"></canvas>
+            <div class="forecast-stack">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3>AI Price Forecast <span class="unit-label">(USD / ton - 6 months ahead)</span></h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
                 </div>
-                <div class="ai-insights" id="insightBar">
-                    <div class="insight-card">
-                        <div class="insight-icon">
-                            <i class="fas fa-brain"></i>
+                <div class="forecast-cards-row">
+                    <div class="price-card" data-commodity="prediction" role="button" tabindex="0" aria-label="AI prediction card" title="AI price prediction">
+                        <div class="card-header">
+                            <h3 class="commodity-title">AI Prediction</h3>
+                            <i class="fas fa-brain card-icon"></i>
                         </div>
-                        <h3>AI Prediction</h3>
-                        <p>Coffee prices are expected to rise by 8-12% in the next quarter due to reduced rainfall in Dak Lak province affecting Robusta yields.</p>
-                        <div class="confidence-meter">
-                            <div class="confidence-bar">
-                                <div class="confidence-fill" style="width: 85%"></div>
-                            </div>
-                            <span>85% Confidence</span>
+                        <div class="price-value">$3,420</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+8-12%</span>
+                        </div>
+                        <div class="price-label">Q1 2026 forecast</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-percentage"></i><span>Confidence: 85%</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-robot"></i><span>ML Model v2.1</span></span>
                         </div>
                     </div>
-                    <div class="insight-card">
-                        <div class="insight-icon">
-                            <i class="fas fa-chart-line"></i>
+                    <div class="price-card" data-commodity="trend" role="button" tabindex="0" aria-label="Market trend card" title="Global market trends">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Market Trend</h3>
+                            <i class="fas fa-chart-line card-icon"></i>
                         </div>
-                        <h3>Market Trend</h3>
-                        <p>Global demand for Vietnamese coffee is increasing, particularly in Asian markets. Export volume to Japan increased by 15% this year.</p>
+                        <div class="price-value">+15%</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>Japan exports</span>
+                        </div>
+                        <div class="price-label">year-over-year</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-globe-asia"></i><span>Asian markets</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-chart-bar"></i><span>Trade Data</span></span>
+                        </div>
                     </div>
-                    <div class="insight-card">
-                        <div class="insight-icon">
-                            <i class="fas fa-cloud-sun-rain"></i>
+                    <div class="price-card" data-commodity="climate" role="button" tabindex="0" aria-label="Climate impact card" title="Weather impact analysis">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Climate Risk</h3>
+                            <i class="fas fa-cloud-sun-rain card-icon"></i>
                         </div>
-                        <h3>Climate Impact</h3>
-                        <p>El Niño patterns suggest a potential dry season ahead. Farmers are advised to implement water conservation strategies.</p>
+                        <div class="price-value">Medium</div>
+                        <div class="price-change negative">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>El Niño</span>
+                        </div>
+                        <div class="price-label">risk level</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-tint"></i><span>Dry season ahead</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-satellite"></i><span>Climate Models</span></span>
+                        </div>
                     </div>
                 </div>
             </div>

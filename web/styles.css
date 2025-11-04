@@ -136,20 +136,20 @@ body {
 }
 
 .sidebar-link.active {
-    color: #FFFFFF;
-    background: linear-gradient(135deg, #8B4513 0%, #D2691E 50%, #CD853F 100%);
-    border: 2px solid #8B4513;
-    box-shadow: 0 8px 28px rgba(139, 69, 19, 0.6), 0 0 0 3px rgba(139, 69, 19, 0.15);
+    color: #2C1810;
+    background: linear-gradient(135deg, #F5DEB3 0%, #DEB887 50%, #D2B48C 100%);
+    border: 2px solid #D2691E;
+    box-shadow: 0 8px 28px rgba(210, 105, 30, 0.4), 0 0 0 3px rgba(210, 105, 30, 0.15);
     transform: scale(1.1);
     animation: pulse-active 2s ease-in-out infinite;
 }
 
 @keyframes pulse-active {
     0%, 100% {
-        box-shadow: 0 8px 28px rgba(139, 69, 19, 0.6), 0 0 0 3px rgba(139, 69, 19, 0.15);
+        box-shadow: 0 8px 28px rgba(210, 105, 30, 0.4), 0 0 0 3px rgba(210, 105, 30, 0.15);
     }
     50% {
-        box-shadow: 0 10px 36px rgba(139, 69, 19, 0.8), 0 0 0 4px rgba(139, 69, 19, 0.25);
+        box-shadow: 0 10px 36px rgba(210, 105, 30, 0.6), 0 0 0 4px rgba(210, 105, 30, 0.25);
     }
 }
 
@@ -159,8 +159,9 @@ body {
     left: 70px;
     white-space: nowrap;
     background: var(--charcoal-mid);
-    color: #fff;
-    font-size: 0.7rem;
+    color: #2C1810;
+    font-size: 0.85rem;
+    font-weight: 600;
     padding: 6px 10px;
     border-radius: 6px;
     opacity: 0;
@@ -473,13 +474,19 @@ body.enable-snap section.hero {
 }
 
 /* New stacked layout: chart on top, cards row beneath */
-.market-stack {
+.market-stack,
+.weather-stack,
+.production-stack,
+.forecast-stack {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
 
-.price-cards-row {
+.price-cards-row,
+.weather-cards-row,
+.production-cards-row,
+.forecast-cards-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1rem;
@@ -592,9 +599,49 @@ body.enable-snap section.hero {
 .price-card[data-commodity="robusta"] .price-value { color: #c47f4e; }
 .price-card[data-commodity="domestic"] .price-value { color: #d3a373; }
 
+/* Weather cards */
+.price-card[data-commodity="rainfall"] .price-value { color: #4a90e2; }
+.price-card[data-commodity="temperature"] .price-value { color: #e67e22; }
+.price-card[data-commodity="humidity"] .price-value { color: #16a085; }
+
+/* Production cards */
+.price-card[data-commodity="production"] .price-value { color: #27ae60; }
+.price-card[data-commodity="area"] .price-value { color: #8e44ad; }
+.price-card[data-commodity="yield"] .price-value { color: #f39c12; }
+
+/* Export performance cards */
+.price-card[data-commodity="export-value"] .price-value { color: #2ecc71; }
+.price-card[data-commodity="world-price"] .price-value { color: #3498db; }
+.price-card[data-commodity="vn-price"] .price-value { color: #e74c3c; }
+
+/* Forecast cards */
+.price-card[data-commodity="prediction"] .price-value { color: #e74c3c; }
+.price-card[data-commodity="trend"] .price-value { color: #3498db; }
+.price-card[data-commodity="climate"] .price-value { color: #95a5a6; }
+
 .price-card[data-commodity="arabica"] .card-header i { color: #9c6644; }
 .price-card[data-commodity="robusta"] .card-header i { color: #c47f4e; }
 .price-card[data-commodity="domestic"] .card-header i { color: #d3a373; }
+
+/* Weather icons */
+.price-card[data-commodity="rainfall"] .card-header i { color: #4a90e2; }
+.price-card[data-commodity="temperature"] .card-header i { color: #e67e22; }
+.price-card[data-commodity="humidity"] .card-header i { color: #16a085; }
+
+/* Production icons */
+.price-card[data-commodity="production"] .card-header i { color: #27ae60; }
+.price-card[data-commodity="area"] .card-header i { color: #8e44ad; }
+.price-card[data-commodity="yield"] .card-header i { color: #f39c12; }
+
+/* Export performance icons */
+.price-card[data-commodity="export-value"] .card-header i { color: #2ecc71; }
+.price-card[data-commodity="world-price"] .card-header i { color: #3498db; }
+.price-card[data-commodity="vn-price"] .card-header i { color: #e74c3c; }
+
+/* Forecast icons */
+.price-card[data-commodity="prediction"] .card-header i { color: #e74c3c; }
+.price-card[data-commodity="trend"] .card-header i { color: #3498db; }
+.price-card[data-commodity="climate"] .card-header i { color: #95a5a6; }
 
 /* Active highlight state (to be toggled via JS) */
 .price-card.active { 
@@ -620,6 +667,17 @@ body.enable-snap section.hero {
 }
 .chart-card-header h3 { font-size: 1rem; font-weight: 600; color: #6b3400; margin: 0 0 .5rem; }
 .chart-card-header .unit-label { font-weight: 500; color: #9c6644; font-size: .75rem; }
+.chart-card-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.chart-card-header h3 { 
+    flex: 1; 
+    min-width: 200px;
+}
 .chart-container { background: transparent; border: none; padding: 0; height: 380px; }
 
 /* Hover glow */
@@ -643,6 +701,112 @@ body.enable-snap section.hero {
     align-items: start;
 }
 
+/* New Export Insights Layout - 50/50 Split */
+.exports-grid-new {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 50% / 50% */
+    gap: 1.5rem;
+    align-items: start;
+}
+
+/* Large Country Card (Left Side) */
+.countries-card-large {
+    background: linear-gradient(135deg, #FFFDFB 0%, #FFF8F3 100%);
+    padding: 2rem;
+    border: 1px solid #e5c9aa;
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.country-list-large {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    flex: 1;
+}
+
+.country-row-large {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 1.1rem;
+    background: #FFF5EC;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    border: 1px solid #f5e5d3;
+}
+
+.country-row-large:hover {
+    background: #FEEEDB;
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(139, 69, 19, 0.1);
+}
+
+.country-name-large {
+    flex: 1;
+    font-weight: 600;
+    color: #55321a;
+    font-size: 1rem;
+}
+
+.country-volume-large {
+    font-weight: 500;
+    color: #8B6F47;
+    font-size: 0.9rem;
+    min-width: 90px;
+    text-align: right;
+}
+
+.country-percentage-large {
+    font-weight: 700;
+    color: #7B3F00;
+    font-size: 1.1rem;
+    min-width: 60px;
+    text-align: right;
+}
+
+.countries-total-large {
+    font-size: 0.85rem;
+    color: #6b3400;
+    opacity: 0.9;
+    padding: 0.9rem;
+    background: #FFFBF8;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #f5e5d3;
+}
+
+/* Large Donut Card (Right Side) */
+.donut-card-large {
+    background: linear-gradient(135deg, #FFFDFB 0%, #FFF8F3 100%);
+    padding: 2rem;
+    border: 1px solid #e5c9aa;
+    border-radius: 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    height: 100%;
+}
+
+.donut-inner-large {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+}
+
+.donut-card-large canvas {
+    max-width: 85%;
+    height: auto;
+}
+
 /* New cards */
 .export-map-card,
 .donut-card,
@@ -660,6 +824,269 @@ body.enable-snap section.hero {
 .export-card-header { display:flex; justify-content:space-between; align-items:center; }
 .export-title { font-size:1.1rem; font-weight:700; color:#6B3F00; position:relative; }
 .export-title::after { content:''; display:block; width:90px; height:3px; margin-top:6px; background: linear-gradient(90deg,#7B3F00,#c69253); border-radius:2px; }
+
+/* Year Selector Styling */
+.year-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.year-selector label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6B3F00;
+}
+
+.year-dropdown {
+    padding: 0.5rem 1rem;
+    padding-right: 2rem; /* Space for dropdown arrow */
+    background: #FFF5EC;
+    border: 1px solid #d8c2a6;
+    border-radius: 10px;
+    color: #6B3F00;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+    min-width: 100px;
+    
+    /* Standard dropdown appearance */
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    appearance: menulist;
+}
+
+.year-dropdown:hover {
+    background: #FEEEDB;
+    border-color: #c47f4e;
+}
+
+.year-dropdown:focus {
+    border-color: #9c6644;
+    box-shadow: 0 0 0 3px rgba(156, 102, 68, 0.1);
+}
+
+/* Style for options when dropdown is open */
+.year-dropdown option {
+    padding: 0.5rem;
+    background: #FFFBF8;
+    color: #6B3F00;
+}
+
+/* Province Selector for Weather Section */
+.province-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.province-selector label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6B3F00;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.province-selector label i {
+    color: #9c6644;
+    font-size: 0.9rem;
+}
+
+.province-dropdown {
+    padding: 0.5rem 1rem;
+    padding-right: 2rem; /* Space for dropdown arrow */
+    background: #FFF5EC;
+    border: 1px solid #d8c2a6;
+    border-radius: 10px;
+    color: #6B3F00;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+    min-width: 140px;
+    
+    /* Standard dropdown appearance */
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    appearance: menulist;
+}
+
+.province-dropdown:hover {
+    background: #FEEEDB;
+    border-color: #c47f4e;
+}
+
+.province-dropdown:focus {
+    border-color: #9c6644;
+    box-shadow: 0 0 0 3px rgba(156, 102, 68, 0.1);
+}
+
+/* Style for options when dropdown is open */
+.province-dropdown option {
+    padding: 0.5rem;
+    background: #FFFBF8;
+    color: #6B3F00;
+}
+
+.year-dropdown option:checked,
+.year-dropdown option:focus {
+    background: linear-gradient(90deg, #c47f4e, #d29a52);
+    color: white;
+    font-weight: 700;
+    /* Force the background to show even when selected */
+    background-color: #c47f4e !important;
+}
+
+/* Firefox specific */
+.year-dropdown option:checked {
+    background: #c47f4e !important;
+    color: white !important;
+}
+
+/* Webkit specific (Chrome, Edge, Safari) */
+.year-dropdown option:checked {
+    box-shadow: 0 0 10px 100px #c47f4e inset !important;
+    color: white !important;
+}
+
+.selected-year-display {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #9c6644;
+    background: #FFF5EC;
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid #e5c9aa;
+}
+
+/* Year Modal */
+.year-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.year-modal {
+    background: #FFFBF8;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+    border: 2px solid #e5c9aa;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.year-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 2rem;
+    border-bottom: 2px solid #e5c9aa;
+}
+
+.year-modal-header h3 {
+    font-size: 1.3rem;
+    color: #6B3F00;
+    margin: 0;
+}
+
+.year-modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #9c6644;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.year-modal-close:hover {
+    background: #FEEEDB;
+    color: #6B3F00;
+}
+
+.year-modal-body {
+    padding: 2rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.year-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.8rem;
+}
+
+.year-btn {
+    padding: 0.8rem;
+    background: #FFF5EC;
+    border: 1px solid #d8c2a6;
+    border-radius: 10px;
+    color: #6B3F00;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.year-btn:hover {
+    background: #c47f4e;
+    color: white;
+    border-color: #9c6644;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(156, 102, 68, 0.2);
+}
+
+.year-btn:active {
+    transform: translateY(0);
+}
+
+/* Responsive modal */
+@media (max-width: 600px) {
+    .year-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .year-modal {
+        width: 95%;
+    }
+}
 
 .map-legend { display:flex; gap:.75rem; flex-wrap:wrap; }
 .map-legend .legend-item { font-size:.7rem; background:#FFF5EC; padding:.35rem .5rem; border-radius:8px; display:flex; align-items:center; gap:6px; box-shadow:0 1px 2px rgba(0,0,0,.05); }
@@ -798,8 +1225,8 @@ body.enable-snap section.hero {
 
 /* Weather Section - Matching Production Card Style */
 .weather-section { 
-    background: var(--background-primary); 
-    padding: 5rem 0;
+    background: var(--secondary-dark);
+    border-top: 1px solid var(--border-color);
 }
 .weather-section .container { 
     max-width: 1280px; 
@@ -876,6 +1303,7 @@ body.enable-snap section.hero {
 .production-header { display:flex; flex-direction:column; gap:1rem; }
 .production-title { font-size:1.25rem; font-weight:700; color:#6B3F00; display:flex; align-items:center; gap:.5rem; position:relative; }
 .production-title::after { content:''; display:block; width:140px; height:3px; margin-top:8px; background:linear-gradient(90deg,#7B3F00,#c47f4e); border-radius:2px; }
+.production-toggles-wrapper { display:flex; justify-content:center; margin-top: 1rem; }
 .production-toggles { display:flex; gap:.75rem; flex-wrap:wrap; }
 .prod-toggle-btn { background:#FFF5EC; border:1px solid #d8c2a6; font-size:.7rem; padding:.55rem .9rem; border-radius:10px; cursor:pointer; color:#6B3F00; font-weight:600; letter-spacing:.3px; transition:.25s; }
 .prod-toggle-btn.active { background:#c47f4e; color:#fff; border-color:#a65e2e; box-shadow:0 3px 10px rgba(0,0,0,.18); }
@@ -931,6 +1359,23 @@ body.enable-snap section.hero {
     border-radius: 20px;
     border: 1px solid var(--border-color);
     height: 500px;
+}
+
+/* Production Trends */
+.trends-section {
+    background: var(--secondary-dark);
+    border-top: 1px solid var(--border-color);
+}
+
+.production-summary {
+    text-align: center;
+    font-size: 0.95rem;
+    color: #6b3400;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #FFFBF8;
+    border-radius: 12px;
+    border: 1px solid #e5c9aa;
 }
 
 /* AI Forecast */
@@ -1496,6 +1941,7 @@ canvas {
 /* Responsive Design */
 @media (max-width: 1024px) {
     .exports-grid,
+    .exports-grid-new,
     .weather-grid,
     .forecast-grid {
         grid-template-columns: 1fr;

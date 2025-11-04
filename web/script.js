@@ -1,25 +1,34 @@
 // Global variables
-let priceChart, exportPieChart, climateChart, trendsChart, forecastChart;
+const API_BASE_URL = 'http://localhost:5000/api';
+let priceChart, exportPieChart, climateChart, trendsChart, exportPerformanceChart, forecastChart;
+
+console.log('🚀 Script.js loaded at:', new Date().toLocaleTimeString());
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM Content Loaded at:', new Date().toLocaleTimeString());
     initializeApp();
 });
 
 // Initialize Application
-function initializeApp() {
+async function initializeApp() {
+    console.log('🎯 initializeApp() called');
     setupNavigation();
     setupScrollAnimations();
     setupCounterAnimations();
-    initializeCharts();
+    console.log('📊 About to initialize charts...');
+    await initializeCharts();
+    await updateHeroMetrics(); // Load hero section data from API
     setupMarketMeta();
     setupCommodityHighlighting();
     setupTrendButtons();
+    setupExportPerformanceToggles();
     setupFormHandling();
     setupSmoothScrolling();
     setupSidebarNavigation();
     enableScrollSnap();
     startRealTimeUpdates();
+    console.log('✅ initializeApp() complete - All async operations finished');
 }
 
 // Sidebar Navigation Active State
@@ -139,17 +148,207 @@ function setupCounterAnimations() {
     });
 }
 
+// Update Hero Section Metrics with Latest Data
+async function updateHeroMetrics() {
+    try {
+        // Fetch latest production data
+        const productionResponse = await fetch(`${API_BASE_URL}/production`);
+        const productionResult = await productionResponse.json();
+        
+        if (productionResult.success && productionResult.data.length > 0) {
+            const latestProduction = productionResult.data[productionResult.data.length - 1];
+            
+            // Update Production (convert to M tons with 1 decimal)
+            const productionMT = (latestProduction.output_million_tons).toFixed(1);
+            document.getElementById('hero-production').textContent = `${productionMT}M t`;
+            
+            // Update Area (convert to K ha)
+            const areaKHa = Math.round(latestProduction.area_thousand_ha);
+            document.getElementById('hero-area').textContent = `${areaKHa}K ha`;
+            
+            // Update Yield (2 decimals)
+            const yieldValue = latestProduction.yield_tons_per_ha.toFixed(1);
+            document.getElementById('hero-yield').textContent = `${yieldValue} t/ha`;
+        }
+        
+        // Fetch export data for value and prices
+        const exportResponse = await fetch(`${API_BASE_URL}/export`);
+        const exportResult = await exportResponse.json();
+        
+        if (exportResult.success && exportResult.data.length > 0) {
+            const latestExport = exportResult.data[exportResult.data.length - 1];
+            
+            // Update Export Value (convert to billions with 1 decimal)
+            const exportValueB = (latestExport.export_value_million_usd / 1000).toFixed(1);
+            document.getElementById('hero-value').textContent = `$${exportValueB}B`;
+            
+            // Update Domestic Price (VN price per ton)
+            if (latestExport.price_vn_usd_per_ton) {
+                document.getElementById('hero-price').textContent = `$${Math.round(latestExport.price_vn_usd_per_ton).toLocaleString()}`;
+            }
+        }
+        
+        console.log('✅ Hero metrics updated with latest data');
+    } catch (error) {
+        console.error('Error updating hero metrics:', error);
+    }
+}
+
 // Chart Initialization
-function initializeCharts() {
+async function initializeCharts() {
+    console.log('📈 initializeCharts() called');
     initializePriceChart();
     initializeExportPieChart();
     initializeWeatherDualChart();
     initializeTrendsChart();
+    initializeExportPerformanceChart();
     initializeForecastChart();
+    // Load production data from API
+    console.log('🔄 Loading production data...');
+    await loadProductionData();
+    // Load export/price data from API
+    await loadMarketPrices();
+    // Load export performance data
+    await loadExportPerformanceData();
+    console.log('✅ initializeCharts() complete - Production data loaded');
 }
 
+// Load and update Market Overview prices
+async function loadMarketPrices() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/export`);
+        const result = await response.json();
+        
+        if (result.success && result.data.length > 0) {
+            // Get latest year with actual data from metadata
+            const latestActualYear = result.metadata?.latest_actual_year;
+            
+            // Filter data to find the records with actual data
+            let latestExport, previousExport;
+            
+            if (latestActualYear) {
+                // Find the record for latest actual year
+                latestExport = result.data.find(d => d.year === latestActualYear);
+                
+                // Find the previous year with actual data
+                const previousActualData = result.data
+                    .filter(d => d.year < latestActualYear && 
+                           (d.export_value_million_usd !== null || 
+                            d.price_world_usd_per_ton !== null || 
+                            d.price_vn_usd_per_ton !== null))
+                    .sort((a, b) => b.year - a.year);
+                
+                previousExport = previousActualData.length > 0 ? previousActualData[0] : latestExport;
+            } else {
+                // Fallback to last record if metadata not available
+                latestExport = result.data[result.data.length - 1];
+                previousExport = result.data.length > 1 ? result.data[result.data.length - 2] : latestExport;
+            }
+            
+            console.log(`📊 Using data from year ${latestExport.year} (latest actual year: ${latestActualYear})`);
+            
+            // Update Export Value card - ONLY in Market Overview section
+            const exportValueCard = document.querySelector('#market [data-commodity="export-value"], .market-section [data-commodity="export-value"]');
+            if (exportValueCard && latestExport.export_value_million_usd) {
+                const valueEl = exportValueCard.querySelector('.price-value');
+                if (valueEl) {
+                    valueEl.textContent = `$${Math.round(latestExport.export_value_million_usd).toLocaleString()} M`;
+                }
+                
+                // Update year display
+                const yearSpan = exportValueCard.querySelector('.meta-item span:last-child');
+                if (yearSpan) {
+                    yearSpan.textContent = `${latestExport.year} Total`;
+                }
+                
+                // Calculate change
+                if (previousExport.export_value_million_usd) {
+                    const change = ((latestExport.export_value_million_usd - previousExport.export_value_million_usd) / previousExport.export_value_million_usd * 100).toFixed(1);
+                    const changeEl = exportValueCard.querySelector('.price-change');
+                    if (changeEl) {
+                        const spanEl = changeEl.querySelector('span');
+                        const iconEl = changeEl.querySelector('i');
+                        if (spanEl) spanEl.textContent = `${change >= 0 ? '↑' : '↓'}${Math.abs(change)}%`;
+                        changeEl.classList.toggle('positive', change >= 0);
+                        changeEl.classList.toggle('negative', change < 0);
+                        if (iconEl) iconEl.className = change >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+                    }
+                }
+            }
+            
+            // Update World Price card - ONLY in Market Overview section
+            const worldPriceCard = document.querySelector('#market [data-commodity="world-price"], .market-section [data-commodity="world-price"]');
+            if (worldPriceCard && latestExport.price_world_usd_per_ton) {
+                const valueEl = worldPriceCard.querySelector('.price-value');
+                if (valueEl) {
+                    valueEl.textContent = `$${Math.round(latestExport.price_world_usd_per_ton).toLocaleString()}`;
+                }
+                
+                // Update date display
+                const dateSpan = worldPriceCard.querySelector('.dynamic-date');
+                if (dateSpan) {
+                    const date = new Date(latestExport.year, 11, 31); // Dec 31 of the year
+                    dateSpan.textContent = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                }
+                
+                if (previousExport.price_world_usd_per_ton) {
+                    const change = ((latestExport.price_world_usd_per_ton - previousExport.price_world_usd_per_ton) / previousExport.price_world_usd_per_ton * 100).toFixed(1);
+                    const changeEl = worldPriceCard.querySelector('.price-change');
+                    if (changeEl) {
+                        const spanEl = changeEl.querySelector('span');
+                        const iconEl = changeEl.querySelector('i');
+                        if (spanEl) spanEl.textContent = `${change >= 0 ? '↑' : '↓'}${Math.abs(change)}%`;
+                        changeEl.classList.toggle('positive', change >= 0);
+                        changeEl.classList.toggle('negative', change < 0);
+                        if (iconEl) iconEl.className = change >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+                    }
+                }
+            }
+            
+            // Update VN Price card - ONLY in Market Overview section
+            const vnPriceCard = document.querySelector('#market [data-commodity="vn-price"], .market-section [data-commodity="vn-price"]');
+            if (vnPriceCard && latestExport.price_vn_usd_per_ton) {
+                const valueEl = vnPriceCard.querySelector('.price-value');
+                if (valueEl) {
+                    valueEl.textContent = `$${Math.round(latestExport.price_vn_usd_per_ton).toLocaleString()}`;
+                }
+                
+                // Update date display
+                const dateSpan = vnPriceCard.querySelector('.dynamic-date');
+                if (dateSpan) {
+                    const date = new Date(latestExport.year, 11, 31);
+                    dateSpan.textContent = date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+                }
+                
+                if (previousExport.price_vn_usd_per_ton) {
+                    const change = ((latestExport.price_vn_usd_per_ton - previousExport.price_vn_usd_per_ton) / previousExport.price_vn_usd_per_ton * 100).toFixed(1);
+                    const changeEl = vnPriceCard.querySelector('.price-change');
+                    if (changeEl) {
+                        const spanEl = changeEl.querySelector('span');
+                        const iconEl = changeEl.querySelector('i');
+                        if (spanEl) spanEl.textContent = `${change >= 0 ? '↑' : '↓'}${Math.abs(change)}%`;
+                        changeEl.classList.toggle('positive', change >= 0);
+                        changeEl.classList.toggle('negative', change < 0);
+                        if (iconEl) iconEl.className = change >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+                    }
+                }
+                
+                // Update VN vs World comparison
+                const volumeSpan = vnPriceCard.querySelector('.meta-item.volume span:last-child');
+                if (volumeSpan && latestExport.price_world_usd_per_ton) {
+                    const ratio = (latestExport.price_vn_usd_per_ton / latestExport.price_world_usd_per_ton * 100).toFixed(1);
+                    volumeSpan.textContent = `${ratio}% vs World`;
+                }
+            }
+            
+            console.log(`✅ Market prices updated with data from year ${latestExport.year}`);
+        }
+    } catch (error) {
+        console.error('Error loading market prices:', error);
+    }
+}
 
-// Price Chart
+// Price Chart - Now loads real data from database
 function initializePriceChart() {
     const ctx = document.getElementById('priceChart');
     if (!ctx) return;
@@ -164,11 +363,11 @@ function initializePriceChart() {
     priceChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: generateDateLabels(30),
+            labels: [],  // Will be filled with years from API
             datasets: [
                 {
-                    label: 'Arabica',
-                    data: generatePriceData(4250, 30),
+                    label: 'Export Volume (Tons)',
+                    data: [],  // Will be filled from API
                     borderColor: '#DAA520',
                     backgroundColor: gradient,
                     fill: true,
@@ -176,11 +375,12 @@ function initializePriceChart() {
                     pointBackgroundColor: '#DAA520',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
-                    pointRadius: 4
+                    pointRadius: 4,
+                    yAxisID: 'y-volume'
                 },
                 {
-                    label: 'Robusta',
-                    data: generatePriceData(2850, 30),
+                    label: 'World Price (USD/ton)',
+                    data: [],  // Will be filled from API
                     borderColor: '#CD853F',
                     backgroundColor: 'rgba(205, 133, 63, 0.1)',
                     fill: true,
@@ -188,11 +388,12 @@ function initializePriceChart() {
                     pointBackgroundColor: '#CD853F',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
-                    pointRadius: 4
+                    pointRadius: 4,
+                    yAxisID: 'y-price'
                 },
                 {
-                    label: 'Domestic',
-                    data: generatePriceData(2650, 30),
+                    label: 'VN Price (USD/ton)',
+                    data: [],  // Will be filled from API
                     borderColor: '#8B4513',
                     backgroundColor: 'rgba(139, 69, 19, 0.1)',
                     fill: true,
@@ -200,18 +401,23 @@ function initializePriceChart() {
                     pointBackgroundColor: '#8B4513',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
-                    pointRadius: 4
+                    pointRadius: 4,
+                    yAxisID: 'y-price'
                 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
             plugins: {
                 legend: {
                     labels: {
                         color: textColor.trim(),
-                        font: { family: 'Inter' }
+                        font: { family: 'Inter', size: 11 }
                     }
                 },
                 tooltip: {
@@ -219,7 +425,24 @@ function initializePriceChart() {
                     titleColor: textColor.trim(),
                     bodyColor: textColor.trim(),
                     borderColor: gridColor.trim(),
-                    borderWidth: 1
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            // Format based on dataset
+                            if (context.datasetIndex === 0) {
+                                // Export Volume - in tons
+                                label += Math.round(context.parsed.y).toLocaleString() + ' tons';
+                            } else {
+                                // Prices - per ton
+                                label += '$' + Math.round(context.parsed.y).toLocaleString() + '/ton';
+                            }
+                            return label;
+                        }
+                    }
                 }
             },
             scales: {
@@ -227,14 +450,43 @@ function initializePriceChart() {
                     ticks: { color: textColor.trim() },
                     grid: { color: gridColor.trim() }
                 },
-                y: {
+                'y-volume': {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Export Volume (Tons)',
+                        color: textColor.trim(),
+                        font: { size: 11 }
+                    },
                     ticks: { 
                         color: textColor.trim(),
                         callback: function(value) {
-                            return '$' + value;
+                            return value.toLocaleString() + ' tons';
                         }
                     },
                     grid: { color: gridColor.trim() }
+                },
+                'y-price': {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Price (USD/ton)',
+                        color: textColor.trim(),
+                        font: { size: 11 }
+                    },
+                    ticks: { 
+                        color: textColor.trim(),
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    }
                 }
             },
             animation: {
@@ -243,6 +495,69 @@ function initializePriceChart() {
             }
         }
     });
+    
+    // Load real data from API
+    loadPriceChartData();
+}
+
+// Load real price data from database (2005-2024)
+async function loadPriceChartData() {
+    console.log('🔄 Loading price chart data...');
+    try {
+        // Fetch production data for export volume (tons)
+        const productionResponse = await fetch(`${API_BASE_URL}/production`);
+        console.log('📡 Production API response status:', productionResponse.status);
+        
+        const productionResult = await productionResponse.json();
+        console.log('📊 Production API result:', productionResult);
+        
+        // Fetch export/price data
+        const exportResponse = await fetch(`${API_BASE_URL}/export`);
+        const exportResult = await exportResponse.json();
+        
+        if (productionResult.success && exportResult.success && productionResult.data.length > 0 && exportResult.data.length > 0) {
+            // Get years from production data
+            const years = productionResult.data.map(item => item.year);
+            
+            // Get export volume in TONS (not million tons)
+            const exportVolumes = productionResult.data.map(item => Math.round(item.export_tons || 0));
+            
+            // Get prices from export data
+            const worldPrices = exportResult.data.map(item => item.price_world_usd_per_ton || 0);
+            const vnPrices = exportResult.data.map(item => item.price_vn_usd_per_ton || 0);
+            
+            console.log('📅 Years:', years);
+            console.log('� Export Volumes (tons):', exportVolumes);
+            console.log('🌍 World Prices:', worldPrices);
+            console.log('🇻🇳 VN Prices:', vnPrices);
+            
+            // Check if chart exists
+            if (!priceChart) {
+                console.error('❌ priceChart is not initialized!');
+                return;
+            }
+            
+            // Update chart data
+            priceChart.data.labels = years;
+            priceChart.data.datasets[0].data = exportVolumes;
+            priceChart.data.datasets[1].data = worldPrices;
+            priceChart.data.datasets[2].data = vnPrices;
+            
+            console.log('📊 Chart data updated, calling update()...');
+            
+            // Update chart
+            priceChart.update();
+            
+            console.log('✅ Price chart updated with real data from database (2005-2024)');
+            console.log(`Export volumes range: ${Math.min(...exportVolumes).toLocaleString()} - ${Math.max(...exportVolumes).toLocaleString()} tons`);
+            console.log(`World prices range: $${Math.min(...worldPrices).toLocaleString()} - $${Math.max(...worldPrices).toLocaleString()}/ton`);
+            console.log(`VN prices range: $${Math.min(...vnPrices).toLocaleString()} - $${Math.max(...vnPrices).toLocaleString()}/ton`);
+        } else {
+            console.error('❌ No data returned from API or API failed');
+        }
+    } catch (error) {
+        console.error('❌ Error loading price chart data:', error);
+    }
 }
 
 // Populate dynamic date for Market Overview cards
@@ -254,9 +569,13 @@ function setupMarketMeta() {
     dateSpans.forEach(span => span.textContent = formatted);
 }
 
-// Commodity highlighting interaction
+// Commodity highlighting interaction - ONLY for Market Overview section
 function setupCommodityHighlighting() {
-    const cards = document.querySelectorAll('.price-card');
+    // Only select price cards in Market Overview section, not Weather cards
+    const marketSection = document.querySelector('#market, .market-section');
+    if (!marketSection) return;
+    
+    const cards = marketSection.querySelectorAll('.price-card');
     if (!cards.length || !priceChart) return;
 
     cards.forEach(card => {
@@ -266,8 +585,13 @@ function setupCommodityHighlighting() {
         });
         card.style.cursor = 'pointer';
     });
-    // Default active first card
-    activateCommodity('arabica');
+    
+    // Default active first card - only if it exists in Market Overview
+    const firstCard = cards[0];
+    if (firstCard) {
+        const firstCommodity = firstCard.getAttribute('data-commodity');
+        activateCommodity(firstCommodity);
+    }
 }
 
 function activateCommodity(commodity) {
@@ -529,7 +853,7 @@ function initializeTrendsChart(){
             labels: years,
             datasets:[
                 {
-                    label:'Production (M Tons)',
+                    label:'Production (Tons)',
                     data: generateTrendData(1.5, 2.5, years.length),
                     borderColor:'#c47f4e',
                     backgroundColor:gProd,
@@ -540,7 +864,7 @@ function initializeTrendsChart(){
                     pointBorderWidth:2
                 },
                 {
-                    label:'Area (K ha)',
+                    label:'Area (ha)',
                     data: generateTrendData(450, 650, years.length),
                     borderColor:'#a65e2e',
                     backgroundColor:gArea,
@@ -566,10 +890,36 @@ function initializeTrendsChart(){
         options:{
             responsive:true,
             maintainAspectRatio:false,
-            plugins:{ legend:{ labels:{ color:textColor.trim(), font:{ family:'Inter' } } } },
+            plugins:{ 
+                legend:{ labels:{ color:textColor.trim(), font:{ family:'Inter' } } },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                // Format large numbers with thousand separators
+                                label += context.parsed.y.toLocaleString();
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
             scales:{
                 x:{ ticks:{ color:textColor.trim() }, grid:{ color:gridColor } },
-                y:{ ticks:{ color:textColor.trim() }, grid:{ color:gridColor } }
+                y:{ 
+                    ticks:{ 
+                        color:textColor.trim(),
+                        callback: function(value) {
+                            // Format Y-axis with thousand separators
+                            return value.toLocaleString();
+                        }
+                    }, 
+                    grid:{ color:gridColor } 
+                }
             },
             animation:{ duration:1400, easing:'easeOutQuart' }
         }
@@ -597,6 +947,331 @@ function setupProductionToggles(){
             trendsChart.update();
         });
     });
+}
+
+// ============================================================================
+// EXPORT PERFORMANCE CHART (3 columns from coffee_export table)
+// ============================================================================
+
+// Initialize Export Performance Chart
+function initializeExportPerformanceChart() {
+    const ctx = document.getElementById('exportPerformanceChart');
+    if (!ctx) return;
+    
+    const styles = getComputedStyle(document.documentElement);
+    const textColor = styles.getPropertyValue('--text-secondary') || '#514338';
+    const gridColor = styles.getPropertyValue('--border-color') || '#e6d9cc';
+    
+    exportPerformanceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Export Value (Million USD)',
+                    data: [],
+                    borderColor: '#2ecc71',
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    yAxisID: 'y-value',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                },
+                {
+                    label: 'World Price (USD/ton)',
+                    data: [],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y-price',
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                },
+                {
+                    label: 'VN Price (USD/ton)',
+                    data: [],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: false,
+                    yAxisID: 'y-price',
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: textColor,
+                        font: { size: 12, weight: '500' },
+                        usePointStyle: true,
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    titleColor: '#333',
+                    bodyColor: '#666',
+                    borderColor: '#ddd',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                if (context.datasetIndex === 0) {
+                                    // Export value
+                                    label += '$' + context.parsed.y.toLocaleString() + ' M';
+                                } else {
+                                    // Prices
+                                    label += '$' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        color: gridColor,
+                        display: true
+                    },
+                    ticks: {
+                        color: textColor,
+                        font: { size: 11 }
+                    }
+                },
+                'y-value': {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Export Value (Million USD)',
+                        color: '#2ecc71',
+                        font: { size: 12, weight: 'bold' }
+                    },
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor,
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                },
+                'y-price': {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Price (USD per ton)',
+                        color: '#3498db',
+                        font: { size: 12, weight: 'bold' }
+                    },
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        color: textColor,
+                        callback: function(value) {
+                            return '$' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Load Export Performance Data from API
+async function loadExportPerformanceData() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/export`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ Export performance data loaded:', result);
+        
+        // Update chart
+        updateExportPerformanceChart(result.data);
+        
+        // Update cards
+        updateExportPerformanceCards(result.data);
+        
+    } catch (error) {
+        console.error('❌ Error loading export performance data:', error);
+    }
+}
+
+// Update Export Performance Chart with data
+function updateExportPerformanceChart(data) {
+    if (!exportPerformanceChart || !data || data.length === 0) return;
+    
+    const years = data.map(d => d.year);
+    const exportValues = data.map(d => d.export_value_million_usd);
+    const worldPrices = data.map(d => d.price_world_usd_per_ton);
+    const vnPrices = data.map(d => d.price_vn_usd_per_ton);
+    
+    exportPerformanceChart.data.labels = years;
+    exportPerformanceChart.data.datasets[0].data = exportValues;
+    exportPerformanceChart.data.datasets[1].data = worldPrices;
+    exportPerformanceChart.data.datasets[2].data = vnPrices;
+    
+    exportPerformanceChart.update();
+    
+    console.log('📊 Export performance chart updated with', data.length, 'years');
+}
+
+// Update Export Performance Cards
+function updateExportPerformanceCards(data) {
+    if (!data || data.length === 0) return;
+    
+    const latest = data[data.length - 1];
+    const previous = data[data.length - 2];
+    
+    // Update Export Value card
+    const exportValueCard = document.querySelector('[data-commodity="export-value"]');
+    if (exportValueCard) {
+        const valueEl = exportValueCard.querySelector('.price-value');
+        const changeEl = exportValueCard.querySelector('.price-change span');
+        const changeContainer = exportValueCard.querySelector('.price-change');
+        
+        const billions = (latest.export_value_million_usd / 1000).toFixed(1);
+        if (valueEl) valueEl.textContent = `$${billions} B`;
+        
+        if (previous && changeEl) {
+            const pctChange = ((latest.export_value_million_usd - previous.export_value_million_usd) / previous.export_value_million_usd * 100);
+            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(1)}%`;
+            changeContainer.classList.toggle('positive', pctChange >= 0);
+            changeContainer.classList.toggle('negative', pctChange < 0);
+            changeContainer.querySelector('i').className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+        }
+    }
+    
+    // Update World Price card
+    const worldPriceCard = document.querySelector('[data-commodity="world-price"]');
+    if (worldPriceCard) {
+        const valueEl = worldPriceCard.querySelector('.price-value');
+        const changeEl = worldPriceCard.querySelector('.price-change span');
+        const changeContainer = worldPriceCard.querySelector('.price-change');
+        
+        if (valueEl) valueEl.textContent = `$${Math.round(latest.price_world_usd_per_ton).toLocaleString()}`;
+        
+        if (previous && changeEl) {
+            const pctChange = ((latest.price_world_usd_per_ton - previous.price_world_usd_per_ton) / previous.price_world_usd_per_ton * 100);
+            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(1)}%`;
+            changeContainer.classList.toggle('positive', pctChange >= 0);
+            changeContainer.classList.toggle('negative', pctChange < 0);
+            changeContainer.querySelector('i').className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+        }
+    }
+    
+    // Update VN Price card
+    const vnPriceCard = document.querySelector('[data-commodity="vn-price"]');
+    if (vnPriceCard) {
+        const valueEl = vnPriceCard.querySelector('.price-value');
+        const changeEl = vnPriceCard.querySelector('.price-change span');
+        const changeContainer = vnPriceCard.querySelector('.price-change');
+        
+        if (valueEl) valueEl.textContent = `$${Math.round(latest.price_vn_usd_per_ton).toLocaleString()}`;
+        
+        if (previous && changeEl) {
+            const pctChange = ((latest.price_vn_usd_per_ton - previous.price_vn_usd_per_ton) / previous.price_vn_usd_per_ton * 100);
+            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(1)}%`;
+            changeContainer.classList.toggle('positive', pctChange >= 0);
+            changeContainer.classList.toggle('negative', pctChange < 0);
+            changeContainer.querySelector('i').className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+        }
+        
+        // Update comparison with world price
+        const volumeSpan = vnPriceCard.querySelector('.meta-item.volume span:last-child');
+        if (volumeSpan) {
+            const ratio = (latest.price_vn_usd_per_ton / latest.price_world_usd_per_ton * 100).toFixed(1);
+            volumeSpan.textContent = `vs World: ${ratio}%`;
+        }
+    }
+    
+    console.log('💳 Export performance cards updated');
+}
+
+// Setup Export Performance Toggle Buttons
+function setupExportPerformanceToggles() {
+    const toggleButtons = document.querySelectorAll('.export-toggle-btn');
+    
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const focus = this.getAttribute('data-focus');
+            
+            // Update active state
+            toggleButtons.forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
+            this.classList.add('active');
+            this.setAttribute('aria-pressed', 'true');
+            
+            // Update chart visibility
+            updateExportPerformanceChartFocus(focus);
+        });
+    });
+}
+
+// Update chart focus based on selected toggle
+function updateExportPerformanceChartFocus(focus) {
+    if (!exportPerformanceChart) return;
+    
+    const datasets = exportPerformanceChart.data.datasets;
+    
+    switch(focus) {
+        case 'value':
+            datasets[0].hidden = false; // Export Value
+            datasets[1].hidden = true;  // World Price
+            datasets[2].hidden = true;  // VN Price
+            break;
+        case 'world-price':
+            datasets[0].hidden = true;
+            datasets[1].hidden = false;
+            datasets[2].hidden = true;
+            break;
+        case 'vn-price':
+            datasets[0].hidden = true;
+            datasets[1].hidden = true;
+            datasets[2].hidden = false;
+            break;
+        case 'all':
+        default:
+            datasets[0].hidden = false;
+            datasets[1].hidden = false;
+            datasets[2].hidden = false;
+    }
+    
+    exportPerformanceChart.update();
 }
 
 // Forecast Chart
@@ -693,6 +1368,109 @@ function setupTrendButtons() {
     });
 }
 
+// Load Production Data from API
+let productionData = null;
+let selectedProductionProvince = 'national';
+
+async function loadProductionData() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/production`);
+        const result = await response.json();
+        
+        if (result.success) {
+            productionData = result.data;
+            console.log('Production data loaded:', productionData.length, 'years');
+            
+            // Update chart with real data
+            updateTrendsChartWithData();
+            
+            // Update production cards
+            updateProductionCards(productionData);
+        } else {
+            console.error('Failed to load production data:', result.error);
+        }
+    } catch (error) {
+        console.error('Error loading production data:', error);
+    }
+}
+
+function updateTrendsChartWithData() {
+    if (!trendsChart || !productionData) return;
+    
+    const years = productionData.map(d => d.year.toString());
+    // Convert from millions to tons and thousands to hectares
+    const production = productionData.map(d => d.output_million_tons * 1000000);
+    const area = productionData.map(d => d.area_thousand_ha * 1000);
+    const yieldData = productionData.map(d => d.yield_tons_per_ha);
+    
+    // Update chart labels and datasets
+    trendsChart.data.labels = years;
+    trendsChart.data.datasets[0].data = production;
+    trendsChart.data.datasets[1].data = area;
+    trendsChart.data.datasets[2].data = yieldData;
+    
+    trendsChart.update();
+}
+
+function updateProductionCards(data) {
+    if (!data || data.length === 0) return;
+    
+    // Get latest year data
+    const latest = data[data.length - 1];
+    const previous = data[data.length - 2];
+    
+    // Calculate changes
+    const prodChange = ((latest.output_million_tons - previous.output_million_tons) / previous.output_million_tons * 100).toFixed(1);
+    const areaChange = ((latest.area_thousand_ha - previous.area_thousand_ha) / previous.area_thousand_ha * 100).toFixed(1);
+    const yieldChange = ((latest.yield_tons_per_ha - previous.yield_tons_per_ha) / previous.yield_tons_per_ha * 100).toFixed(1);
+    
+    // Update Production card
+    const prodCard = document.querySelector('[data-commodity="production"]');
+    if (prodCard) {
+        const outputTons = Math.round(latest.output_million_tons * 1000000);
+        prodCard.querySelector('.price-value').textContent = outputTons.toLocaleString() + ' t';
+        const changeEl = prodCard.querySelector('.price-change');
+        changeEl.querySelector('span').textContent = `${prodChange > 0 ? '+' : ''}${prodChange}%`;
+        changeEl.classList.toggle('positive', prodChange >= 0);
+        changeEl.classList.toggle('negative', prodChange < 0);
+        changeEl.querySelector('i').className = prodChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+        prodCard.querySelector('.price-label').textContent = `${latest.year} total`;
+    }
+    
+    // Update Area card
+    const areaCard = document.querySelector('[data-commodity="area"]');
+    if (areaCard) {
+        const areaHa = Math.round(latest.area_thousand_ha * 1000);
+        areaCard.querySelector('.price-value').textContent = areaHa.toLocaleString() + ' ha';
+        const changeEl = areaCard.querySelector('.price-change');
+        changeEl.querySelector('span').textContent = `${areaChange > 0 ? '+' : ''}${areaChange}%`;
+        changeEl.classList.toggle('positive', areaChange >= 0);
+        changeEl.classList.toggle('negative', areaChange < 0);
+        changeEl.querySelector('i').className = areaChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+    }
+    
+    // Update Yield card
+    const yieldCard = document.querySelector('[data-commodity="yield"]');
+    if (yieldCard) {
+        const yieldValue = parseFloat(latest.yield_tons_per_ha).toFixed(2);
+        yieldCard.querySelector('.price-value').textContent = `${yieldValue} t/ha`;
+        const changeEl = yieldCard.querySelector('.price-change');
+        changeEl.querySelector('span').textContent = `${yieldChange > 0 ? '+' : ''}${yieldChange}%`;
+        changeEl.classList.toggle('positive', yieldChange >= 0);
+        changeEl.classList.toggle('negative', yieldChange < 0);
+        changeEl.querySelector('i').className = yieldChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+    }
+    
+    // Update summary text
+    const summaryEl = document.querySelector('.production-summary');
+    if (summaryEl) {
+        const maxProd = Math.max(...data.map(d => d.output_million_tons));
+        const maxYear = data.find(d => d.output_million_tons === maxProd).year;
+        const maxProdTons = Math.round(maxProd * 1000000).toLocaleString();
+        summaryEl.innerHTML = `Vietnam's coffee production has grown steadily, peaking at <strong>${maxProdTons} tons</strong> in ${maxYear}.`;
+    }
+}
+
 // Update Trends Chart
 function updateTrendsChart(type) {
     if (!trendsChart) return;
@@ -725,6 +1503,7 @@ function updateTrendsChart(type) {
     
     trendsChart.update('active');
 }
+
 
 // Form Handling
 function setupFormHandling() {
@@ -985,3 +1764,369 @@ document.querySelectorAll('.wx-toggle-btn, .prod-toggle-btn').forEach(btn => {
         syncPressed(groupButtons);
     }).observe(btn, mutationConfig);
 });
+
+// ========================================
+// Year Selector for Export Data
+// ========================================
+
+// Country flags mapping
+const countryFlags = {
+    'United States': '🇺🇸',
+    'Germany': '🇩🇪',
+    'Japan': '🇯🇵',
+    'Italy': '🇮🇹',
+    'France': '🇫🇷',
+    'China': '🇨🇳',
+    'Belgium': '🇧🇪',
+    'Spain': '🇪🇸',
+    'United Kingdom': '🇬🇧',
+    'Netherlands': '🇳🇱',
+    'Others': '🌍'
+};
+
+// Initialize year dropdown (2005 to current year - 1)
+function initializeYearDropdown() {
+    const currentYear = new Date().getFullYear();
+    const yearSelect = document.getElementById('exportYear');
+    if (!yearSelect) return;
+
+    // Generate all years from current-1 down to 2005
+    for (let year = currentYear - 1; year >= 2005; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    }
+
+    // Set default to latest year (current - 1)
+    yearSelect.value = currentYear - 1;
+
+    // Add event listener for year change
+    yearSelect.addEventListener('change', function() {
+        const selectedYear = this.value;
+        loadExportDataForYear(selectedYear);
+    });
+}
+
+// Function to load export data for selected year
+async function loadExportDataForYear(year) {
+    console.log(`Loading export data for year: ${year}`);
+    
+    // Update year display
+    const yearDisplay = document.getElementById('selectedYearDisplay');
+    if (yearDisplay) {
+        yearDisplay.textContent = year;
+    }
+
+    try {
+        // Call API to get real data from database
+        const data = await fetchExportDataFromDatabase(year);
+        
+        // Update the chart and country list
+        updateExportVisualization(data);
+    } catch (error) {
+        console.error('Error loading export data:', error);
+        // Show error message to user
+        showErrorMessage('Failed to load export data for ' + year);
+    }
+}
+
+// Fetch export data from API
+async function fetchExportDataFromDatabase(year) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/exports/top-countries?year=${year}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        // Show forecast indicator if data is forecasted
+        updateForecastIndicator(result.is_forecast);
+        
+        // Transform API response to match expected format
+        return {
+            countries: result.countries || [],
+            others: result.others?.percentage || 0,
+            is_forecast: result.is_forecast || false
+        };
+    } catch (error) {
+        console.error('API Error:', error);
+        // Return empty data on error
+        return {
+            countries: [],
+            others: 0,
+            is_forecast: false
+        };
+    }
+}
+
+// Update forecast indicator
+function updateForecastIndicator(isForecast) {
+    const yearDisplay = document.getElementById('selectedYearDisplay');
+    if (!yearDisplay) return;
+    
+    if (isForecast) {
+        yearDisplay.innerHTML = `${yearDisplay.textContent} <span style="font-size: 0.8em; color: #f39c12;">(Forecast)</span>`;
+    }
+}
+
+// Update chart and country list with new data
+function updateExportVisualization(data) {
+    if (!data || !data.countries) return;
+
+    // Update country list
+    updateCountryList(data.countries, data.others);
+    
+    // Update pie chart
+    updatePieChart(data.countries, data.others);
+}
+
+// Update country list display
+function updateCountryList(countries, othersPercentage) {
+    const countryListContainer = document.getElementById('countryList');
+    if (!countryListContainer) return;
+
+    // Clear existing list
+    countryListContainer.innerHTML = '';
+
+    // Add top 9 countries (removed flag icons, added volume in tons)
+    countries.forEach(country => {
+        const row = document.createElement('div');
+        row.className = 'country-row-large';
+        const volumeInTons = Math.round(country.volume).toLocaleString();
+        row.innerHTML = `
+            <span class="country-name-large">${country.name}</span>
+            <span class="country-volume-large">${volumeInTons} tons</span>
+            <span class="country-percentage-large">${country.percentage}%</span>
+        `;
+        countryListContainer.appendChild(row);
+    });
+
+    // Update total
+    const total = countries.reduce((sum, c) => sum + c.percentage, 0);
+    const exportTotal = document.getElementById('exportTotal');
+    if (exportTotal) {
+        exportTotal.innerHTML = `Total exports represented: <strong>${total.toFixed(1)}%</strong> of global volume`;
+    }
+}
+
+// Update pie chart with new data
+function updatePieChart(countries, othersData) {
+    if (!exportPieChart) return;
+
+    const labels = [...countries.map(c => c.name), 'Others'];
+    const dataValues = [...countries.map(c => c.percentage), othersData.percentage || othersData];
+    const volumeData = [...countries.map(c => c.volume), othersData.volume || 0];
+
+    // Store volume data for tooltip
+    exportPieChart.data.datasets[0].volumeData = volumeData;
+    
+    // Update chart data
+    exportPieChart.data.labels = labels;
+    exportPieChart.data.datasets[0].data = dataValues;
+    
+    // Update tooltip to show volume in tons
+    exportPieChart.options.plugins.tooltip.callbacks.label = function(context) {
+        const volume = volumeData[context.dataIndex];
+        const volumeInThousandTons = (volume / 1000).toFixed(1);
+        return context.label + ': ' + context.parsed + '% (' + volumeInThousandTons + 'K tons)';
+    };
+    
+    // Animate the update
+    exportPieChart.update('active');
+
+    // Rebuild legend
+    buildDonutLegend();
+}
+
+// Show error message
+function showErrorMessage(message) {
+    const countryListContainer = document.getElementById('countryList');
+    if (countryListContainer) {
+        countryListContainer.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #c0392b;">
+                <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <p>${message}</p>
+            </div>
+        `;
+    }
+}
+
+// Initialize year dropdown when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeYearDropdown();
+    initializeProvinceSelector();
+    
+    // Load initial export data for default year
+    const currentYear = new Date().getFullYear();
+    loadExportDataForYear(currentYear - 1);  // Load data for 2024
+});
+
+// ============================================================================
+// PROVINCE SELECTOR FOR WEATHER DATA
+// ============================================================================
+
+// API_BASE_URL already defined at top of file
+let currentProvince = 'DakLak'; // Default province
+
+// Initialize province selector
+function initializeProvinceSelector() {
+    const provinceSelect = document.getElementById('provinceSelect');
+    if (!provinceSelect) return;
+
+    // Load initial data
+    loadWeatherData(currentProvince);
+
+    // Handle province change
+    provinceSelect.addEventListener('change', function() {
+        currentProvince = this.value;
+        loadWeatherData(currentProvince);
+    });
+}
+
+// Load weather data from API
+async function loadWeatherData(province) {
+    try {
+        // Get last 12 months data
+        const response = await fetch(`${API_BASE_URL}/weather/province/${province}?aggregate=recent12`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        // Update chart with real data
+        updateWeatherChart(result.data);
+        
+        // Update weather cards with stats
+        updateWeatherCards(result.stats);
+        
+    } catch (error) {
+        console.error('Error loading weather data:', error);
+        // Keep using placeholder data on error
+        console.log('Using placeholder data due to API error');
+    }
+}
+
+// Update weather chart with real data
+function updateWeatherChart(data) {
+    if (!climateChart || !data || data.length === 0) return;
+
+    // Map month numbers to names
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // For last 12 months, show actual year/month labels and data
+    const labels = data.map(record => monthNames[record.month - 1]);
+    const rainfallData = data.map(record => record.precipitation_sum || 0);
+    const tempData = data.map(record => record.temperature_mean || 0);
+
+    // Update chart labels and datasets
+    climateChart.data.labels = labels;
+    climateChart.data.datasets[0].data = rainfallData;
+    climateChart.data.datasets[1].data = tempData;
+    
+    // Animate update
+    climateChart.update('active');
+}
+
+// Update weather cards with statistics
+function updateWeatherCards(stats) {
+    if (!stats) return;
+
+    // Update Rainfall card
+    const rainfallCard = document.querySelector('[data-commodity="rainfall"]');
+    if (rainfallCard && stats.precipitation) {
+        const value = rainfallCard.querySelector('.price-value');
+        const change = rainfallCard.querySelector('.price-change span');
+        const changeIcon = rainfallCard.querySelector('.price-change i');
+        const changeContainer = rainfallCard.querySelector('.price-change');
+        
+        if (value) value.textContent = `${Math.round(stats.precipitation.avg)} mm`;
+        if (change) change.textContent = `${stats.precipitation.change_pct > 0 ? '↑' : '↓'}${Math.abs(stats.precipitation.change_pct).toFixed(1)}%`;
+        
+        // Update change direction
+        if (changeContainer) {
+            if (stats.precipitation.change_pct > 0) {
+                changeContainer.classList.remove('negative');
+                changeContainer.classList.add('positive');
+                if (changeIcon) changeIcon.className = 'fas fa-arrow-up';
+            } else {
+                changeContainer.classList.remove('positive');
+                changeContainer.classList.add('negative');
+                if (changeIcon) changeIcon.className = 'fas fa-arrow-down';
+            }
+        }
+        
+        // Update range info
+        const volumeSpan = rainfallCard.querySelector('.meta-item.volume span:last-child');
+        if (volumeSpan) {
+            const peakMonths = ['Jul', 'Aug']; // Could be calculated from data
+            volumeSpan.textContent = `Peak: ${peakMonths.join('-')}`;
+        }
+    }
+
+    // Update Temperature card
+    const tempCard = document.querySelector('[data-commodity="temperature"]');
+    if (tempCard && stats.temperature) {
+        const value = tempCard.querySelector('.price-value');
+        const change = tempCard.querySelector('.price-change span');
+        const changeIcon = tempCard.querySelector('.price-change i');
+        const changeContainer = tempCard.querySelector('.price-change');
+        
+        if (value) value.textContent = `${stats.temperature.avg.toFixed(1)}°C`;
+        if (change) change.textContent = `${stats.temperature.change_pct > 0 ? '↑' : '↓'}${Math.abs(stats.temperature.change_pct).toFixed(1)}%`;
+        
+        // Update change direction
+        if (changeContainer) {
+            if (stats.temperature.change_pct > 0) {
+                changeContainer.classList.remove('negative');
+                changeContainer.classList.add('positive');
+                if (changeIcon) changeIcon.className = 'fas fa-arrow-up';
+            } else {
+                changeContainer.classList.remove('positive');
+                changeContainer.classList.add('negative');
+                if (changeIcon) changeIcon.className = 'fas fa-arrow-down';
+            }
+        }
+        
+        // Update range info
+        const volumeSpan = tempCard.querySelector('.meta-item.volume span:last-child');
+        if (volumeSpan) {
+            volumeSpan.textContent = `Range: ${stats.temperature.min.toFixed(1)}-${stats.temperature.max.toFixed(1)}°C`;
+        }
+    }
+
+    // Update Humidity card
+    const humidityCard = document.querySelector('[data-commodity="humidity"]');
+    if (humidityCard && stats.humidity) {
+        const value = humidityCard.querySelector('.price-value');
+        const change = humidityCard.querySelector('.price-change span');
+        const changeIcon = humidityCard.querySelector('.price-change i');
+        const changeContainer = humidityCard.querySelector('.price-change');
+        
+        if (value) value.textContent = `${Math.round(stats.humidity.avg)}%`;
+        if (change) change.textContent = `${stats.humidity.change_pct > 0 ? '↑' : '↓'}${Math.abs(stats.humidity.change_pct).toFixed(1)}%`;
+        
+        // Update change direction
+        if (changeContainer) {
+            if (stats.humidity.change_pct > 0) {
+                changeContainer.classList.remove('negative');
+                changeContainer.classList.add('positive');
+                if (changeIcon) changeIcon.className = 'fas fa-arrow-up';
+            } else {
+                changeContainer.classList.remove('positive');
+                changeContainer.classList.add('negative');
+                if (changeIcon) changeIcon.className = 'fas fa-arrow-down';
+            }
+        }
+        
+        // Update optimal range
+        const volumeSpan = humidityCard.querySelector('.meta-item.volume span:last-child');
+        if (volumeSpan) {
+            volumeSpan.textContent = `Optimal: 60-80%`;
+        }
+    }
+}
