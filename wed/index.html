@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vietnam Coffee Data Portal</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="contact-modern.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -66,6 +67,25 @@
                 <div class="chart-card">
                         <div class="chart-card-header">
                             <h3>Export Volume & Prices (2005-2024) <span class="unit-label">Tons & USD/ton</span></h3>
+                        </div>
+                        <div class="production-toggles-wrapper">
+                            <div class="production-toggles" role="group" aria-label="Toggle datasets">
+                                <label class="prod-checkbox-label">
+                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="volume" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">Export Volume</span>
+                                </label>
+                                <label class="prod-checkbox-label">
+                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="worldPrice" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">World Price</span>
+                                </label>
+                                <label class="prod-checkbox-label">
+                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="vnPrice" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">VN Price</span>
+                                </label>
+                            </div>
                         </div>
                         <div class="chart-container">
                             <canvas id="priceChart"></canvas>
@@ -280,10 +300,22 @@
                         <h3>Production Trends <span class="unit-label">(Tons / ha / t/ha)</span></h3>
                     </div>
                     <div class="production-toggles-wrapper">
-                        <div class="production-toggles" role="group" aria-label="Focus dataset">
-                            <button class="prod-toggle-btn active" data-focus="production" aria-pressed="true">Production</button>
-                            <button class="prod-toggle-btn" data-focus="area" aria-pressed="false">Area</button>
-                            <button class="prod-toggle-btn" data-focus="yield" aria-pressed="false">Yield</button>
+                        <div class="production-toggles" role="group" aria-label="Toggle datasets">
+                            <label class="prod-checkbox-label">
+                                <input type="checkbox" class="prod-checkbox" data-dataset="production" checked>
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">Production (Tons)</span>
+                            </label>
+                            <label class="prod-checkbox-label">
+                                <input type="checkbox" class="prod-checkbox" data-dataset="area" checked>
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">Area (ha)</span>
+                            </label>
+                            <label class="prod-checkbox-label">
+                                <input type="checkbox" class="prod-checkbox" data-dataset="yield" checked>
+                                <span class="checkbox-custom"></span>
+                                <span class="checkbox-text">Yield (t/ha)</span>
+                            </label>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -497,57 +529,92 @@
 
     <!-- News & Reports -->
     <section id="news" class="news-section">
-        <div class="container">
-            <h2 class="section-title">News & Reports</h2>
-            <div class="news-grid">
-                <article class="news-card">
-                    <div class="news-icon"></div>
-                    <h3>Record Exports Q3</h3>
-                    <p>2.1M tons exported</p>
-                    <span class="news-date">Oct 25, 2025</span>
-                </article>
-                <article class="news-card">
-                    <div class="news-icon">🌱</div>
-                    <h3>Sustainable Farming</h3>
-                    <p>Eco-friendly methods boost quality</p>
-                    <span class="news-date">Oct 22, 2025</span>
-                </article>
-                <article class="news-card">
-                    <div class="news-icon">🌍</div>
-                    <h3>Global Market Growth</h3>
-                    <p>Vietnam's strategic position expands</p>
-                    <span class="news-date">Oct 20, 2025</span>
-                </article>
-                <article class="news-card">
-                    <div class="news-icon">🤖</div>
-                    <h3>AI Quality Control</h3>
-                    <p>Smart processing technology</p>
-                    <span class="news-date">Oct 18, 2025</span>
-                </article>
-                <article class="news-card">
-                    <div class="news-icon">🚛</div>
-                    <h3>Cold-Chain Innovation</h3>
-                    <p>12% reduction in losses</p>
-                    <span class="news-date">Oct 17, 2025</span>
-                </article>
-                <article class="news-card">
-                    <div class="news-icon">💰</div>
-                    <h3>Green Finance</h3>
-                    <p>$50M sustainability fund launched</p>
-                    <span class="news-date">Oct 15, 2025</span>
-                </article>
-            </div>
-        </div>
-    </section>
-                    <div class="news-content">
-                        <h3>Green Financing Fuels Sustainable Coffee Projects</h3>
-                        <p>Banks expand low-interest credit lines for water-efficient irrigation and solar drying installations across major cooperatives...</p>
-                        <div class="news-meta">
-                            <span class="news-date">Oct 15, 2025</span>
-                            <button class="read-more-btn">Read More</button>
+        <div class="news-container">
+            <!-- Main Content -->
+            <div class="news-main">
+                <header class="news-header">
+                    <h1 class="news-main-title">News & Reports</h1>
+                </header>
+
+                <div class="news-list">
+                    <!-- News Item 1 - Giá cà phê -->
+                    <article class="news-item">
+                        <div class="news-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop" alt="Coffee beans price">
+                            <div class="news-category technology">GIÁ CÀ PHÊ</div>
                         </div>
-                    </div>
-                </article>
+                        <div class="news-item-content">
+                            <h3 class="news-item-title">Giá cà phê Robusta tăng mạnh lên 4.850 USD/tấn</h3>
+                            <p class="news-item-desc">Giá cà phê Robusta trên sàn London tăng 2,3% trong tuần qua, đạt mức cao nhất trong 15 năm do lo ngại nguồn cung từ Việt Nam giảm.</p>
+                            <span class="news-item-date">Nov 03, 2025</span>
+                        </div>
+                    </article>
+
+                    <!-- News Item 2 - Xuất khẩu -->
+                    <article class="news-item">
+                        <div class="news-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=400&h=300&fit=crop" alt="Coffee export">
+                            <div class="news-category education">XUẤT KHẨU</div>
+                        </div>
+                        <div class="news-item-content">
+                            <h3 class="news-item-title">Kim ngạch xuất khẩu 10 tháng đạt 4,8 tỷ USD</h3>
+                            <p class="news-item-desc">Xuất khẩu cà phê Việt Nam 10 tháng đầu năm đạt 1,45 triệu tấn, trị giá 4,8 tỷ USD, tăng 14,2% về lượng và 38,5% về giá trị so với cùng kỳ.</p>
+                            <span class="news-item-date">Nov 02, 2025</span>
+                        </div>
+                    </article>
+
+                    <!-- News Item 3 - Dự báo mùa vụ -->
+                    <article class="news-item">
+                        <div class="news-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop" alt="Coffee farm">
+                            <div class="news-category business">DỰ BÁO</div>
+                        </div>
+                        <div class="news-item-content">
+                            <h3 class="news-item-title">Vụ cà phê 2025-2026 dự kiến đạt 1,7 triệu tấn</h3>
+                            <p class="news-item-desc">Sản lượng cà phê niên vụ mới được dự báo giảm 10-15% do ảnh hưởng hạn hán kéo dài tại Tây Nguyên trong quý 1/2025.</p>
+                            <span class="news-item-date">Oct 30, 2025</span>
+                        </div>
+                    </article>
+
+                    <!-- News Item 4 - Thị trường trong nước -->
+                    <article class="news-item">
+                        <div class="news-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1610889556528-9a770e32642f?w=400&h=300&fit=crop" alt="Coffee market">
+                            <div class="news-category technology">THỊ TRƯỜNG</div>
+                        </div>
+                        <div class="news-item-content">
+                            <h3 class="news-item-title">Giá cà phê nội địa tại Đắk Lắk đạt 128.000 đồng/kg</h3>
+                            <p class="news-item-desc">Giá thu mua tại Tây Nguyên tiếp tục tăng mạnh, cao nhất ở Đắk Lắk 128.000 đ/kg, tăng 4.000 đ/kg so với tuần trước do hàng về ít.</p>
+                            <span class="news-item-date">Oct 28, 2025</span>
+                        </div>
+                    </article>
+
+                    <!-- News Item 5 - Chính sách -->
+                    <article class="news-item">
+                        <div class="news-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop" alt="Coffee policy">
+                            <div class="news-category business">CHÍNH SÁCH</div>
+                        </div>
+                        <div class="news-item-content">
+                            <h3 class="news-item-title">Bộ NN&PTNT hỗ trợ 500 tỷ đồng tái canh cà phê</h3>
+                            <p class="news-item-desc">Chương trình tái canh cải tạo vườn cà phê già cỗi với mục tiêu 50.000 ha tại Tây Nguyên, nâng cao năng suất và chất lượng.</p>
+                            <span class="news-item-date">Oct 25, 2025</span>
+                        </div>
+                    </article>
+
+                    <!-- News Item 6 - Công nghệ -->
+                    <article class="news-item">
+                        <div class="news-thumbnail">
+                            <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop" alt="Coffee technology">
+                            <div class="news-category technology">CÔNG NGHỆ</div>
+                        </div>
+                        <div class="news-item-content">
+                            <h3 class="news-item-title">Ứng dụng AI phân loại cà phê tại 20 nhà máy</h3>
+                            <p class="news-item-desc">Hệ thống AI phân loại tự động giúp tăng 25% hiệu quả chế biến, đảm bảo chất lượng đồng đều cho xuất khẩu.</p>
+                            <span class="news-item-date">Oct 22, 2025</span>
+                        </div>
+                    </article>
+                </div>
             </div>
         </div>
     </section>
@@ -603,110 +670,181 @@
 
     <!-- Contact Section -->
     <section id="contact" class="contact-section">
-        <div class="container">
-            <h2 class="section-title">Get In Touch</h2>
-            <div class="contact-wrapper">
-                <div class="contact-card">
-                    <div class="contact-header">
-                        <div class="contact-icon">
+        <div class="contact-container">
+            <!-- Hero Header -->
+            <div class="contact-hero-header">
+                <span class="contact-badge">Contact Us</span>
+                <h2 class="contact-hero-title">Let's Connect</h2>
+                <p class="contact-hero-description">Have questions about Vietnam's coffee market? We're here to help with data insights and analytics.</p>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="contact-main-grid">
+                <!-- Company Info Card -->
+                <div class="company-info-card">
+                    <div class="company-header">
+                        <div class="company-logo">
                             <i class="fas fa-coffee"></i>
                         </div>
-                        <h3>Vietnam Coffee Data Portal</h3>
-                        <p class="contact-tagline">Bringing transparency and insights to Vietnam's coffee industry through data-driven analytics.</p>
+                        <div>
+                            <h3 class="company-title">Vietnam Coffee Data Portal</h3>
+                            <p class="company-subtitle">Data-driven insights for coffee industry</p>
+                        </div>
                     </div>
-                    
-                    <div class="contact-grid">
-                        <div class="info-box">
-                            <div class="info-icon">
+
+                    <div class="contact-info-grid">
+                        <div class="contact-info-box">
+                            <div class="info-icon email-gradient">
                                 <i class="fas fa-envelope"></i>
                             </div>
-                            <div class="info-content">
-                                <h4>Email</h4>
-                                <a href="mailto:phamtien@coffeedata.vn">phamtien@coffeedata.vn</a>
+                            <div class="info-text">
+                                <span class="info-label">Email Address</span>
+                                <a href="mailto:phamtien@coffeedata.vn" class="info-link">phamtien@coffeedata.vn</a>
                             </div>
                         </div>
-                        
-                        <div class="info-box">
-                            <div class="info-icon">
+
+                        <div class="contact-info-box">
+                            <div class="info-icon phone-gradient">
                                 <i class="fas fa-phone"></i>
                             </div>
-                            <div class="info-content">
-                                <h4>Phone</h4>
-                                <a href="tel:+84123456789">+84 123 456 789</a>
+                            <div class="info-text">
+                                <span class="info-label">Phone Number</span>
+                                <a href="tel:+84123456789" class="info-link">+84 123 456 789</a>
                             </div>
                         </div>
-                        
-                        <div class="info-box">
-                            <div class="info-icon">
+
+                        <div class="contact-info-box">
+                            <div class="info-icon location-gradient">
                                 <i class="fas fa-map-marker-alt"></i>
                             </div>
-                            <div class="info-content">
-                                <h4>Location</h4>
-                                <p>Ho Chi Minh City, Vietnam</p>
+                            <div class="info-text">
+                                <span class="info-label">Office Location</span>
+                                <p class="info-link">Ho Chi Minh City, Vietnam</p>
+                            </div>
+                        </div>
+
+                        <div class="contact-info-box">
+                            <div class="info-icon time-gradient">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="info-text">
+                                <span class="info-label">Working Hours</span>
+                                <p class="info-link">Mon - Fri: 9:00 AM - 6:00 PM</p>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="quick-links-section">
-                        <h4>Quick Links</h4>
-                        <div class="links-grid">
-                            <a href="#market" class="quick-link">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Market Data</span>
-                            </a>
-                            <a href="#exports" class="quick-link">
-                                <i class="fas fa-globe-asia"></i>
-                                <span>Export Insights</span>
-                            </a>
-                            <a href="#forecast" class="quick-link">
-                                <i class="fas fa-brain"></i>
-                                <span>AI Forecast</span>
-                            </a>
-                            <a href="#news" class="quick-link">
-                                <i class="fas fa-newspaper"></i>
-                                <span>Latest News</span>
-                            </a>
+                </div>
+
+                <!-- Quick Navigation Card -->
+                <div class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="fas fa-compass"></i>
+                        <h4>Quick Navigation</h4>
+                    </div>
+                    <div class="feature-links">
+                        <a href="#market" class="feature-link">
+                            <i class="fas fa-chart-line"></i>
+                            <div class="feature-link-content">
+                                <strong>Market Analytics</strong>
+                                <span>Real-time coffee prices</span>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="#exports" class="feature-link">
+                            <i class="fas fa-globe-americas"></i>
+                            <div class="feature-link-content">
+                                <strong>Export Data</strong>
+                                <span>International trade insights</span>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="#forecast" class="feature-link">
+                            <i class="fas fa-brain"></i>
+                            <div class="feature-link-content">
+                                <strong>AI Predictions</strong>
+                                <span>Price forecasting</span>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="#news" class="feature-link">
+                            <i class="fas fa-newspaper"></i>
+                            <div class="feature-link-content">
+                                <strong>Latest News</strong>
+                                <span>Industry updates</span>
+                            </div>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Data Sources Card -->
+                <div class="feature-card">
+                    <div class="feature-card-header">
+                        <i class="fas fa-database"></i>
+                        <h4>Trusted Data Sources</h4>
+                    </div>
+                    <div class="data-sources-grid">
+                        <div class="data-source-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Ministry of Agriculture</span>
+                        </div>
+                        <div class="data-source-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Vietnam Coffee Association</span>
+                        </div>
+                        <div class="data-source-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>ICO - International Coffee Org.</span>
+                        </div>
+                        <div class="data-source-item">
+                            <i class="fas fa-check-circle"></i>
+                            <span>Weather API Services</span>
                         </div>
                     </div>
-                    
-                    <div class="data-sources-section">
-                        <h4>Data Sources</h4>
-                        <div class="sources-list">
-                            <a href="#" class="source-link">
-                                <i class="fas fa-seedling"></i>
-                                <span>Ministry of Agriculture</span>
-                            </a>
-                            <a href="#" class="source-link">
-                                <i class="fas fa-coffee"></i>
-                                <span>Vietnam Coffee Association</span>
-                            </a>
-                            <a href="#" class="source-link">
-                                <i class="fas fa-globe"></i>
-                                <span>ICO - International Coffee</span>
-                            </a>
-                            <a href="#" class="source-link">
-                                <i class="fas fa-cloud-sun"></i>
-                                <span>Weather APIs</span>
-                            </a>
-                        </div>
+                </div>
+            </div>
+
+            <!-- Bottom Section: Social & Stats -->
+            <div class="contact-bottom-grid">
+                <!-- Social Media -->
+                <div class="social-card">
+                    <h4 class="social-card-title">Follow Our Updates</h4>
+                    <div class="social-buttons-grid">
+                        <a href="#" class="social-button facebook" aria-label="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                            <span>Facebook</span>
+                        </a>
+                        <a href="#" class="social-button twitter" aria-label="Twitter">
+                            <i class="fab fa-twitter"></i>
+                            <span>Twitter</span>
+                        </a>
+                        <a href="#" class="social-button linkedin" aria-label="LinkedIn">
+                            <i class="fab fa-linkedin-in"></i>
+                            <span>LinkedIn</span>
+                        </a>
+                        <a href="#" class="social-button github" aria-label="GitHub">
+                            <i class="fab fa-github"></i>
+                            <span>GitHub</span>
+                        </a>
                     </div>
-                    
-                    <div class="social-section">
-                        <h4>Follow Us</h4>
-                        <div class="social-links">
-                            <a href="#" class="social-link" title="Facebook">
-                                <i class="fab fa-facebook"></i>
-                            </a>
-                            <a href="#" class="social-link" title="Twitter">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a href="#" class="social-link" title="LinkedIn">
-                                <i class="fab fa-linkedin"></i>
-                            </a>
-                            <a href="#" class="social-link" title="GitHub">
-                                <i class="fab fa-github"></i>
-                            </a>
-                        </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-card-modern">
+                    <div class="stat-box">
+                        <i class="fas fa-database"></i>
+                        <div class="stat-value">10K+</div>
+                        <div class="stat-name">Data Points</div>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <div class="stat-value">50+</div>
+                        <div class="stat-name">Provinces</div>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-sync-alt"></i>
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-name">Updates</div>
                     </div>
                 </div>
             </div>

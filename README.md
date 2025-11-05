@@ -89,12 +89,15 @@ coffee-export-project/
 │   ├── index.html                 # Frontend HTML
 │   ├── script.js                  # Frontend JavaScript (Chart.js)
 │   ├── styles.css                 # Frontend CSS
-│   └── create_production_by_province.py  # Production data management
+│   ├── test_forecast.py           # Forecasting tests
+│   └── check_*.py                 # Data validation scripts
 │
 ├── collect_data/                  # Data collection tools
 │   ├── Data_coffee.csv            # Main coffee data
 │   ├── sync_coffee.py             # Database sync script
-│   └── sync_weather.py            # Weather data sync
+│   ├── sync_weather.py            # Weather data sync
+│   ├── create_production_by_province.py
+│   └── beautiful_soup_4_demo.ipynb
 │
 ├── visualize/                     # Data visualization
 │   └── scatterplot_production.ipynb

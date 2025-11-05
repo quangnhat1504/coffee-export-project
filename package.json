@@ -4,11 +4,10 @@
   "description": "Vietnam Coffee Export Data Portal with Flask API and Frontend",
   "main": "index.js",
   "scripts": {
-    "install-python": "pip install -r requirements.txt",
-    "start-api": "cd wed && python api.py",
-    "start-frontend": "cd wed && npx http-server -p 8080 -o",
-    "dev": "concurrently \"npm run start-api\" \"npm run start-frontend\"",
-    "start": "npm run dev",
+    "postinstall": "pip install -r requirements.txt",
+    "dev": "cd wed && python api.py",
+    "api": "cd wed && python api.py",
+    "check": "curl http://localhost:5000/api/health",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

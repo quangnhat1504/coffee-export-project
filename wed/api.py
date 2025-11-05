@@ -2,20 +2,36 @@
 Flask API for Vietnam Coffee Data Portal
 Provides weather data by province from Aiven MySQL database
 """
+# -*- coding: utf-8 -*-
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
 import pandas as pd
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+import sys
+import traceback
+
+# Set UTF-8 encoding for stdout
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # Load environment variables
 load_dotenv(dotenv_path='../.env')
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend requests
+
+# Configure CORS to allow all origins (important for local development)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # Database connection
 DB_HOST = os.getenv('HOST')
@@ -24,29 +40,239 @@ DB_PASSWORD = os.getenv('PASSWORD')
 DB_PORT = os.getenv('PORT', '19034')
 DB_NAME = os.getenv('DB', 'defaultdb')
 
-connection_string = (
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    f"?ssl_disabled=true"
-)
+# Global engine variable
+engine = None
 
-engine = create_engine(
-    connection_string,
-    pool_pre_ping=True,
-    pool_recycle=3600,
-    echo=False
-)
+# Create database engine with multiple fallback strategies
+def create_db_engine():
+    """Create database engine with robust fallback strategies"""
+    global engine
+    
+    if not all([DB_HOST, DB_USER, DB_PASSWORD]):
+        raise Exception("Missing required database credentials in .env file")
+    
+    base_url = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    
+    # Strategy 1: Try without SSL (most reliable for Aiven)
+    try:
+        print("🔄 Attempting connection without SSL...")
+        test_engine = create_engine(
+            base_url,
+            connect_args={
+                "ssl": False,
+                "connect_timeout": 30,
+                "read_timeout": 30,
+                "write_timeout": 30
+            },
+            pool_pre_ping=True,
+            pool_recycle=3600,
+            pool_size=5,
+            max_overflow=10,
+            echo=False
+        )
+        # Test connection
+        with test_engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            conn.commit()
+        print("✅ Database connected successfully (without SSL)")
+        return test_engine
+    except Exception as e:
+        print(f"⚠️  Connection without SSL failed: {str(e)[:100]}")
+    
+    # Strategy 2: Try with SSL if certificate available
+    ca_cert = os.getenv('CA_CERT')
+    if ca_cert and ca_cert.strip():
+        try:
+            print("🔄 Attempting connection with SSL certificate...")
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as f:
+                f.write(ca_cert)
+                cert_file = f.name
+            
+            test_engine = create_engine(
+                base_url,
+                connect_args={
+                    "ssl": {"ca": cert_file},
+                    "connect_timeout": 30
+                },
+                pool_pre_ping=True,
+                pool_recycle=3600,
+                pool_size=5,
+                max_overflow=10,
+                echo=False
+            )
+            # Test connection
+            with test_engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                conn.commit()
+            print("✅ Database connected successfully (with SSL)")
+            return test_engine
+        except Exception as ssl_error:
+            print(f"⚠️  SSL connection failed: {str(ssl_error)[:100]}")
+    
+    # Strategy 3: Try with default SSL mode
+    try:
+        print("🔄 Attempting connection with default SSL mode...")
+        test_engine = create_engine(
+            base_url,
+            connect_args={"connect_timeout": 30},
+            pool_pre_ping=True,
+            pool_recycle=3600,
+            pool_size=5,
+            max_overflow=10,
+            echo=False
+        )
+        # Test connection
+        with test_engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            conn.commit()
+        print("✅ Database connected successfully (default mode)")
+        return test_engine
+    except Exception as default_error:
+        print(f"⚠️  Default connection failed: {str(default_error)[:100]}")
+    
+    # All strategies failed
+    raise Exception(
+        "❌ Unable to connect to database after trying all strategies. "
+        "Please check your .env file and network connection."
+    )
+
+# Initialize database connection
+try:
+    engine = create_db_engine()
+except Exception as e:
+    print(f"❌ CRITICAL ERROR: Database initialization failed: {e}")
+    print("   The API will start but database operations will fail.")
+    print("   Please check your .env file and database credentials.")
+    engine = None
 
 # Province name mapping (database -> display)
 PROVINCE_NAMES = {
-    'DakLak': 'Đắk Lắk',
+    'DakLak': 'Dak Lak',
     'GiaLai': 'Gia Lai',
-    'DakNong': 'Đắk Nông',
+    'DakNong': 'Dak Nong',
     'KonTum': 'Kon Tum',
-    'LamDong': 'Lâm Đồng'
+    'LamDong': 'Lam Dong'
 }
+
+# ============================================================================
+# ERROR HANDLERS & HELPER FUNCTIONS
+# ============================================================================
+
+def check_database_connection():
+    """Check if database is connected and available"""
+    if engine is None:
+        return False, "Database not initialized"
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+            conn.commit()
+        return True, "Database connected"
+    except Exception as e:
+        return False, f"Database connection error: {str(e)}"
+
+def safe_db_operation(operation_func):
+    """Decorator to safely execute database operations with error handling"""
+    def wrapper(*args, **kwargs):
+        try:
+            # Check database connection first
+            is_connected, message = check_database_connection()
+            if not is_connected:
+                return jsonify({
+                    'error': 'Database connection unavailable',
+                    'details': message,
+                    'success': False
+                }), 503
+            
+            # Execute the operation
+            return operation_func(*args, **kwargs)
+        except OperationalError as e:
+            print(f"❌ Database operational error in {operation_func.__name__}: {e}")
+            return jsonify({
+                'error': 'Database operational error',
+                'details': str(e),
+                'success': False
+            }), 503
+        except SQLAlchemyError as e:
+            print(f"❌ SQLAlchemy error in {operation_func.__name__}: {e}")
+            return jsonify({
+                'error': 'Database query error',
+                'details': str(e),
+                'success': False
+            }), 500
+        except Exception as e:
+            print(f"❌ Unexpected error in {operation_func.__name__}: {e}")
+            traceback.print_exc()
+            return jsonify({
+                'error': 'Internal server error',
+                'details': str(e),
+                'success': False
+            }), 500
+    wrapper.__name__ = operation_func.__name__
+    return wrapper
+
+# Global error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        'error': 'Endpoint not found',
+        'message': 'The requested API endpoint does not exist',
+        'success': False
+    }), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({
+        'error': 'Internal server error',
+        'message': 'An unexpected error occurred',
+        'success': False
+    }), 500
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    print(f"❌ Unhandled exception: {e}")
+    traceback.print_exc()
+    return jsonify({
+        'error': 'Unexpected error',
+        'message': str(e),
+        'success': False
+    }), 500
+
+# ============================================================================
+# API ENDPOINTS
+# ============================================================================
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint - always returns even if DB is down"""
+    db_status = "unknown"
+    db_message = "Not checked"
+    
+    if engine is None:
+        db_status = "disconnected"
+        db_message = "Database engine not initialized"
+    else:
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+                conn.commit()
+            db_status = "connected"
+            db_message = "Database operational"
+        except Exception as e:
+            db_status = "error"
+            db_message = str(e)[:100]
+    
+    return jsonify({
+        'status': 'healthy' if db_status == 'connected' else 'degraded',
+        'api': 'running',
+        'database': db_status,
+        'message': db_message,
+        'timestamp': datetime.now().isoformat()
+    }), 200 if db_status == 'connected' else 503
 
 
 @app.route('/api/weather/province/<province>', methods=['GET'])
+@safe_db_operation
 def get_weather_by_province(province):
     """
     Get weather data for a specific province
@@ -220,6 +446,7 @@ def get_weather_summary():
 
 
 @app.route('/api/exports/top-countries', methods=['GET'])
+@safe_db_operation
 def get_top_export_countries():
     """
     Get top 9 importing countries by year
@@ -446,6 +673,7 @@ def get_available_years():
 
 
 @app.route('/api/production', methods=['GET'])
+@safe_db_operation
 def get_production_data():
     """
     Get production data with missing data handling via interpolation
@@ -574,6 +802,7 @@ def get_production_by_province(province):
 
 
 @app.route('/api/export', methods=['GET'])
+@safe_db_operation
 def get_export_data():
     """
     Get coffee export data with time series interpolation for missing values
@@ -667,19 +896,50 @@ def get_export_data():
         }), 500
 
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    try:
-        # Test database connection
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        return jsonify({'status': 'healthy', 'database': 'connected'})
-    except Exception as e:
-        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
-
+# ============================================================================
+# MAIN
+# ============================================================================
 
 if __name__ == '__main__':
-    print("Starting Vietnam Coffee Data Portal API...")
-    print(f"Database: {DB_HOST}:{DB_PORT}/{DB_NAME}")
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    print("\n" + "="*70)
+    print("🚀 Vietnam Coffee Data Portal API")
+    print("="*70)
+    print(f"📍 Database: {DB_HOST}:{DB_PORT}/{DB_NAME}")
+    
+    # Check database connection status
+    if engine:
+        is_connected, message = check_database_connection()
+        if is_connected:
+            print(f"✅ Database: {message}")
+        else:
+            print(f"⚠️  Database: {message}")
+            print("   API will start but some endpoints may fail")
+    else:
+        print("❌ Database: Not initialized")
+        print("   API will start but database operations will fail")
+    
+    print(f"\n🌐 API Server starting on:")
+    print(f"   - Local:   http://localhost:5000")
+    print(f"   - Network: http://0.0.0.0:5000")
+    print(f"\n📚 Available endpoints:")
+    print(f"   - Health Check:      /api/health")
+    print(f"   - Production Data:   /api/production")
+    print(f"   - Export Data:       /api/export")
+    print(f"   - Weather Data:      /api/weather/province/<province>")
+    print(f"   - Top Countries:     /api/exports/top-countries")
+    print("="*70 + "\n")
+    
+    try:
+        app.run(
+            debug=True, 
+            host='0.0.0.0', 
+            port=5000,
+            threaded=True,
+            use_reloader=True
+        )
+    except KeyboardInterrupt:
+        print("\n\n👋 API Server stopped by user")
+    except Exception as e:
+        print(f"\n\n❌ API Server error: {e}")
+        traceback.print_exc()
+
