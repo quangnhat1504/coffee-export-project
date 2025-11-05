@@ -1,8 +1,33 @@
-# Coffee Database Project (ADY 201)
+# Vietnam Coffee Data Portal 🌱☕
 
-A comprehensive coffee data collection, processing, and analysis system. This project includes web scraping tools for coffee price data, data processing pipelines, and MySQL database integration for storing and analyzing coffee market information.
+A comprehensive coffee data collection, analysis, and visualization system for Vietnam coffee export market. This project includes a Flask API backend, interactive web dashboard with Chart.js visualizations, and automated data collection tools.
 
-## Table of Contents
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.8+
+- Node.js 18+
+- pip & npm
+
+### Installation & Run
+
+```bash
+# 1. Install Python dependencies
+pip install -r requirements.txt
+
+# 2. Install Node.js dependencies
+npm install
+
+# 3. Run the development server (API + Frontend)
+npm run dev
+```
+
+The application will automatically:
+- ✅ Start Flask API on `http://localhost:5000`
+- ✅ Start Frontend on `http://localhost:8080`
+- ✅ Open your browser
+
+## 📋 Table of Contents
 
 - [Project Overview](#project-overview)
 - [Features](#features)
@@ -12,74 +37,100 @@ A comprehensive coffee data collection, processing, and analysis system. This pr
 - [Components](#components)
 - [Database Schema](#database-schema)
 - [Data Sources](#data-sources)
+- [API Documentation](#api-documentation)
 - [Requirements](#requirements)
 - [Contributing](#contributing)
 
 ## Project Overview
 
 This project provides a complete solution for:
+- **Web Dashboard**: Interactive data visualization with Chart.js
+- **REST API**: Flask-based API for coffee export data
 - **Web Scraping**: Automated collection of coffee prices from various online sources
 - **Data Processing**: Transforming raw CSV data into structured database formats
 - **Database Management**: Storing and managing coffee data in MySQL (Aiven Cloud)
 - **Data Analysis**: Exploratory data analysis and visualization using Jupyter notebooks
 
-## Features
+## ✨ Features
 
-- Multiple web scraping approaches (Beautiful Soup, Selenium)
-- Automated data synchronization with MySQL database
-- Data processing and transformation pipelines
-- Fallback data generation for testing
-- Exploratory data analysis capabilities
-- Error handling and data validation
-- Support for Vietnamese coffee market data
+### Web Dashboard
+- 📊 Interactive charts with Chart.js (line charts, pie charts, dual Y-axis)
+- 🌍 Real-time export data visualization (2005-2024)
+- 💰 Market overview with export values and price trends
+- 🌦️ Weather & climate impact analysis
+- 🗺️ Export insights by country
+- 📈 Time series forecasting
 
-## Project Structure
+### Backend API
+- 🔌 RESTful API with Flask
+- 🗄️ MySQL database integration (Aiven Cloud)
+- 📡 Real-time data endpoints
+- 🔄 Automatic data interpolation for missing values
+- ⚡ CORS-enabled for cross-origin requests
+
+### Data Collection
+- 🕷️ Multiple web scraping approaches (Beautiful Soup, Selenium)
+- 🔄 Automated data synchronization with MySQL database
+- 📊 Data processing and transformation pipelines
+- 🛡️ Error handling and data validation
+- 🇻🇳 Support for Vietnamese coffee market data
+
+## 📁 Project Structure
 
 ```
-coffee_dabase/
-├── Data Files
-│   ├── Data_coffee.csv                           # Main coffee data (production, weather, export)
-│   ├── Thi_phan_3_thi_truong_chinh.csv          # Market trade data
-│   ├── coffee_prices_demo.csv                    # Demo coffee price data
-│   └── processed_coffee_data.csv                 # Processed data output
+coffee-export-project/
+├── package.json                    # Node.js configuration & npm scripts
+├── requirements.txt                # Python dependencies
+├── README.md                       # Main documentation
 │
-├── Web Scrapers
-│   ├── coffee_price_scraper.py                   # Basic Beautiful Soup scraper
-│   ├── coffee_price_scraper_selenium.py         # Selenium-based scraper (bypass Cloudflare)
-│   ├── coffee_price_scraper_final.py            # Complete scraper with error handling
-│   ├── coffee_price_scraper_simple.py           # Simplified scraper
-│   ├── real_scraper.py                          # Production scraper
-│   ├── simple_scraper.py                        # Minimal scraper implementation
-│   └── coffee_price_demo.py                     # Demo scraper with sample data
+├── web/                           # Web application
+│   ├── backend/
+│   │   └── api.py                 # Flask API with caching & compression
+│   ├── scripts/
+│   │   ├── data_generator.py      # Production data generator
+│   │   └── news_updater.py        # News content updater
+│   ├── static/
+│   │   ├── css/
+│   │   │   ├── styles.css         # Main styles
+│   │   │   └── contact-modern.css # Contact page styles
+│   │   └── js/
+│   │       └── script.js          # Frontend JavaScript (Chart.js + lazy loading)
+│   └── templates/
+│       ├── index.html             # Main dashboard
+│       └── news_content.html      # News page
 │
-├── Database Sync
-│   ├── sync_coffee.py                           # Main data synchronization script
-│   ├── main_coffee.ipynb                        # Notebook for database operations
-│   └── unprocessing_sql.py                      # Raw data processing script
+├── collect_data/                  # Data collection tools
+│   ├── Data_coffee.csv            # Main coffee data
+│   ├── coffee_data_sync.py        # Coffee data sync to MySQL
+│   ├── weather_data_sync.py       # Weather data sync to MySQL
+│   └── Thi_phan_3_thi_truong_chinh.csv
 │
-├── Analysis Notebooks
-│   ├── main_coffee.ipynb                        # Main analysis notebook
-│   ├── eda_data_coffee.ipynb                    # Exploratory data analysis
-│   └── beautiful_soup_4_demo.ipynb              # Beautiful Soup demonstration
+├── visualize/                     # Data visualization & analysis
+│   ├── charts_generator.py        # Chart generation scripts
+│   ├── production_analysis.ipynb  # Production scatter plot analysis
+│   └── time_series_analysis.ipynb # Time series forecasting
 │
-├── Testing
-│   ├── test_scraper.py                          # Scraper tests
-│   ├── test_selenium.py                         # Selenium tests
-│   └── test.py                                  # General tests
+└── docs/                          # Documentation
+    ├── QUICK_START.md
+    ├── PROJECT_STRUCTURE.md
+    ├── PERFORMANCE_OPTIMIZATIONS.md
+    └── ...
 │
-└── Documentation
-    ├── README.md                                 # This file
-    └── HUONG_DAN_SU_DUNG_COFFEE_SCRAPER.md     # Vietnamese scraper guide
+├── visualize/                     # Data visualization
+│   └── scatterplot_production.ipynb
+│
+└── Time_Series.ipynb              # Time series analysis
 ```
 
-## Setup & Installation
+## 🛠️ Setup & Installation
 
 ### Prerequisites
 
-- Python 3.8+
-- MySQL/MariaDB database (or Aiven Cloud MySQL)
-- Google Chrome (for Selenium scrapers)
-- ChromeDriver (auto-installed with webdriver-manager)
+- **Python 3.8+**
+- **Node.js 18+** 
+- **npm** or **yarn**
+- **MySQL/MariaDB database** (or Aiven Cloud MySQL)
+- **Google Chrome** (for Selenium scrapers)
 
 ### Installation
 
@@ -89,12 +140,17 @@ coffee_dabase/
    cd coffee-export-project
    ```
 
-2. **Install dependencies**
+2. **Install Python dependencies**
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **⚠️ IMPORTANT: Configure environment variables**
+3. **Install Node.js dependencies**
+   ```bash
+   npm install
+   ```
+
+4. **⚠️ IMPORTANT: Configure environment variables**
    
    **NEVER commit sensitive data to Git!** Follow these steps:
 
@@ -126,14 +182,50 @@ coffee_dabase/
 
    > Security Note: The `.env` file contains sensitive credentials and is automatically ignored by Git. Only commit `.env.example` which contains template values.
 
-4. **Verify setup**
+5. **Verify setup**
    
    Check that the environment variables are loaded correctly:
    ```bash
    python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('.env loaded!' if os.getenv('HOST') else '.env not found')"
    ```
 
-## Usage
+## 🚀 Usage
+
+### Running the Web Application
+
+#### Option 1: Full Stack (Recommended)
+```bash
+npm run dev
+```
+This command will:
+- ✅ Start Flask API backend on port 5000
+- ✅ Start frontend web server on port 8080
+- ✅ Automatically open browser
+
+#### Option 2: API Only
+```bash
+npm run start-api
+# Or directly:
+cd wed && python api.py
+```
+
+#### Option 3: Frontend Only
+```bash
+npm run start-frontend
+# Or directly:
+cd wed && npx http-server -p 8080
+```
+
+### Available npm Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm install` | Install all Node.js dependencies |
+| `npm run dev` | Start both API and frontend servers |
+| `npm start` | Same as `npm run dev` |
+| `npm run start-api` | Start Flask API only |
+| `npm run start-frontend` | Start frontend server only |
+| `npm run install-python` | Install Python dependencies |
 
 ### Web Scraping
 
@@ -341,7 +433,158 @@ For Selenium scrapers, ChromeDriver is auto-managed. Optionally configure:
 - Timeout settings
 - User agent strings
 
-## 🐛 Troubleshooting
+## � API Documentation
+
+The Flask API provides RESTful endpoints for accessing coffee export data.
+
+### Base URL
+```
+http://localhost:5000/api
+```
+
+### Endpoints
+
+#### 1. Health Check
+```http
+GET /api/health
+```
+Returns API status.
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "message": "Vietnam Coffee Data Portal API"
+}
+```
+
+#### 2. Export Data (Time Series)
+```http
+GET /api/export
+```
+Returns coffee export values and prices from 2005-2024.
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 20,
+  "data": [
+    {
+      "year": 2023,
+      "export_value_million_usd": 3500.5,
+      "price_world_usd_per_ton": 4500,
+      "price_vn_usd_per_ton": 4280
+    }
+  ],
+  "metadata": {
+    "interpolated": true,
+    "method": "linear + backward fill for leading NaNs",
+    "latest_actual_year": 2023
+  }
+}
+```
+
+#### 3. Production Data
+```http
+GET /api/production
+```
+Returns coffee production and export volumes by year.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "year": 2023,
+      "output_tons": 1500000,
+      "export_tons": 1200000
+    }
+  ]
+}
+```
+
+#### 4. Top Export Countries
+```http
+GET /api/exports/top-countries?year=2024
+```
+Returns top coffee importing countries.
+
+**Query Parameters:**
+- `year` (optional): Filter by year, default is current year
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "country": "Germany",
+      "quantity_tons": 250000,
+      "percentage": 20.5
+    }
+  ]
+}
+```
+
+#### 5. Weather Data
+```http
+GET /api/weather/province/{province}?aggregate=recent12
+```
+Returns weather data for coffee-growing provinces.
+
+**Path Parameters:**
+- `province`: Province name (e.g., `DakLak`, `GiaLai`, `LamDong`)
+
+**Query Parameters:**
+- `aggregate`: Aggregation type (`recent12` for 12-month average)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "avg_temperature": 24.5,
+    "avg_rainfall": 150.3,
+    "avg_humidity": 75.2
+  }
+}
+```
+
+### Usage Examples
+
+#### cURL
+```bash
+# Get export data
+curl http://localhost:5000/api/export
+
+# Get top countries for 2023
+curl http://localhost:5000/api/exports/top-countries?year=2023
+
+# Get weather data
+curl http://localhost:5000/api/weather/province/DakLak?aggregate=recent12
+```
+
+#### JavaScript (Fetch)
+```javascript
+// Get export data
+const response = await fetch('http://localhost:5000/api/export');
+const data = await response.json();
+console.log(data);
+```
+
+#### Python (requests)
+```python
+import requests
+
+# Get production data
+response = requests.get('http://localhost:5000/api/production')
+data = response.json()
+print(data)
+```
+
+## �🐛 Troubleshooting
 
 ### Web Scraping Issues
 
