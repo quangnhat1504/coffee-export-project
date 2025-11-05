@@ -1,612 +1,473 @@
-# Vietnam Coffee Data Portal 🌱☕
+# ☕ Vietnam Coffee Export Data Analysis Project
 
-A comprehensive coffee data collection, analysis, and visualization system for Vietnam coffee export market. This project includes a Flask API backend, interactive web dashboard with Chart.js visualizations, and automated data collection tools.
+## 📊 Tổng Quan / Overview
 
-## 🚀 Quick Start
+Dự án này cung cấp một hệ thống phân tích dữ liệu toàn diện cho ngành xuất khẩu cà phê Việt Nam, bao gồm thu thập dữ liệu tự động, xử lý ETL, quản lý cơ sở dữ liệu, trực quan hóa và dashboard web hiện đại.
 
-### Prerequisites
-- Python 3.8+
-- Node.js 18+
-- pip & npm
-
-### Installation & Run
-
-```bash
-# 1. Install Python dependencies
-pip install -r requirements.txt
-
-# 2. Install Node.js dependencies
-npm install
-
-# 3. Run the development server (API + Frontend)
-npm run dev
-```
-
-The application will automatically:
-- ✅ Start Flask API on `http://localhost:5000`
-- ✅ Start Frontend on `http://localhost:8080`
-- ✅ Open your browser
-
-## 📋 Table of Contents
-
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Setup & Installation](#setup--installation)
-- [Usage](#usage)
-- [Components](#components)
-- [Database Schema](#database-schema)
-- [Data Sources](#data-sources)
-- [API Documentation](#api-documentation)
-- [Requirements](#requirements)
-- [Contributing](#contributing)
-
-## Project Overview
-
-This project provides a complete solution for:
-- **Web Dashboard**: Interactive data visualization with Chart.js
-- **REST API**: Flask-based API for coffee export data
-- **Web Scraping**: Automated collection of coffee prices from various online sources
-- **Data Processing**: Transforming raw CSV data into structured database formats
-- **Database Management**: Storing and managing coffee data in MySQL (Aiven Cloud)
-- **Data Analysis**: Exploratory data analysis and visualization using Jupyter notebooks
-
-## ✨ Features
-
-### Web Dashboard
-- 📊 Interactive charts with Chart.js (line charts, pie charts, dual Y-axis)
-- 🌍 Real-time export data visualization (2005-2024)
-- 💰 Market overview with export values and price trends
-- 🌦️ Weather & climate impact analysis
-- 🗺️ Export insights by country
-- 📈 Time series forecasting
-
-### Backend API
-- 🔌 RESTful API with Flask
-- 🗄️ MySQL database integration (Aiven Cloud)
-- 📡 Real-time data endpoints
-- 🔄 Automatic data interpolation for missing values
-- ⚡ CORS-enabled for cross-origin requests
-
-### Data Collection
-- 🕷️ Multiple web scraping approaches (Beautiful Soup, Selenium)
-- 🔄 Automated data synchronization with MySQL database
-- 📊 Data processing and transformation pipelines
-- 🛡️ Error handling and data validation
-- 🇻🇳 Support for Vietnamese coffee market data
-
-## 📁 Project Structure
-
-```
-coffee-export-project/
-├── package.json                    # Node.js configuration
-├── requirements.txt                # Python dependencies
-├── README.md                       # Main documentation
-├── README_SETUP.md                 # Setup guide
-│
-├── wed/                           # Web application
-│   ├── api.py                     # Flask API backend
-│   ├── index.html                 # Frontend HTML
-│   ├── script.js                  # Frontend JavaScript (Chart.js)
-│   ├── styles.css                 # Frontend CSS
-│   └── create_production_by_province.py  # Production data management
-│
-├── collect_data/                  # Data collection tools
-│   ├── Data_coffee.csv            # Main coffee data
-│   ├── sync_coffee.py             # Database sync script
-│   └── sync_weather.py            # Weather data sync
-│
-├── visualize/                     # Data visualization
-│   └── scatterplot_production.ipynb
-│
-└── Time_Series.ipynb              # Time series analysis
-```
-
-## 🛠️ Setup & Installation
-
-### Prerequisites
-
-- **Python 3.8+**
-- **Node.js 18+** 
-- **npm** or **yarn**
-- **MySQL/MariaDB database** (or Aiven Cloud MySQL)
-- **Google Chrome** (for Selenium scrapers)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd coffee-export-project
-   ```
-
-2. **Install Python dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Install Node.js dependencies**
-   ```bash
-   npm install
-   ```
-
-4. **⚠️ IMPORTANT: Configure environment variables**
-   
-   **NEVER commit sensitive data to Git!** Follow these steps:
-
-   a. **Copy the example file:**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   b. **Edit `.env` with your actual credentials:**
-   ```env
-   # Database Configuration
-   HOST=your-actual-database-host.aivencloud.com
-   PORT=3306
-   USER=your-actual-username
-   PASSWORD=your-actual-password
-   DB=your-database-name
-   CA_PEM=C:\path\to\your\ca.pem
-   
-   # File Paths
-   CSV_PATH=C:\Users\YourName\path\to\Data_coffee.csv
-   CSV_PATH_MT=C:\Users\YourName\path\to\Thi_phan_3_thi_truong_chinh.csv
-   ```
-
-   c. **Verify `.env` is in `.gitignore`:**
-   ```bash
-   git status
-   # .env should NOT appear in the list of files to commit
-   ```
-
-   > Security Note: The `.env` file contains sensitive credentials and is automatically ignored by Git. Only commit `.env.example` which contains template values.
-
-5. **Verify setup**
-   
-   Check that the environment variables are loaded correctly:
-   ```bash
-   python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('.env loaded!' if os.getenv('HOST') else '.env not found')"
-   ```
-
-## 🚀 Usage
-
-### Running the Web Application
-
-#### Option 1: Full Stack (Recommended)
-```bash
-npm run dev
-```
-This command will:
-- ✅ Start Flask API backend on port 5000
-- ✅ Start frontend web server on port 8080
-- ✅ Automatically open browser
-
-#### Option 2: API Only
-```bash
-npm run start-api
-# Or directly:
-cd wed && python api.py
-```
-
-#### Option 3: Frontend Only
-```bash
-npm run start-frontend
-# Or directly:
-cd wed && npx http-server -p 8080
-```
-
-### Available npm Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm install` | Install all Node.js dependencies |
-| `npm run dev` | Start both API and frontend servers |
-| `npm start` | Same as `npm run dev` |
-| `npm run start-api` | Start Flask API only |
-| `npm run start-frontend` | Start frontend server only |
-| `npm run install-python` | Install Python dependencies |
-
-### Web Scraping
-
-#### Option 1: Simple Scraper (Beautiful Soup)
-```bash
-python coffee_price_scraper.py
-```
-
-#### Option 2: Selenium Scraper (for Cloudflare-protected sites)
-```bash
-python coffee_price_scraper_selenium.py
-```
-
-#### Option 3: Complete Scraper with Fallback
-```bash
-python coffee_price_scraper_final.py
-```
-
-This will:
-- Attempt to scrape coffee prices from giacaphe.com
-- Save results to a CSV file with timestamp
-- Generate fallback data if scraping fails
-
-### Database Synchronization
-
-#### Using Python Script
-```bash
-python sync_coffee.py
-```
-
-#### Using Jupyter Notebook
-```bash
-jupyter notebook main_coffee.ipynb
-```
-
-The sync process will:
-1. Read CSV files (`Data_coffee.csv` and `Thi_phan_3_thi_truong_chinh.csv`)
-2. Transform data from wide to long format
-3. Create/update database tables
-4. Upsert data into MySQL database
-
-### Data Analysis
-
-Open and run notebooks for analysis:
-```bash
-jupyter notebook eda_data_coffee.ipynb
-jupyter notebook main_coffee.ipynb
-```
-
-## 🧩 Components
-
-### 1. Coffee Price Scrapers
-
-#### `coffee_price_scraper_final.py`
-- Most complete implementation
-- Handles HTTP errors and Cloudflare protection
-- Generates fallback data automatically
-- Saves data with timestamps
-
-#### `coffee_price_scraper_selenium.py`
-- Uses Selenium WebDriver
-- Bypasses Cloudflare bot protection
-- Auto-manages ChromeDriver
-
-### 2. Data Processing
-
-#### `sync_coffee.py`
-Main synchronization script that:
-- Reads raw CSV data
-- Transforms wide format to long format
-- Creates normalized database tables
-- Handles upserts for data updates
-
-Key transformations:
-- **Weather data**: Temperature, humidity, rainfall
-- **Production data**: Area, output, exports
-- **Export data**: Trade value, prices (world & Vietnam)
-- **Market trade**: Importer countries, quantities
-
-#### `main_coffee.ipynb`
-Interactive notebook for:
-- Database connection and setup
-- Data transformation
-- SQL query execution
-- Quick data validation
-
-### 3. Database Schema
-
-The system creates and manages the following tables:
-
-#### `coffee_long`
-Raw data in long format (hang_muc, year, value)
-
-#### `weather`
-- Year, temperature, humidity, rain
-
-#### `production`
-- Year, area_thousand_ha, output_tons, export_tons
-
-#### `coffee_export`
-- Year, export_value_million_usd, price_world_usd_per_ton, price_vn_usd_per_ton
-
-#### `market_trade`
-- Importer, year, trade_value_million_usd, quantity_tons
-
-## Data Sources
-
-1. **Coffee Price Data**: 
-   - Web scraping from giacaphe.com
-   - Demo/fallback data for testing
-
-2. **Production & Weather Data**: 
-   - `Data_coffee.csv` - Historical coffee production, weather, and export statistics
-
-3. **Market Trade Data**: 
-   - `Thi_phan_3_thi_truong_chinh.csv` - International trade data by importer country
-
-## Requirements
-
-### Core Dependencies
-```
-pandas>=1.5.0
-pymysql>=1.0.0
-sqlalchemy>=2.0.0
-beautifulsoup4>=4.11.0
-selenium>=4.0.0
-requests>=2.28.0
-webdriver-manager>=3.8.0
-python-dotenv>=0.19.0
-```
-
-### For Jupyter Notebooks
-```
-jupyter>=1.0.0
-ipykernel>=6.0.0
-```
-
-Install all requirements:
-```bash
-pip install -r requirements.txt
-```
-
-## � Security Best Practices
-
-### Protecting Sensitive Data
-
-This project uses environment variables to keep credentials secure. Follow these guidelines:
-
-1. **NEVER commit `.env` file** - It's already in `.gitignore`
-2. **Always use `.env.example`** as a template
-3. **Store credentials securely** - Don't share passwords in chat/email
-4. **Rotate credentials** if accidentally exposed
-5. **Use different passwords** for dev/staging/production
-
-### Before Every Commit
-
-Check what you're about to commit:
-```bash
-git status
-git diff
-```
-
-Verify `.env` is NOT listed. If it appears, run:
-```bash
-git rm --cached .env
-git add .gitignore
-git commit -m "Remove .env from tracking"
-```
-
-### Team Collaboration
-
-When a new team member joins:
-
-1. They clone the repo
-2. They copy `.env.example` to `.env`
-3. Team lead shares credentials securely (NOT via Git)
-4. They update `.env` with actual values
-5. They verify with `git status` that `.env` is ignored
-
-## Configuration
-
-### Database Connection
-
-Update connection settings in:
-- `sync_coffee.py` - Uses `.env` file (RECOMMENDED - Secure)
-- `main_coffee.ipynb` - May have hardcoded credentials (Update to use .env)
-
-### File Paths
-
-Update CSV file paths in `.env`:
-```env
-CSV_PATH=C:\path\to\Data_coffee.csv
-CSV_PATH_MT=C:\path\to\Thi_phan_3_thi_truong_chinh.csv
-```
-
-Or update directly in scripts:
-- `sync_coffee.py` (lines ~35, ~39)
-- `main_coffee.ipynb` (line ~7, ~10)
-- `unprocessing_sql.py` (line ~105)
-
-### Selenium Settings
-
-For Selenium scrapers, ChromeDriver is auto-managed. Optionally configure:
-- Headless mode
-- Timeout settings
-- User agent strings
-
-## � API Documentation
-
-The Flask API provides RESTful endpoints for accessing coffee export data.
-
-### Base URL
-```
-http://localhost:5000/api
-```
-
-### Endpoints
-
-#### 1. Health Check
-```http
-GET /api/health
-```
-Returns API status.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "message": "Vietnam Coffee Data Portal API"
-}
-```
-
-#### 2. Export Data (Time Series)
-```http
-GET /api/export
-```
-Returns coffee export values and prices from 2005-2024.
-
-**Response:**
-```json
-{
-  "success": true,
-  "count": 20,
-  "data": [
-    {
-      "year": 2023,
-      "export_value_million_usd": 3500.5,
-      "price_world_usd_per_ton": 4500,
-      "price_vn_usd_per_ton": 4280
-    }
-  ],
-  "metadata": {
-    "interpolated": true,
-    "method": "linear + backward fill for leading NaNs",
-    "latest_actual_year": 2023
-  }
-}
-```
-
-#### 3. Production Data
-```http
-GET /api/production
-```
-Returns coffee production and export volumes by year.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "year": 2023,
-      "output_tons": 1500000,
-      "export_tons": 1200000
-    }
-  ]
-}
-```
-
-#### 4. Top Export Countries
-```http
-GET /api/exports/top-countries?year=2024
-```
-Returns top coffee importing countries.
-
-**Query Parameters:**
-- `year` (optional): Filter by year, default is current year
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "country": "Germany",
-      "quantity_tons": 250000,
-      "percentage": 20.5
-    }
-  ]
-}
-```
-
-#### 5. Weather Data
-```http
-GET /api/weather/province/{province}?aggregate=recent12
-```
-Returns weather data for coffee-growing provinces.
-
-**Path Parameters:**
-- `province`: Province name (e.g., `DakLak`, `GiaLai`, `LamDong`)
-
-**Query Parameters:**
-- `aggregate`: Aggregation type (`recent12` for 12-month average)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "avg_temperature": 24.5,
-    "avg_rainfall": 150.3,
-    "avg_humidity": 75.2
-  }
-}
-```
-
-### Usage Examples
-
-#### cURL
-```bash
-# Get export data
-curl http://localhost:5000/api/export
-
-# Get top countries for 2023
-curl http://localhost:5000/api/exports/top-countries?year=2023
-
-# Get weather data
-curl http://localhost:5000/api/weather/province/DakLak?aggregate=recent12
-```
-
-#### JavaScript (Fetch)
-```javascript
-// Get export data
-const response = await fetch('http://localhost:5000/api/export');
-const data = await response.json();
-console.log(data);
-```
-
-#### Python (requests)
-```python
-import requests
-
-# Get production data
-response = requests.get('http://localhost:5000/api/production')
-data = response.json()
-print(data)
-```
-
-## �🐛 Troubleshooting
-
-### Web Scraping Issues
-
-**Problem**: 403 Forbidden errors
-- **Solution**: Use Selenium-based scrapers (`coffee_price_scraper_selenium.py`)
-
-**Problem**: Cloudflare protection
-- **Solution**: Ensure ChromeDriver is updated, or use fallback data mode
-
-### Database Issues
-
-**Problem**: Connection timeout
-- **Solution**: Check SSL certificate path (`CA_PEM` in `.env`)
-- **Solution**: Verify network connectivity to Aiven Cloud
-
-**Problem**: UTF-8 encoding errors
-- **Solution**: Ensure database uses `utf8mb4` charset
-- **Solution**: Use `encoding='utf-8-sig'` when reading CSV files
-
-## 📝 Notes
-
-- The website `giacaphe.com` uses Cloudflare protection - Selenium is required
-- Database credentials are hardcoded in some files - consider using environment variables
-- Some scripts have hardcoded file paths - update according to your system
-- SSL certificate required for Aiven Cloud MySQL connections
-
-## 🤝 Contributing
-
-This is an academic project for ADY 201 (Semester 3). For contributions:
-1. Create a feature branch
-2. Make your changes
-3. Test thoroughly
-4. Submit a pull request
-
-## 📄 License
-
-Educational project - use as reference or learning material.
-
-## 👥 Authors
-
-ADY 201 - Team 7
+This project provides a comprehensive data analysis system for Vietnam's coffee export industry, including automated data collection, ETL processing, database management, visualization, and a modern web dashboard.
 
 ---
 
-**Note**: This project is part of Academic Data Science coursework. Some data sources may require proper attribution or permission for commercial use.
+## 🌟 Tính Năng Chính / Key Features
+
+- ☁️ **Thu thập dữ liệu tự động** - Automated data collection from multiple sources
+- 🔄 **Pipeline ETL hoàn chỉnh** - Complete ETL pipeline for data processing
+- 💾 **Quản lý cơ sở dữ liệu MySQL** - MySQL database management with normalized schema
+- 📈 **Trực quan hóa dữ liệu** - Interactive charts and time series analysis
+- 🌐 **Dashboard web hiện đại** - Modern, responsive web interface
+- 🔌 **Tích hợp API World Bank WITS** - World Bank WITS API integration
+
+---
+
+## 📁 Cấu Trúc Dự Án / Project Structure
+
+```
+coffee-export-project/
+│
+├── 📂 collect_data/                    # Thu thập & Xử lý dữ liệu / Data Collection
+│   ├── 📄 Data_coffee.csv              # Dữ liệu cà phê chính / Main coffee data
+│   ├── 📄 Thi_phan_3_thi_truong_chinh.csv  # Dữ liệu thị phần / Market share data
+│   ├── 🐍 sync_coffee.py               # Script đồng bộ database / DB sync script
+│   ├── 📓 main_coffee.ipynb            # Notebook xử lý dữ liệu / Data processing
+│   ├── 📓 export_api.ipynb             # Tích hợp WITS API / WITS API integration
+│   └── 📓 beautiful_soup_4_demo.ipynb  # Demo web scraping
+│
+├── 📂 visualize/                       # Trực quan hóa / Visualization
+│   ├── 📓 Time_Series.ipynb            # Phân tích chuỗi thời gian / Time series
+│   ├── 📓 pair_plot.ipynb              # Phân tích tương quan / Correlation
+│   ├── 📓 scatterplot_production.ipynb # Biểu đồ sản xuất / Production charts
+│   └── 📓 nhat.ipynb                   # Phân tích bổ sung / Additional analysis
+│
+├── 📂 web/                             # Dashboard Web
+│   ├── 🌐 index.html                   # Trang dashboard chính / Main dashboard
+│   ├── ⚙️ script.js                    # Chức năng tương tác / Interactive features
+│   └── 🎨 styles.css                   # Giao diện / Styling
+│
+├── 📄 requirements.txt                 # Dependencies Python
+└── 📖 README.md                        # File này / This file
+```
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng / Technology Stack
+
+### Backend & Xử lý dữ liệu / Backend & Data Processing
+- **Python 3.x** - Ngôn ngữ lập trình chính / Main programming language
+- **Pandas** - Xử lý và phân tích dữ liệu / Data manipulation and analysis
+- **SQLAlchemy** - ORM cho database / Database ORM
+- **PyMySQL** - MySQL connector
+- **BeautifulSoup4** - Web scraping
+- **Selenium** - Dynamic web scraping
+- **Requests** - HTTP library
+
+### Trực quan hóa / Visualization
+- **Matplotlib** - Biểu đồ tĩnh / Static charts
+- **Seaborn** - Biểu đồ thống kê / Statistical visualizations
+- **Plotly** - Biểu đồ tương tác / Interactive charts
+
+### Frontend
+- **HTML5/CSS3** - Cấu trúc và giao diện / Structure and styling
+- **JavaScript (ES6+)** - Tương tác động / Dynamic interactions
+- **Chart.js** - Biểu đồ dữ liệu / Data visualization
+- **D3.js** - Trực quan hóa nâng cao / Advanced visualizations
+
+### Database
+- **MySQL 5.7+** - Quản lý cơ sở dữ liệu quan hệ / Relational database management
+
+---
+
+## 📋 Yêu Cầu Hệ Thống / Prerequisites
+
+- ✅ Python 3.7 trở lên / Python 3.7 or higher
+- ✅ MySQL Server 5.7 trở lên / MySQL Server 5.7 or higher
+- ✅ pip (Python package manager)
+- ✅ Trình duyệt hiện đại / Modern web browser (Chrome, Firefox, Edge)
+- ✅ Jupyter Notebook (tùy chọn / optional)
+
+---
+
+## 🚀 Cài Đặt / Installation
+
+### 1️⃣ Clone Repository
+```bash
+git clone <repository-url>
+cd coffee-export-project
+```
+
+### 2️⃣ Cài đặt Python Dependencies / Install Python Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+**Hoặc cài đặt từng package / Or install individually:**
+```bash
+pip install pandas>=1.5.0 pymysql>=1.0.0 sqlalchemy>=2.0.0
+pip install beautifulsoup4>=4.11.0 selenium>=4.0.0 requests>=2.28.0
+pip install matplotlib>=3.5.0 seaborn>=0.12.0 plotly>=5.0.0
+pip install jupyter>=1.0.0 ipykernel>=6.0.0 notebook>=6.4.0
+```
+
+### 3️⃣ Cấu hình Database / Database Configuration
+
+**Tạo database MySQL / Create MySQL database:**
+```sql
+CREATE DATABASE coffee_export_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+**Cấu hình kết nối trong `sync_coffee.py` / Configure connection:**
+```python
+# Cập nhật thông tin kết nối / Update connection info
+DB_HOST = "localhost"
+DB_PORT = 3306
+DB_USER = "your_username"
+DB_PASSWORD = "your_password"
+DB_NAME = "coffee_export_db"
+```
+
+---
+
+## 💾 Cấu Trúc Database / Database Schema
+
+### 📊 Bảng `coffee_long` (Dữ liệu thô dạng long format / Raw data in long format)
+```sql
+CREATE TABLE coffee_long (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  hang_muc VARCHAR(255) NOT NULL,
+  year INT NOT NULL,
+  value DECIMAL(16,2),
+  UNIQUE KEY uq_coffee_long (hang_muc, year)
+) CHARACTER SET utf8mb4;
+```
+
+### 🌡️ Bảng `weather` (Dữ liệu khí hậu / Climate data)
+```sql
+CREATE TABLE weather (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  year INT NOT NULL,
+  temperature DECIMAL(5,2),      -- Nhiệt độ trung bình (°C) / Avg temperature
+  humidity DECIMAL(5,2),          -- Độ ẩm trung bình (%) / Avg humidity
+  rainfall DECIMAL(10,2),         -- Lượng mưa (mm) / Rainfall
+  UNIQUE KEY uq_weather_year (year)
+) CHARACTER SET utf8mb4;
+```
+
+### 🌱 Bảng `production` (Sản xuất / Production)
+```sql
+CREATE TABLE production (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  year INT NOT NULL,
+  area_thousand_ha DECIMAL(10,1),    -- Diện tích (nghìn ha) / Area (thousand ha)
+  output_tons DECIMAL(14,2),          -- Sản lượng (tấn) / Output (tons)
+  export_tons DECIMAL(14,2),          -- Xuất khẩu (tấn) / Export (tons)
+  UNIQUE KEY uq_prod_year (year)
+) CHARACTER SET utf8mb4;
+```
+
+### 💰 Bảng `coffee_export` (Xuất khẩu & Giá / Export & Prices)
+```sql
+CREATE TABLE coffee_export (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  year INT NOT NULL,
+  export_value_million_usd DECIMAL(16,2),  -- Giá trị XK (triệu USD) / Export value
+  price_world_usd_per_ton DECIMAL(12,2),   -- Giá thế giới (USD/tấn) / World price
+  price_vn_usd_per_ton DECIMAL(12,2),      -- Giá VN (USD/tấn) / VN price
+  UNIQUE KEY uq_trade_year (year)
+) CHARACTER SET utf8mb4;
+```
+
+### 🌍 Bảng `market_trade` (Thị trường xuất khẩu / Export markets)
+```sql
+CREATE TABLE market_trade (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  year INT NOT NULL,
+  country VARCHAR(100) NOT NULL,
+  trade_value_thousand_usd DECIMAL(16,2),  -- Giá trị (nghìn USD) / Value (thousand USD)
+  quantity_tons DECIMAL(14,2),             -- Khối lượng (tấn) / Quantity (tons)
+  UNIQUE KEY uq_market (year, country)
+) CHARACTER SET utf8mb4;
+```
+
+---
+
+## 💻 Hướng Dẫn Sử Dụng / Usage Guide
+
+### 🔄 Đồng bộ dữ liệu vào Database / Sync Data to Database
+
+**Chạy script đồng bộ / Run sync script:**
+```bash
+python collect_data/sync_coffee.py
+```
+
+**Script sẽ thực hiện / Script will:**
+1. ✅ Đọc file CSV từ thư mục `collect_data/` / Read CSV files
+2. ✅ Chuyển đổi dữ liệu từ wide format sang long format / Transform wide to long format
+3. ✅ Tạo/cập nhật các bảng trong database / Create/update database tables
+4. ✅ Upsert dữ liệu vào MySQL (xử lý duplicate) / Upsert data (handle duplicates)
+5. ✅ Tạo các bảng phân tích từ `coffee_long` / Create analysis tables
+
+**Output mẫu / Sample output:**
+```
+✓ Đã đọc 17 dòng từ Data_coffee.csv / Read 17 rows from Data_coffee.csv
+✓ Chuyển đổi sang long format: 340 records / Transformed to long format: 340 records
+✓ Đã tạo bảng coffee_long / Created table coffee_long
+✓ Đã insert 340 records / Inserted 340 records
+✓ Đã tạo bảng production, coffee_export, weather, market_trade
+✓ Hoàn thành đồng bộ! / Sync completed!
+```
+
+### 📓 Sử dụng Jupyter Notebooks / Using Jupyter Notebooks
+
+**Khởi động Jupyter / Start Jupyter:**
+```bash
+jupyter notebook
+```
+
+**Các notebook chính / Main notebooks:**
+
+1. **`collect_data/main_coffee.ipynb`**
+   - Xử lý dữ liệu cà phê / Coffee data processing
+   - Kết nối database / Database connection
+   - Thực thi SQL queries / Execute SQL queries
+
+2. **`collect_data/export_api.ipynb`**
+   - Thu thập dữ liệu từ World Bank WITS API / Fetch data from WITS API
+   - Dữ liệu xuất khẩu theo quốc gia / Export data by country
+   - Mã HS: 090111 (Coffee, not roasted)
+
+3. **`visualize/Time_Series.ipynb`**
+   - Phân tích chuỗi thời gian / Time series analysis
+   - Xu hướng sản xuất và xuất khẩu / Production and export trends
+
+4. **`visualize/pair_plot.ipynb`**
+   - Ma trận tương quan / Correlation matrix
+   - Phân tích mối quan hệ giữa các biến / Analyze relationships
+
+5. **`visualize/scatterplot_production.ipynb`**
+   - Biểu đồ phân tán sản xuất / Production scatter plots
+   - Mối quan hệ diện tích - sản lượng / Area-output relationship
+
+### 🌐 Sử dụng Web Dashboard / Using Web Dashboard
+
+**Mở dashboard / Open dashboard:**
+```bash
+# Mở trực tiếp file / Open file directly
+open web/index.html
+
+# Hoặc sử dụng local server / Or use local server
+python -m http.server 8000
+# Truy cập / Access: http://localhost:8000/web/
+```
+
+**Các tính năng dashboard / Dashboard features:**
+- 📊 **Market Overview**: Giá cà phê real-time / Real-time coffee prices
+- 📈 **Production Stats**: Thống kê sản xuất / Production statistics
+- 🌡️ **Climate Impact**: Ảnh hưởng khí hậu / Climate impact analysis
+- 🤖 **AI Forecasts**: Dự báo xu hướng / Trend predictions
+- 🗺️ **Export Markets**: Thị trường xuất khẩu / Export market distribution
+
+---
+
+## 📊 Nguồn Dữ Liệu / Data Sources
+
+### 1. Dữ liệu nội bộ / Internal Data (CSV files)
+- **`Data_coffee.csv`**:
+  - Diện tích trồng (2005-2024) / Cultivation area
+  - Sản lượng sản xuất / Production output
+  - Sản lượng xuất khẩu / Export volume
+  - Giá cà phê VN và thế giới / VN and world coffee prices
+  - Dữ liệu khí hậu / Climate data (temperature, humidity, rainfall)
+
+- **`Thi_phan_3_thi_truong_chinh.csv`**:
+  - Thị phần xuất khẩu theo quốc gia / Export market share by country
+  - Giá trị và khối lượng xuất khẩu / Export value and quantity
+
+### 2. World Bank WITS API
+- Dữ liệu thương mại quốc tế / International trade data
+- Mã HS: 090111 (Coffee, not roasted, not decaffeinated)
+- Quốc gia / Country: Vietnam (VNM)
+- Thời gian / Period: 2005-2024
+
+**Ví dụ API call / API call example:**
+```python
+url = f"https://wits.worldbank.org/trade/comtrade/en/country/VNM/year/{year}/tradeflow/Exports/partner/ALL/product/090111"
+```
+
+---
+
+## 🔄 Data Pipeline Flow
+
+```
+┌─────────────────┐
+│   CSV Files     │
+│  (Wide Format)  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Data Cleaning   │
+│ & Validation    │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Wide → Long     │
+│ Transformation  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ MySQL Database  │
+│ (Normalized)    │
+└────────┬────────┘
+         │
+         ├──────────────┬──────────────┐
+         ▼              ▼              ▼
+    ┌────────┐    ┌─────────┐    ┌──────────┐
+    │ Charts │    │ Reports │    │ Web UI   │
+    └────────┘    └─────────┘    └──────────┘
+```
+
+### Chi tiết các bước / Pipeline Steps:
+
+**1. Extract (Trích xuất / Extraction)**
+```python
+df = pd.read_csv("Data_coffee.csv", encoding="utf-8")
+```
+
+**2. Transform (Chuyển đổi / Transformation)**
+```python
+# Wide → Long format
+long_df = df.melt(
+    id_vars=["Hang_muc"],
+    value_vars=year_cols,
+    var_name="year",
+    value_name="value"
+)
+
+# Clean data
+long_df["year"] = pd.to_numeric(long_df["year"], errors="coerce")
+long_df["value"] = pd.to_numeric(long_df["value"], errors="coerce")
+long_df = long_df.dropna(subset=["year"])
+```
+
+**3. Load (Nạp dữ liệu / Loading)**
+```python
+# Upsert với xử lý duplicate / Upsert with duplicate handling
+upsert_sql = """
+INSERT INTO coffee_long (hang_muc, year, value)
+VALUES (%s, %s, %s)
+ON DUPLICATE KEY UPDATE value = VALUES(value)
+"""
+```
+
+**4. Analyze (Phân tích / Analysis)**
+```python
+# Tạo bảng phân tích / Create analysis tables
+INSERT INTO production (year, area_thousand_ha, output_tons, export_tons)
+SELECT year,
+       MAX(CASE WHEN hang_muc LIKE 'Area%' THEN value END),
+       MAX(CASE WHEN hang_muc LIKE 'San luong ca phe san xuat%' THEN value END),
+       MAX(CASE WHEN hang_muc LIKE 'San luong ca phe xuat khau%' THEN value END)
+FROM coffee_long
+GROUP BY year
+```
+
+---
+
+## 📚 Tài Liệu Tham Khảo / References
+
+### Documentation
+- [Pandas Documentation](https://pandas.pydata.org/docs/)
+- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
+- [Chart.js Documentation](https://www.chartjs.org/docs/)
+- [MySQL Documentation](https://dev.mysql.com/doc/)
+- [BeautifulSoup Documentation](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+
+### Data Sources
+- [World Bank WITS](https://wits.worldbank.org/)
+- [Vietnam Coffee Association](http://www.vicofa.org.vn/)
+- [ICO - International Coffee Organization](https://www.ico.org/)
+
+---
+
+## 🤝 Đóng Góp / Contributing
+
+Chúng tôi hoan nghênh mọi đóng góp! / Contributions are welcome!
+
+### Cách đóng góp / How to contribute:
+
+1. **Fork repository**
+2. **Tạo branch mới / Create new branch:**
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+3. **Commit changes:**
+   ```bash
+   git commit -m 'Add some AmazingFeature'
+   ```
+4. **Push to branch:**
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+5. **Mở Pull Request / Open Pull Request**
+
+---
+
+## 📄 Giấy Phép / License
+
+Dự án này được phân phối dưới giấy phép MIT License.
+
+This project is distributed under the MIT License.
+
+---
+
+## 👥 Tác Giả / Authors
+
+- **Đặng Quang Nhật** - *Initial work*
+- **Phạm Minh Tiến** - *Initial work*
+- **Nguyễn Thái Hưng** - *Initial work*
+- **Phan Tuấn Hưng** - *Initial work*
+- **Trương Công Phúc** - *Initial work*
+---
+
+## 🙏 Lời Cảm Ơn / Acknowledgments
+
+- 🌟 Vietnam Coffee Association (VICOFA)
+- 🌟 World Bank WITS Database
+- 🌟 Open-source community
+- 🌟 All contributors and supporters
+
+---
+
+## 📞 Liên Hệ / Contact
+
+- **Email**: your-email@example.com
+- **GitHub**: https://github.com/your-username/coffee-export-project
+
+---
+
+## 📊 Thống Kê Dự Án / Project Stats
+
+- **Lines of Code**: ~5,000+
+- **Data Points**: 340+ records (2005-2024)
+- **Database Tables**: 5 tables
+- **Visualizations**: 10+ charts
+- **Languages**: Python, JavaScript, SQL, HTML/CSS
+
+---
+
+## ⚠️ Lưu Ý Quan Trọng / Important Notes
+
+> **Disclaimer**: Dự án này phục vụ mục đích nghiên cứu và giáo dục. Dữ liệu nên được xác minh với nguồn chính thức trước khi sử dụng cho quyết định kinh doanh.
+
+> **Note**: This project is for educational and research purposes. Data accuracy should be verified with official sources before making business decisions.
+
+---
+
+**⭐ Nếu dự án hữu ích, hãy cho chúng tôi một star trên GitHub!**
+
+**⭐ If you find this project useful, please give us a star on GitHub!**
+
+---
+
+*Last Updated: November 2025 | Version: 1.0.0*
