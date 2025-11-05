@@ -917,7 +917,103 @@ def get_export_data():
             'success': False,
             'error': str(e)
         }), 500
+    
+# ==========================================================
+# 📢 NEWS ENDPOINT - Crawl tin tức cà phê từ Báo Mới (Cập nhật chuẩn HTML 2025)
+# ==========================================================
+@app.route('/api/news', methods=['GET'])
+def get_coffee_news():
+    """
+    Lấy 9 bài viết mới nhất liên quan đến cà phê từ Baomoi.com
+    """
+    import requests
+    from bs4 import BeautifulSoup
+    import random
+    import re
 
+    try:
+        url = "https://baomoi.com/tim-kiem/gi%C3%A1%20c%C3%A0%20ph%C3%AA.epi"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        r = requests.get(url, headers=headers, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        articles = []
+        for card in soup.select("div.bm-card"):
+            # --- Tiêu đề & link ---
+            a_tag = card.select_one("a[title]")
+            if not a_tag:
+                continue
+            title = a_tag.get("title").strip()
+            href = a_tag.get("href")
+            link = "https://baomoi.com" + href if href and href.startswith("/") else href
+
+            # --- Ảnh (Cập nhật dò đa tầng + fallback regex) ---
+            import re
+
+            img = None
+
+            # 1️⃣ Ưu tiên <img src> hoặc <img data-src>
+            img_tag = card.select_one("img")
+            if img_tag:
+                img = img_tag.get("src") or img_tag.get("data-src")
+
+            # 2️⃣ Nếu chưa có, tìm <source srcset> hoặc <source data-srcset>
+            if not img:
+                source_tag = card.select_one("source[srcset], source[data-srcset]")
+                if source_tag:
+                    srcset = source_tag.get("srcset") or source_tag.get("data-srcset")
+                    if srcset:
+                        # Tách lấy link đầu tiên trong srcset
+                        img = srcset.split()[0]
+
+            # 3️⃣ Nếu vẫn không có, thử regex tìm đường dẫn ảnh từ HTML (phòng khi HTML rút gọn)
+            if not img:
+                match = re.search(r"https://photo-baomoi\.bmcdn\.me/[^\s\"']+\.(jpg|webp|avif)", str(card))
+                if match:
+                    img = match.group(0)
+
+            # 4️⃣ Nếu vẫn không có, dùng ảnh fallback ngẫu nhiên
+            if not img:
+                fallback_images = [
+                    "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop",
+                    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
+                    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
+                    "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=400&h=300&fit=crop",
+                    "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=300&fit=crop"
+                ]
+                img = random.choice(fallback_images)
+
+            # --- Nguồn báo ---
+            source_tag = card.select_one(".bm-card-source")
+            source = source_tag.get("title") if source_tag else "Báo Mới"
+
+            # --- Thời gian đăng ---
+            time_tag = card.select_one("time")
+            time_text = time_tag.get_text(strip=True) if time_tag else ""
+
+            # --- Ghi lại dữ liệu ---
+            articles.append({
+                "title": title,
+                "url": link,
+                "image": img,
+                "source": source,
+                "time": time_text
+            })
+
+        # Giới hạn 9 bài đầu
+        articles = articles[:9]
+
+        return jsonify({
+            "success": True,
+            "count": len(articles),
+            "data": articles
+        })
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        })
 
 # ============================================================================
 # MAIN
