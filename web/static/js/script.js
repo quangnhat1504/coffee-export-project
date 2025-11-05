@@ -1,8 +1,197 @@
 // Global variables
 const API_BASE_URL = 'http://localhost:5000/api';
 let priceChart, exportPieChart, climateChart, trendsChart, exportPerformanceChart, forecastChart;
+let apiAvailable = false;
+
+// Cache configuration
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const apiCache = new Map();
 
 console.log('🚀 Script.js loaded at:', new Date().toLocaleTimeString());
+console.log('🔗 API Base URL:', API_BASE_URL);
+
+// ============================================================================
+// CACHE HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Get cached data if available and not expired
+ * @param {string} key - Cache key
+ * @returns {object|null} - Cached data or null
+ */
+function getCachedData(key) {
+    const cached = apiCache.get(key);
+    if (!cached) return null;
+    
+    const now = Date.now();
+    if (now - cached.timestamp > CACHE_DURATION) {
+        apiCache.delete(key);
+        return null;
+    }
+    
+    console.log(`✅ Cache hit: ${key}`);
+    return cached.data;
+}
+
+/**
+ * Store data in cache
+ * @param {string} key - Cache key
+ * @param {object} data - Data to cache
+ */
+function setCachedData(key, data) {
+    apiCache.set(key, {
+        data: data,
+        timestamp: Date.now()
+    });
+    console.log(`💾 Cached: ${key}`);
+}
+
+// ============================================================================
+// API HELPER FUNCTIONS WITH RETRY LOGIC AND CACHING
+// ============================================================================
+
+/**
+ * Fetch data from API with caching, retry logic and error handling
+ * @param {string} url - API endpoint URL
+ * @param {boolean} useCache - Whether to use cache
+ * @param {number} maxRetries - Maximum number of retry attempts
+ * @param {number} retryDelay - Delay between retries in ms
+ * @returns {Promise<object>} - API response data
+ */
+async function fetchWithRetry(url, useCache = true, maxRetries = 3, retryDelay = 1000) {
+    // Check cache first
+    if (useCache) {
+        const cached = getCachedData(url);
+        if (cached) return cached;
+    }
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            console.log(`📡 Fetching (attempt ${attempt}/${maxRetries}): ${url}`);
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                mode: 'cors',
+                cache: 'default'  // Use browser cache
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+            }
+            
+            const data = await response.json();
+            console.log(`✅ Fetch successful: ${url}`);
+            
+            // Cache the result
+            if (useCache) {
+                setCachedData(url, data);
+            }
+            
+            return data;
+            
+        } catch (error) {
+            console.warn(`⚠️  Attempt ${attempt} failed: ${error.message}`);
+            
+            if (attempt === maxRetries) {
+                console.error(`❌ All ${maxRetries} attempts failed for: ${url}`);
+                throw error;
+            }
+            
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+    }
+}
+
+// Helper function to check API connection
+async function checkAPIConnection() {
+    try {
+        const data = await fetchWithRetry(`${API_BASE_URL}/health`, 2, 500);
+        
+        if (data.status === 'healthy' || data.status === 'degraded') {
+            console.log('✅ API Connection successful:', data);
+            apiAvailable = true;
+            return true;
+        } else {
+            throw new Error('API is not healthy');
+        }
+    } catch (error) {
+        console.error('❌ API Connection failed:', error.message);
+        console.error('   Make sure the Flask API is running on http://localhost:5000');
+        console.error('   Run: npm run start-api');
+        apiAvailable = false;
+        showAPIErrorNotification();
+        return false;
+    }
+}
+
+// Show API error notification to user
+function showAPIErrorNotification() {
+    // Remove existing notification if any
+    const existing = document.getElementById('api-error-notification');
+    if (existing) existing.remove();
+    
+    const notification = document.createElement('div');
+    notification.id = 'api-error-notification';
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #f44336;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        z-index: 10000;
+        max-width: 400px;
+        font-family: Arial, sans-serif;
+        animation: slideIn 0.3s ease-out;
+    `;
+    notification.innerHTML = `
+        <strong style="font-size: 18px;">⚠️ API Connection Error</strong>
+        <p style="margin: 10px 0;">Cannot connect to the API server.</p>
+        <p style="margin: 10px 0; font-size: 14px;">
+            Please make sure the Flask API is running:<br>
+            <code style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 3px; display: inline-block; margin-top: 5px;">
+                npm run start-api
+            </code>
+        </p>
+        <button onclick="this.parentElement.remove()" style="
+            background: white;
+            color: #f44336;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        ">Close</button>
+        <button onclick="location.reload()" style="
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-left: 10px;
+        ">Retry</button>
+    `;
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 15 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 15000);
+}
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,6 +202,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize Application
 async function initializeApp() {
     console.log('🎯 initializeApp() called');
+    
+    // Check API connection first
+    console.log('🔍 Checking API connection...');
+    const apiConnected = await checkAPIConnection();
+    if (!apiConnected) {
+        console.warn('⚠️ Continuing without API connection - some features may not work');
+    }
+    
     setupNavigation();
     setupScrollAnimations();
     setupCounterAnimations();
@@ -21,6 +218,7 @@ async function initializeApp() {
     await updateHeroMetrics(); // Load hero section data from API
     setupMarketMeta();
     setupCommodityHighlighting();
+    setupMarketChartToggles(); // NEW: Setup toggle buttons for market chart
     setupTrendButtons();
     setupExportPerformanceToggles();
     setupFormHandling();
@@ -150,47 +348,58 @@ function setupCounterAnimations() {
 
 // Update Hero Section Metrics with Latest Data
 async function updateHeroMetrics() {
+    if (!apiAvailable) {
+        console.warn('⚠️  Skipping hero metrics update - API not available');
+        return;
+    }
+    
     try {
+        console.log('📊 Fetching hero metrics from API...');
+        
         // Fetch latest production data
-        const productionResponse = await fetch(`${API_BASE_URL}/production`);
-        const productionResult = await productionResponse.json();
+        const productionResult = await fetchWithRetry(`${API_BASE_URL}/production`);
         
         if (productionResult.success && productionResult.data.length > 0) {
             const latestProduction = productionResult.data[productionResult.data.length - 1];
             
             // Update Production (convert to M tons with 1 decimal)
             const productionMT = (latestProduction.output_million_tons).toFixed(1);
-            document.getElementById('hero-production').textContent = `${productionMT}M t`;
+            const heroProduction = document.getElementById('hero-production');
+            if (heroProduction) heroProduction.textContent = `${productionMT}M t`;
             
             // Update Area (convert to K ha)
             const areaKHa = Math.round(latestProduction.area_thousand_ha);
-            document.getElementById('hero-area').textContent = `${areaKHa}K ha`;
+            const heroArea = document.getElementById('hero-area');
+            if (heroArea) heroArea.textContent = `${areaKHa}K ha`;
             
             // Update Yield (2 decimals)
             const yieldValue = latestProduction.yield_tons_per_ha.toFixed(1);
-            document.getElementById('hero-yield').textContent = `${yieldValue} t/ha`;
+            const heroYield = document.getElementById('hero-yield');
+            if (heroYield) heroYield.textContent = `${yieldValue} t/ha`;
         }
         
         // Fetch export data for value and prices
-        const exportResponse = await fetch(`${API_BASE_URL}/export`);
-        const exportResult = await exportResponse.json();
+        const exportResult = await fetchWithRetry(`${API_BASE_URL}/export`);
         
         if (exportResult.success && exportResult.data.length > 0) {
             const latestExport = exportResult.data[exportResult.data.length - 1];
             
             // Update Export Value (convert to billions with 1 decimal)
             const exportValueB = (latestExport.export_value_million_usd / 1000).toFixed(1);
-            document.getElementById('hero-value').textContent = `$${exportValueB}B`;
+            const heroValue = document.getElementById('hero-value');
+            if (heroValue) heroValue.textContent = `$${exportValueB}B`;
             
             // Update Domestic Price (VN price per ton)
             if (latestExport.price_vn_usd_per_ton) {
-                document.getElementById('hero-price').textContent = `$${Math.round(latestExport.price_vn_usd_per_ton).toLocaleString()}`;
+                const heroPrice = document.getElementById('hero-price');
+                if (heroPrice) heroPrice.textContent = `$${Math.round(latestExport.price_vn_usd_per_ton).toLocaleString()}`;
             }
         }
         
         console.log('✅ Hero metrics updated with latest data');
     } catch (error) {
-        console.error('Error updating hero metrics:', error);
+        console.error('❌ Error updating hero metrics:', error);
+        console.error('   Some metrics may not display correctly');
     }
 }
 
@@ -434,8 +643,9 @@ function initializePriceChart() {
                             }
                             // Format based on dataset
                             if (context.datasetIndex === 0) {
-                                // Export Volume - in tons
-                                label += Math.round(context.parsed.y).toLocaleString() + ' tons';
+                                // Export Volume - convert to million tons
+                                const millionTons = (context.parsed.y / 1000000).toFixed(2);
+                                label += millionTons + ' million tons';
                             } else {
                                 // Prices - per ton
                                 label += '$' + Math.round(context.parsed.y).toLocaleString() + '/ton';
@@ -456,14 +666,15 @@ function initializePriceChart() {
                     position: 'left',
                     title: {
                         display: true,
-                        text: 'Export Volume (Tons)',
+                        text: 'Export Volume (Million Tons)',
                         color: textColor.trim(),
                         font: { size: 11 }
                     },
                     ticks: { 
                         color: textColor.trim(),
                         callback: function(value) {
-                            return value.toLocaleString() + ' tons';
+                            // Convert tons to million tons for display
+                            return (value / 1000000).toFixed(1) + 'M';
                         }
                     },
                     grid: { color: gridColor.trim() }
@@ -498,6 +709,92 @@ function initializePriceChart() {
     
     // Load real data from API
     loadPriceChartData();
+}
+
+// Setup Market Chart Toggle Buttons
+function setupMarketChartToggles() {
+    const checkboxes = document.querySelectorAll('.market-checkbox');
+    
+    if (!checkboxes.length) {
+        console.warn('No checkboxes found for market chart');
+        return;
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const dataset = this.getAttribute('data-dataset');
+            const isChecked = this.checked;
+            
+            console.log(`Market checkbox changed: ${dataset} = ${isChecked}`);
+            
+            // Update chart visibility
+            togglePriceChartSeries(dataset, isChecked);
+        });
+    });
+    
+    console.log('✅ Market chart toggles initialized -', checkboxes.length, 'checkboxes found');
+}
+
+// Toggle series visibility in price chart
+function togglePriceChartSeries(dataset, visible) {
+    if (!priceChart) {
+        console.warn('Price chart not initialized');
+        return;
+    }
+    
+    let datasetIndex = -1;
+    
+    // Map dataset name to dataset index
+    switch(dataset) {
+        case 'volume':
+            datasetIndex = 0; // Export Volume
+            break;
+        case 'worldPrice':
+            datasetIndex = 1; // World Price
+            break;
+        case 'vnPrice':
+            datasetIndex = 2; // VN Price
+            break;
+    }
+    
+    if (datasetIndex !== -1) {
+        // Set visibility: checked = show, unchecked = hide
+        const meta = priceChart.getDatasetMeta(datasetIndex);
+        meta.hidden = !visible; // hidden=false means show, hidden=true means hide
+        
+        // Update Y-axes visibility based on which datasets are visible
+        updatePriceChartAxes();
+        
+        // Update chart
+        priceChart.update();
+        
+        console.log(`${visible ? 'Showing' : 'Hiding'} ${dataset} in market chart`);
+    }
+}
+
+// Update Y-axes visibility based on visible datasets
+function updatePriceChartAxes() {
+    if (!priceChart) return;
+    
+    // Check if Export Volume (dataset 0) is visible
+    const volumeMeta = priceChart.getDatasetMeta(0);
+    const isVolumeVisible = !volumeMeta.hidden;
+    
+    // Check if any price dataset (1 or 2) is visible
+    const worldPriceMeta = priceChart.getDatasetMeta(1);
+    const vnPriceMeta = priceChart.getDatasetMeta(2);
+    const isPriceVisible = !worldPriceMeta.hidden || !vnPriceMeta.hidden;
+    
+    // Show/hide Y-axes accordingly
+    priceChart.options.scales['y-volume'].display = isVolumeVisible;
+    priceChart.options.scales['y-price'].display = isPriceVisible;
+    
+    // If only price axis is visible, position it on the left for better readability
+    if (isPriceVisible && !isVolumeVisible) {
+        priceChart.options.scales['y-price'].position = 'left';
+    } else {
+        priceChart.options.scales['y-price'].position = 'right';
+    }
 }
 
 // Load real price data from database (2005-2024)
@@ -928,25 +1225,40 @@ function initializeTrendsChart(){
 }
 
 function setupProductionToggles(){
-    const buttons = document.querySelectorAll('.prod-toggle-btn');
-    if(!buttons.length || !trendsChart) return;
-    buttons.forEach((btn,idx)=>{
-        btn.addEventListener('click',()=>{
-            buttons.forEach(b=>b.classList.remove('active'));
-            btn.classList.add('active');
-            const focus = btn.getAttribute('data-focus');
-            trendsChart.data.datasets.forEach(ds => {
-                const match = ds.label.toLowerCase().includes(focus);
-                ds.borderWidth = match?3:2;
-                ds.borderColor = adjustAlpha(ds.borderColor, match?1:0.5);
-                ds.pointRadius = match?5:3;
-                ds.backgroundColor = ds.backgroundColor; // keep gradient
-                ds.hidden = false;
-                ds.opacity = match?1:0.5;
-            });
-            trendsChart.update();
+    const checkboxes = document.querySelectorAll('.prod-checkbox');
+    if(!checkboxes.length || !trendsChart) return;
+    
+    checkboxes.forEach((checkbox)=>{
+        checkbox.addEventListener('change',()=>{
+            updateProductionChart();
         });
     });
+}
+
+function updateProductionChart() {
+    const checkboxes = document.querySelectorAll('.prod-checkbox');
+    const checkedDatasets = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.getAttribute('data-dataset'));
+    
+    trendsChart.data.datasets.forEach(ds => {
+        const datasetName = ds.label.toLowerCase();
+        let isVisible = false;
+        
+        if (checkedDatasets.includes('production') && datasetName.includes('production')) {
+            isVisible = true;
+        }
+        if (checkedDatasets.includes('area') && datasetName.includes('area')) {
+            isVisible = true;
+        }
+        if (checkedDatasets.includes('yield') && datasetName.includes('yield')) {
+            isVisible = true;
+        }
+        
+        ds.hidden = !isVisible;
+    });
+    
+    trendsChart.update();
 }
 
 // ============================================================================
@@ -1749,16 +2061,16 @@ const revealObserver = new IntersectionObserver((entries)=>{
 
 document.querySelectorAll('.reveal').forEach(el=> revealObserver.observe(el));
 
-// Sync aria-pressed state for toggle buttons (weather & production)
+// Sync aria-pressed state for toggle buttons (weather only now)
 function syncPressed(buttons){
     buttons.forEach(btn => {
         btn.setAttribute('aria-pressed', btn.classList.contains('active') ? 'true' : 'false');
     });
 }
 
-// Observe activation changes
+// Observe activation changes for weather buttons only
 const mutationConfig = { attributes:true, attributeFilter:['class'] };
-document.querySelectorAll('.wx-toggle-btn, .prod-toggle-btn').forEach(btn => {
+document.querySelectorAll('.wx-toggle-btn').forEach(btn => {
     new MutationObserver(()=>{
         const groupButtons = btn.closest('[role="group"]').querySelectorAll('button');
         syncPressed(groupButtons);
