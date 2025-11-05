@@ -1,15 +1,19 @@
 {
   "name": "vietnam-coffee-data-portal",
   "version": "1.0.0",
-  "description": "Vietnam Coffee Export Data Portal with Flask API and Frontend",
+  "description": "Vietnam Coffee Export Data Analytics Portal - Professional dashboard with real-time data visualization",
   "main": "index.js",
   "scripts": {
-    "install-python": "pip install -r requirements.txt",
-    "start-api": "cd wed && python api.py",
-    "start-frontend": "cd wed && npx http-server -p 8080 -o",
-    "dev": "concurrently \"npm run start-api\" \"npm run start-frontend\"",
+    "postinstall": "python -m pip install --upgrade pip && pip install -r requirements.txt",
+    "prestart": "python -c \"import flask, flask_cors, flask_caching, flask_compress\" || npm run postinstall",
     "start": "npm run dev",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "cd web/backend && python api.py",
+    "api": "cd web/backend && python api.py",
+    "api:debug": "cd web/backend && set FLASK_DEBUG=1 && python api.py",
+    "health": "curl http://localhost:5000/api/health",
+    "test:api": "curl http://localhost:5000/api/health && curl http://localhost:5000/api/production",
+    "clean": "rm -rf node_modules package-lock.json && rm -rf web/backend/__pycache__",
+    "reinstall": "npm run clean && npm install"
   },
   "keywords": [
     "coffee",

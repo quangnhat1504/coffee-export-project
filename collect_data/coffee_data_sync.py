@@ -12,31 +12,65 @@ except Exception:
     pass
 
 # ===== 0) Load .env =====
-load_dotenv()
+load_dotenv(dotenv_path='../.env')
 HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT", "3306"))
 USER = os.getenv("USER")
 PASSWORD = os.getenv("PASSWORD")
 DB = os.getenv("DB")
-CA_PEM = os.getenv("CA_PEM")
-if not all([HOST, PORT, USER, PASSWORD, DB, CA_PEM]):
-    raise SystemExit("Missing env vars. Set HOST, PORT, USER, PASSWORD, DB, CA_PEM in .env")
+CA_CERT = os.getenv("CA_CERT")  # Changed from CA_PEM to CA_CERT
 
-# ===== 1) Kết nối MySQL (Aiven cần SSL) =====
+if not all([HOST, PORT, USER, PASSWORD, DB]):
+    raise SystemExit("Missing env vars. Set HOST, PORT, USER, PASSWORD, DB in .env")
+
+# ===== 1) Kết nối MySQL (Support both SSL and non-SSL) =====
 url = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
-engine = create_engine(
-    url,
-    connect_args={"ssl": {"ca": CA_PEM}},
-    pool_pre_ping=True,
-    pool_recycle=1800,
-)
+
+# Try SSL first, fallback to non-SSL if certificate not available
+try:
+    if CA_CERT and CA_CERT.strip():
+        # Create temp cert file for SSL connection
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as f:
+            f.write(CA_CERT)
+            cert_file = f.name
+        
+        engine = create_engine(
+            url,
+            connect_args={"ssl": {"ca": cert_file}},
+            pool_pre_ping=True,
+            pool_recycle=1800,
+        )
+        print("✅ Connected with SSL")
+    else:
+        raise Exception("No SSL certificate provided")
+except Exception as e:
+    print(f"⚠️ SSL connection failed ({e}), trying without SSL...")
+    engine = create_engine(
+        url + "?ssl_disabled=true",
+        pool_pre_ping=True,
+        pool_recycle=1800,
+    )
+    print("✅ Connected without SSL")
 
 # ===== 2) Đọc CSV =====
-CSV_PATH = r"C:\Users\hungn\Downloads\coffee_dabase\Data_coffee.csv"  # <-- sửa nếu khác
+# Use relative paths from current script location
+script_dir = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(script_dir, "Data_coffee.csv")
+CSV_PATH_MT = os.path.join(script_dir, "Thi_phan_3_thi_truong_chinh.csv")
+
+print(f"📁 Looking for CSV files in: {script_dir}")
+print(f"📄 Main CSV: {CSV_PATH}")
+print(f"📄 Market CSV: {CSV_PATH_MT}")
+
+if not os.path.exists(CSV_PATH):
+    raise SystemExit(f"❌ Data_coffee.csv not found at: {CSV_PATH}")
+if not os.path.exists(CSV_PATH_MT):
+    raise SystemExit(f"❌ Thi_phan_3_thi_truong_chinh.csv not found at: {CSV_PATH_MT}")
+
 df = pd.read_csv(CSV_PATH, encoding="utf-8-sig")
 
 # ===== 2b) Đọc CSV thị trường ('.' là thập phân) =====
-CSV_PATH_MT = r"C:\Users\hungn\Downloads\coffee_dabase\Thi_phan_3_thi_truong_chinh.csv"  # đổi đường dẫn nếu cần
 mt = pd.read_csv(CSV_PATH_MT, encoding="utf-8-sig")
 
 # Làm sạch cột

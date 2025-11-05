@@ -20,17 +20,48 @@ DB_NAME = os.getenv('DB', 'defaultdb')
 
 print(f"Connecting to {DB_HOST}:{DB_PORT}/{DB_NAME}")
 
-# Create database connection
-connection = pymysql.connect(
-    host=DB_HOST,
-    port=DB_PORT,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    database=DB_NAME,
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor,
-    ssl={'ssl_disabled': True}
-)
+# Create database connection with SSL fallback
+def create_connection():
+    """Create database connection with SSL support and fallback"""
+    ca_cert = os.getenv('CA_CERT')
+    
+    try:
+        if ca_cert and ca_cert.strip():
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as f:
+                f.write(ca_cert)
+                cert_file = f.name
+            
+            connection = pymysql.connect(
+                host=DB_HOST,
+                port=DB_PORT,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                database=DB_NAME,
+                charset='utf8mb4',
+                cursorclass=pymysql.cursors.DictCursor,
+                ssl={'ca': cert_file}
+            )
+            print("✅ Connected with SSL")
+            return connection
+        else:
+            raise Exception("No SSL certificate provided")
+    except Exception as e:
+        print(f"⚠️ SSL connection failed ({e}), trying without SSL...")
+        connection = pymysql.connect(
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            database=DB_NAME,
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'ssl_disabled': True}
+        )
+        print("✅ Connected without SSL")
+        return connection
+
+connection = create_connection()
 
 cursor = connection.cursor()
 
