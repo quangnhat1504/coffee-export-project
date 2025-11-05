@@ -44,6 +44,26 @@ Thumbs.db
 credentials.json
 secrets.json
 
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+.npm
+.yarn
+
+# Build outputs
+dist/
+build/
+*.min.js
+*.min.css
+
+# Backup files
+*.backup
+*.bak
+*.old
+*~
+
 # Data files (optional - comment out if you want to track them)
 # *.csv
 # *.xlsx

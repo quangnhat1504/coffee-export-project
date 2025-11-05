@@ -19,24 +19,32 @@ USER = os.getenv("USER")
 PASSWORD = os.getenv("PASSWORD")
 DB = os.getenv("DB")
 CA_PEM = os.getenv("CA_PEM")
-if not all([HOST, PORT, USER, PASSWORD, DB, CA_PEM]):
-    raise SystemExit("Missing env vars. Set HOST, PORT, USER, PASSWORD, DB, CA_PEM in .env")
+CSV_PATH = os.getenv("CSV_PATH")
+CSV_PATH_MT = os.getenv("CSV_PATH_MT")
+
+if not all([HOST, PORT, USER, PASSWORD, DB]):
+    raise SystemExit("Missing env vars. Set HOST, PORT, USER, PASSWORD, DB in .env")
+if not CSV_PATH or not CSV_PATH_MT:
+    raise SystemExit("Missing CSV paths. Set CSV_PATH and CSV_PATH_MT in .env")
 
 # ===== 1) Kết nối MySQL (Aiven cần SSL) =====
 url = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
+# Only use SSL if CA_PEM is provided
+connect_args = {}
+if CA_PEM and CA_PEM.strip():
+    connect_args["ssl"] = {"ca": CA_PEM}
+
 engine = create_engine(
     url,
-    connect_args={"ssl": {"ca": CA_PEM}},
+    connect_args=connect_args,
     pool_pre_ping=True,
     pool_recycle=1800,
 )
 
 # ===== 2) Đọc CSV =====
-CSV_PATH = r"C:\Users\hungn\Downloads\coffee_dabase\Data_coffee.csv"  # <-- sửa nếu khác
 df = pd.read_csv(CSV_PATH, encoding="utf-8-sig")
 
 # ===== 2b) Đọc CSV thị trường ('.' là thập phân) =====
-CSV_PATH_MT = r"C:\Users\hungn\Downloads\coffee_dabase\Thi_phan_3_thi_truong_chinh.csv"  # đổi đường dẫn nếu cần
 mt = pd.read_csv(CSV_PATH_MT, encoding="utf-8-sig")
 
 # Làm sạch cột

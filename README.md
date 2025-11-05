@@ -6,6 +6,7 @@ A comprehensive coffee data collection, processing, and analysis system. This pr
 
 - [Project Overview](#project-overview)
 - [Features](#features)
+- [🔐 Security](#security)
 - [Project Structure](#project-structure)
 - [Setup & Installation](#setup--installation)
 - [Usage](#usage)
@@ -32,6 +33,31 @@ This project provides a complete solution for:
 - Exploratory data analysis capabilities
 - Error handling and data validation
 - Support for Vietnamese coffee market data
+- **🔐 Secure credential management using environment variables**
+
+## 🔐 Security
+
+**IMPORTANT:** This project uses environment variables to protect sensitive information like database passwords and API keys.
+
+### Key Security Features:
+- ✅ All credentials stored in `.env` file (not committed to Git)
+- ✅ `.env.example` template provided for setup guidance
+- ✅ `.gitignore` configured to exclude sensitive files
+- ✅ SSL/TLS support for database connections
+- ✅ No hardcoded passwords or API keys in source code
+
+### Quick Security Check:
+```powershell
+# Verify .env is ignored by Git
+git check-ignore -v .env
+# Should output: .gitignore:5:*.env    .env
+
+# Verify .env is not tracked
+git status
+# .env should NOT appear in the list
+```
+
+📖 **For detailed security guidelines, see [SECURITY.md](SECURITY.md)**
 
 ## Project Structure
 
