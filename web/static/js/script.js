@@ -198,7 +198,51 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 DOM Content Loaded at:', new Date().toLocaleTimeString());
     initializeApp();
 });
+// ================================================================
+// 📢 Load Coffee News from Flask API (/api/news)
+// ================================================================
+async function loadCoffeeNews() {
+    const container = document.querySelector(".news-list");
+    if (!container) return;
+    container.innerHTML = "<p>🔄 Đang tải tin tức mới nhất...</p>";
 
+    try {
+        const res = await fetch(`${API_BASE_URL}/news`);
+        const data = await res.json();
+
+        if (!data.success || !data.data.length) {
+            container.innerHTML = "<p>⚠️ Không có tin tức mới.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+        data.data.forEach(item => {
+            container.innerHTML += `
+                <article class="news-item">
+                    <div class="news-thumbnail">
+                        <img src="${item.image}" alt="Coffee news">
+                        <div class="news-category">BÁO MỚI</div>
+                    </div>
+                    <div class="news-item-content">
+                        <h3 class="news-item-title">
+                            <a href="${item.url}" target="_blank">${item.title}</a>
+                        </h3>
+                        <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
+                    </div>
+                </article>
+            `;
+        });
+    } catch (err) {
+        container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
+    }
+}
+
+// Gọi hàm khi DOM sẵn sàng
+document.addEventListener("DOMContentLoaded", loadCoffeeNews);
+
+
+// Gọi hàm khi trang News được load
+document.addEventListener("DOMContentLoaded", loadCoffeeNews);
 // Initialize Application
 async function initializeApp() {
     console.log('🎯 initializeApp() called');
