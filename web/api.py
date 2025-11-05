@@ -678,6 +678,52 @@ def health_check():
     except Exception as e:
         return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
+import requests
+from bs4 import BeautifulSoup
+from flask import Blueprint, jsonify
+
+news_bp = Blueprint('news', __name__)
+
+@news_bp.route("/api/news")
+def get_coffee_news():
+    try:
+        news_list = []
+
+        # Crawl tin từ Báo Mới
+        baomoi_url = "https://baomoi.com/tim-kiem/gi%C3%A1%20c%C3%A0%20ph%C3%AA.epi"
+        r = requests.get(baomoi_url, timeout=10)
+        soup = BeautifulSoup(r.text, "html.parser")
+
+        for item in soup.select(".story"):
+            title_el = item.select_one(".story__heading a")
+            if not title_el:
+                continue
+            title = title_el.text.strip()
+            link = "https://baomoi.com" + title_el["href"]
+            source = item.select_one(".source").text if item.select_one(".source") else "Báo Mới"
+            news_list.append({
+                "title": title,
+                "url": link,
+                "source": source,
+            })
+
+        # Crawl thêm tin từ VnExpress
+        vnexpress_url = "https://vnexpress.net/tin-tuc/kinh-doanh/thi-truong/ca-phe"
+        r2 = requests.get(vnexpress_url, timeout=10)
+        soup2 = BeautifulSoup(r2.text, "html.parser")
+
+        for item in soup2.select(".title-news a[href]")[:5]:
+            title = item.text.strip()
+            link = item["href"]
+            news_list.append({
+                "title": title,
+                "url": link,
+                "source": "VnExpress",
+            })
+
+        return jsonify({"success": True, "data": news_list[:10]})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 if __name__ == '__main__':
     print("Starting Vietnam Coffee Data Portal API...")

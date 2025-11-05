@@ -2130,3 +2130,40 @@ function updateWeatherCards(stats) {
         }
     }
 }
+// ===============================
+// 📰 Load Coffee News & Reports
+// ===============================
+async function loadCoffeeNews() {
+    const newsContainer = document.getElementById('newsGrid');
+    if (!newsContainer) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/news`);
+        const result = await response.json();
+
+        if (result.success && result.data.length > 0) {
+            newsContainer.innerHTML = '';
+            result.data.forEach(news => {
+                const card = document.createElement('div');
+                card.className = 'news-card reveal';
+                card.innerHTML = `
+                    <div class="news-icon"><i class="fas fa-coffee"></i></div>
+                    <h3>${news.title}</h3>
+                    <p>${news.source}</p>
+                    <a href="${news.url}" class="read-more-btn" target="_blank">Đọc thêm</a>
+                `;
+                newsContainer.appendChild(card);
+            });
+        } else {
+            newsContainer.innerHTML = '<p>Không tìm thấy tin tức cà phê mới.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading coffee news:', error);
+        newsContainer.innerHTML = '<p>Lỗi khi tải tin tức cà phê.</p>';
+    }
+}
+
+// Gọi hàm khi trang đã load xong
+document.addEventListener('DOMContentLoaded', () => {
+    loadCoffeeNews();
+});
