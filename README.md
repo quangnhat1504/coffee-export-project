@@ -79,25 +79,42 @@ This project provides a complete solution for:
 
 ```
 coffee-export-project/
-├── package.json                    # Node.js configuration
+├── package.json                    # Node.js configuration & npm scripts
 ├── requirements.txt                # Python dependencies
 ├── README.md                       # Main documentation
-├── README_SETUP.md                 # Setup guide
 │
-├── wed/                           # Web application
-│   ├── api.py                     # Flask API backend
-│   ├── index.html                 # Frontend HTML
-│   ├── script.js                  # Frontend JavaScript (Chart.js)
-│   ├── styles.css                 # Frontend CSS
-│   ├── test_forecast.py           # Forecasting tests
-│   └── check_*.py                 # Data validation scripts
+├── web/                           # Web application
+│   ├── backend/
+│   │   └── api.py                 # Flask API with caching & compression
+│   ├── scripts/
+│   │   ├── data_generator.py      # Production data generator
+│   │   └── news_updater.py        # News content updater
+│   ├── static/
+│   │   ├── css/
+│   │   │   ├── styles.css         # Main styles
+│   │   │   └── contact-modern.css # Contact page styles
+│   │   └── js/
+│   │       └── script.js          # Frontend JavaScript (Chart.js + lazy loading)
+│   └── templates/
+│       ├── index.html             # Main dashboard
+│       └── news_content.html      # News page
 │
 ├── collect_data/                  # Data collection tools
 │   ├── Data_coffee.csv            # Main coffee data
-│   ├── sync_coffee.py             # Database sync script
-│   ├── sync_weather.py            # Weather data sync
-│   ├── create_production_by_province.py
-│   └── beautiful_soup_4_demo.ipynb
+│   ├── coffee_data_sync.py        # Coffee data sync to MySQL
+│   ├── weather_data_sync.py       # Weather data sync to MySQL
+│   └── Thi_phan_3_thi_truong_chinh.csv
+│
+├── visualize/                     # Data visualization & analysis
+│   ├── charts_generator.py        # Chart generation scripts
+│   ├── production_analysis.ipynb  # Production scatter plot analysis
+│   └── time_series_analysis.ipynb # Time series forecasting
+│
+└── docs/                          # Documentation
+    ├── QUICK_START.md
+    ├── PROJECT_STRUCTURE.md
+    ├── PERFORMANCE_OPTIMIZATIONS.md
+    └── ...
 │
 ├── visualize/                     # Data visualization
 │   └── scatterplot_production.ipynb

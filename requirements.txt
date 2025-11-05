@@ -11,6 +11,8 @@ python-dotenv>=0.19.0
 # Web Framework
 flask>=2.0.0
 flask-cors>=4.0.0
+flask-caching>=2.1.0
+flask-compress>=1.14
 
 # Data Analysis & Visualization
 matplotlib>=3.5.0

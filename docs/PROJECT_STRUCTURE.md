@@ -20,12 +20,21 @@ coffee-export-project/
 ├── visualize/           # Data visualization notebooks
 │   └── *.ipynb          # Jupyter notebooks
 │
-└── wed/                 # Main web application
-    ├── api.py           # Flask API backend
-    ├── index.html       # Main HTML page
-    ├── script.js        # JavaScript logic
-    ├── styles.css       # CSS styles
-    └── *.py             # Other Python scripts
+└── web/                 # Main web application
+    ├── backend/         # Flask API backend
+    │   └── api.py       # Main API server
+    ├── scripts/         # Utility scripts
+    │   ├── create_production_by_province.py
+    │   └── update_news.py
+    ├── static/          # Static assets
+    │   ├── css/         # Stylesheets
+    │   │   ├── styles.css
+    │   │   └── contact-modern.css
+    │   └── js/          # JavaScript files
+    │       └── script.js
+    └── templates/       # HTML templates
+        ├── index.html
+        └── news_content.html
 ```
 
 ## 🔑 Files Quan Trọng
@@ -106,5 +115,5 @@ npm run check
 
 - Sử dụng `npm run dev` để chạy cả API và web server
 - API chạy trên port 5000
-- Website có thể mở trực tiếp file `wed/index.html` hoặc qua API server
+- Website có thể mở trực tiếp file `web/templates/index.html` hoặc qua API server
 - Database connection tự động load từ `.env`

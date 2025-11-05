@@ -1,11 +1,13 @@
 """
 Flask API for Vietnam Coffee Data Portal
-Provides weather data by province from Aiven MySQL database
+Optimized with caching and compression for better performance
 """
 # -*- coding: utf-8 -*-
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from flask_cors import CORS
+from flask_caching import Cache
+from flask_compress import Compress
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 import pandas as pd
@@ -14,15 +16,27 @@ from dotenv import load_dotenv
 from datetime import datetime
 import sys
 import traceback
+from functools import wraps
 
 # Set UTF-8 encoding for stdout
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
 # Load environment variables
-load_dotenv(dotenv_path='../.env')
+load_dotenv(dotenv_path='../../.env')
 
-app = Flask(__name__)
+app = Flask(__name__, 
+            template_folder='../templates',
+            static_folder='../static')
+
+# Configure Caching (Simple in-memory cache)
+app.config['CACHE_TYPE'] = 'SimpleCache'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # 5 minutes default
+cache = Cache(app)
+
+# Enable Response Compression
+compress = Compress()
+compress.init_app(app)
 
 # Configure CORS to allow all origins (important for local development)
 CORS(app, resources={
@@ -55,35 +69,32 @@ def create_db_engine():
     
     # Strategy 1: Try without SSL (most reliable for Aiven)
     try:
-        print("🔄 Attempting connection without SSL...")
         test_engine = create_engine(
             base_url,
             connect_args={
                 "ssl": False,
-                "connect_timeout": 30,
+                "connect_timeout": 10,
                 "read_timeout": 30,
                 "write_timeout": 30
             },
             pool_pre_ping=True,
-            pool_recycle=3600,
-            pool_size=5,
-            max_overflow=10,
+            pool_recycle=1800,  # Recycle connections every 30 minutes
+            pool_size=10,  # Increased pool size
+            max_overflow=20,  # Increased overflow
             echo=False
         )
         # Test connection
         with test_engine.connect() as conn:
             conn.execute(text("SELECT 1"))
             conn.commit()
-        print("✅ Database connected successfully (without SSL)")
         return test_engine
     except Exception as e:
-        print(f"⚠️  Connection without SSL failed: {str(e)[:100]}")
+        pass
     
     # Strategy 2: Try with SSL if certificate available
     ca_cert = os.getenv('CA_CERT')
     if ca_cert and ca_cert.strip():
         try:
-            print("🔄 Attempting connection with SSL certificate...")
             import tempfile
             with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as f:
                 f.write(ca_cert)
@@ -105,14 +116,12 @@ def create_db_engine():
             with test_engine.connect() as conn:
                 conn.execute(text("SELECT 1"))
                 conn.commit()
-            print("✅ Database connected successfully (with SSL)")
             return test_engine
         except Exception as ssl_error:
-            print(f"⚠️  SSL connection failed: {str(ssl_error)[:100]}")
+            pass
     
     # Strategy 3: Try with default SSL mode
     try:
-        print("🔄 Attempting connection with default SSL mode...")
         test_engine = create_engine(
             base_url,
             connect_args={"connect_timeout": 30},
@@ -126,10 +135,9 @@ def create_db_engine():
         with test_engine.connect() as conn:
             conn.execute(text("SELECT 1"))
             conn.commit()
-        print("✅ Database connected successfully (default mode)")
         return test_engine
     except Exception as default_error:
-        print(f"⚠️  Default connection failed: {str(default_error)[:100]}")
+        pass
     
     # All strategies failed
     raise Exception(
@@ -141,9 +149,6 @@ def create_db_engine():
 try:
     engine = create_db_engine()
 except Exception as e:
-    print(f"❌ CRITICAL ERROR: Database initialization failed: {e}")
-    print("   The API will start but database operations will fail.")
-    print("   Please check your .env file and database credentials.")
     engine = None
 
 # Province name mapping (database -> display)
@@ -239,6 +244,20 @@ def handle_exception(e):
     }), 500
 
 # ============================================================================
+# WEB ROUTES
+# ============================================================================
+
+@app.route('/')
+def index():
+    """Serve the main dashboard page"""
+    return render_template('index.html')
+
+@app.route('/news')
+def news():
+    """Serve the news page"""
+    return render_template('news_content.html')
+
+# ============================================================================
 # API ENDPOINTS
 # ============================================================================
 
@@ -272,6 +291,7 @@ def health_check():
 
 
 @app.route('/api/weather/province/<province>', methods=['GET'])
+@cache.cached(timeout=600, query_string=True)  # Cache for 10 minutes
 @safe_db_operation
 def get_weather_by_province(province):
     """
@@ -446,6 +466,7 @@ def get_weather_summary():
 
 
 @app.route('/api/exports/top-countries', methods=['GET'])
+@cache.cached(timeout=600, query_string=True)  # Cache for 10 minutes
 @safe_db_operation
 def get_top_export_countries():
     """
@@ -673,6 +694,7 @@ def get_available_years():
 
 
 @app.route('/api/production', methods=['GET'])
+@cache.cached(timeout=300)  # Cache for 5 minutes
 @safe_db_operation
 def get_production_data():
     """
@@ -802,6 +824,7 @@ def get_production_by_province(province):
 
 
 @app.route('/api/export', methods=['GET'])
+@cache.cached(timeout=300)  # Cache for 5 minutes
 @safe_db_operation
 def get_export_data():
     """
@@ -901,45 +924,21 @@ def get_export_data():
 # ============================================================================
 
 if __name__ == '__main__':
-    print("\n" + "="*70)
-    print("🚀 Vietnam Coffee Data Portal API")
-    print("="*70)
-    print(f"📍 Database: {DB_HOST}:{DB_PORT}/{DB_NAME}")
-    
-    # Check database connection status
-    if engine:
-        is_connected, message = check_database_connection()
-        if is_connected:
-            print(f"✅ Database: {message}")
-        else:
-            print(f"⚠️  Database: {message}")
-            print("   API will start but some endpoints may fail")
-    else:
-        print("❌ Database: Not initialized")
-        print("   API will start but database operations will fail")
-    
-    print(f"\n🌐 API Server starting on:")
-    print(f"   - Local:   http://localhost:5000")
-    print(f"   - Network: http://0.0.0.0:5000")
-    print(f"\n📚 Available endpoints:")
-    print(f"   - Health Check:      /api/health")
-    print(f"   - Production Data:   /api/production")
-    print(f"   - Export Data:       /api/export")
-    print(f"   - Weather Data:      /api/weather/province/<province>")
-    print(f"   - Top Countries:     /api/exports/top-countries")
-    print("="*70 + "\n")
+    print("\n🚀 Vietnam Coffee Data Portal")
+    print(f"📍 Web Interface: http://localhost:5000")
+    print(f"📍 API Endpoint:  http://localhost:5000/api/")
+    print(f"✨ Press CTRL+C to stop\n")
     
     try:
         app.run(
-            debug=True, 
+            debug=False, 
             host='0.0.0.0', 
             port=5000,
             threaded=True,
-            use_reloader=True
+            use_reloader=False
         )
     except KeyboardInterrupt:
-        print("\n\n👋 API Server stopped by user")
+        pass
     except Exception as e:
-        print(f"\n\n❌ API Server error: {e}")
         traceback.print_exc()
 

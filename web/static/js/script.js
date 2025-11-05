@@ -3,21 +3,68 @@ const API_BASE_URL = 'http://localhost:5000/api';
 let priceChart, exportPieChart, climateChart, trendsChart, exportPerformanceChart, forecastChart;
 let apiAvailable = false;
 
+// Cache configuration
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const apiCache = new Map();
+
 console.log('🚀 Script.js loaded at:', new Date().toLocaleTimeString());
 console.log('🔗 API Base URL:', API_BASE_URL);
 
 // ============================================================================
-// API HELPER FUNCTIONS WITH RETRY LOGIC
+// CACHE HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Fetch data from API with retry logic and error handling
+ * Get cached data if available and not expired
+ * @param {string} key - Cache key
+ * @returns {object|null} - Cached data or null
+ */
+function getCachedData(key) {
+    const cached = apiCache.get(key);
+    if (!cached) return null;
+    
+    const now = Date.now();
+    if (now - cached.timestamp > CACHE_DURATION) {
+        apiCache.delete(key);
+        return null;
+    }
+    
+    console.log(`✅ Cache hit: ${key}`);
+    return cached.data;
+}
+
+/**
+ * Store data in cache
+ * @param {string} key - Cache key
+ * @param {object} data - Data to cache
+ */
+function setCachedData(key, data) {
+    apiCache.set(key, {
+        data: data,
+        timestamp: Date.now()
+    });
+    console.log(`💾 Cached: ${key}`);
+}
+
+// ============================================================================
+// API HELPER FUNCTIONS WITH RETRY LOGIC AND CACHING
+// ============================================================================
+
+/**
+ * Fetch data from API with caching, retry logic and error handling
  * @param {string} url - API endpoint URL
+ * @param {boolean} useCache - Whether to use cache
  * @param {number} maxRetries - Maximum number of retry attempts
  * @param {number} retryDelay - Delay between retries in ms
  * @returns {Promise<object>} - API response data
  */
-async function fetchWithRetry(url, maxRetries = 3, retryDelay = 1000) {
+async function fetchWithRetry(url, useCache = true, maxRetries = 3, retryDelay = 1000) {
+    // Check cache first
+    if (useCache) {
+        const cached = getCachedData(url);
+        if (cached) return cached;
+    }
+    
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             console.log(`📡 Fetching (attempt ${attempt}/${maxRetries}): ${url}`);
@@ -29,7 +76,7 @@ async function fetchWithRetry(url, maxRetries = 3, retryDelay = 1000) {
                     'Content-Type': 'application/json'
                 },
                 mode: 'cors',
-                cache: 'no-cache'
+                cache: 'default'  // Use browser cache
             });
             
             if (!response.ok) {
@@ -39,6 +86,12 @@ async function fetchWithRetry(url, maxRetries = 3, retryDelay = 1000) {
             
             const data = await response.json();
             console.log(`✅ Fetch successful: ${url}`);
+            
+            // Cache the result
+            if (useCache) {
+                setCachedData(url, data);
+            }
+            
             return data;
             
         } catch (error) {
