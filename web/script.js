@@ -2147,10 +2147,13 @@ async function loadCoffeeNews() {
                 const card = document.createElement('div');
                 card.className = 'news-card reveal';
                 card.innerHTML = `
-                    <div class="news-icon"><i class="fas fa-coffee"></i></div>
-                    <h3>${news.title}</h3>
-                    <p>${news.source}</p>
-                    <a href="${news.url}" class="read-more-btn" target="_blank">Đọc thêm</a>
+                    <a href="${news.url}" target="_blank" class="news-link">
+                        <div class="news-icon"><i class="fas fa-coffee"></i></div>
+                        <div class="news-content">
+                        <h3 class="news-title">${news.title}</h3>
+                        <p class="news-source">Nguồn: ${news.source}</p>
+                        </div>
+                    </a>
                 `;
                 newsContainer.appendChild(card);
             });
