@@ -678,42 +678,6 @@ def health_check():
     except Exception as e:
         return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
 
-import requests
-from bs4 import BeautifulSoup
-from flask import Blueprint, jsonify
-
-news_bp = Blueprint('news', __name__)
-
-@app.route("/api/news")
-def get_coffee_news():
-    try:
-        news_list = []
-
-        # 🔹 Crawl tin từ Báo Mới (từ khóa: giá cà phê)
-        baomoi_url = "https://baomoi.com/tim-kiem/gi%C3%A1%20c%C3%A0%20ph%C3%AA.epi"
-        r = requests.get(baomoi_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        # Lấy các thẻ <a> chứa liên kết bài viết trong khối .bm-card-header
-        for article in soup.select(".bm-card-header a[href$='.epi'][title]"):
-            title = article.get("title").strip()
-            link = "https://baomoi.com" + article.get("href")
-            news_list.append({
-                "title": title,
-                "url": link,
-                "source": "Báo Mới"
-            })
-
-
-
-
-        return jsonify({"success": True, "data": news_list[:10]})
-    except Exception as e:
-        import traceback
-        print("🛑 ERROR in /api/news:")
-        traceback.print_exc()
-        return jsonify({"success": False, "error": str(e)})
-
 
 if __name__ == '__main__':
     print("Starting Vietnam Coffee Data Portal API...")
