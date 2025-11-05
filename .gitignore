@@ -47,3 +47,4 @@ secrets.json
 # Data files (optional - comment out if you want to track them)
 # *.csv
 # *.xlsx
+node_modules
