@@ -1501,14 +1501,15 @@ body.enable-snap section.hero {
     background: var(--card-bg);
     border-radius: 16px;
     border: 1px solid var(--border-color);
-    padding: 1.5rem 1.25rem;
-    text-align: center;
+    padding: 1.5rem;
+    text-align: left;
     transition: all 0.3s ease;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
     cursor: pointer;
+    min-height: 150px;
 }
 
 .news-card:hover {
@@ -1518,8 +1519,41 @@ body.enable-snap section.hero {
 }
 
 .news-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+    font-size: 2rem;
+    color: var(--coffee-brown);
+    flex-shrink: 0;
+}
+.news-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    line-height: 1.4;
+}
+.news-source {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+    margin-bottom: 0.8rem;
+}
+
+.read-more-btn {
+    background: var(--coffee-brown);
+    color: #fff;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.read-more-btn:hover {
+    background: var(--coffee-light);
+    transform: translateY(-2px);
+}
+
+.news-title a:hover {
+    color: var(--accent-primary);
 }
 
 .news-card h3 {
