@@ -706,19 +706,6 @@ def get_coffee_news():
 
 
 
-        # 🔹 Crawl thêm tin từ VnExpress (mục cà phê)
-        vnexpress_url = "https://vnexpress.net/tin-tuc/kinh-doanh/thi-truong/ca-phe"
-        r2 = requests.get(vnexpress_url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
-        soup2 = BeautifulSoup(r2.text, "html.parser")
-
-        for item in soup2.select("h3.title-news a[href]")[:5]:
-            title = item.text.strip()
-            link = item["href"]
-            news_list.append({
-                "title": title,
-                "url": link,
-                "source": "VnExpress"
-            })
 
         return jsonify({"success": True, "data": news_list[:10]})
     except Exception as e:
