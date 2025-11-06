@@ -7,9 +7,20 @@ Automatically continues from the last date in database to avoid duplicates
 import requests
 import pandas as pd
 from datetime import date, datetime, timedelta
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Engine
+from typing import Optional, Tuple, List, Dict, Any
 import os
+import sys
+import calendar
 from dotenv import load_dotenv
+
+# Add parent directory to path to import db_utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'web', 'backend'))
+try:
+    from db_utils import create_database_engine
+except ImportError:
+    # Fallback if import fails
+    create_database_engine = None
 
 # ============================================================================
 # ENVIRONMENT VARIABLES
@@ -18,7 +29,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 HOST = os.getenv("HOST")
-PORT = int(os.getenv("PORT", "3306"))
+PORT = os.getenv("PORT", "3306")
 USER = os.getenv("USER")
 PASSWORD = os.getenv("PASSWORD")
 DB = os.getenv("DB")
@@ -31,17 +42,32 @@ if not all([HOST, PORT, USER, PASSWORD, DB]):
 # DATABASE CONNECTION
 # ============================================================================
 
-url = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
+engine: Optional[Engine] = None
 
-# Disable SSL verification for simplicity
-engine = create_engine(
-    url,
-    connect_args={"ssl_disabled": True},
-    pool_pre_ping=True,
-    pool_recycle=1800,
-)
-
-print("Connected to Aiven MySQL")
+if create_database_engine:
+    try:
+        engine = create_database_engine(
+            host=HOST,
+            user=USER,
+            password=PASSWORD,
+            port=PORT,
+            database=DB,
+            ca_cert=CA_CERT
+        )
+        print("✅ Connected to Aiven MySQL")
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        raise
+else:
+    # Fallback to simple connection
+    url = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
+    engine = create_engine(
+        url,
+        connect_args={"ssl_disabled": True},
+        pool_pre_ping=True,
+        pool_recycle=1800,
+    )
+    print("✅ Connected to Aiven MySQL (fallback mode)")
 
 # ============================================================================
 # CONFIGURATION
@@ -94,24 +120,30 @@ def clear_all_data():
         print(f"Deleted {result.rowcount} records from weather_data_monthly")
 
 
-def get_last_month_in_db(province):
+def get_last_month_in_db(province: str) -> Tuple[int, int]:
     """Get the last year-month we have data for a specific province"""
-    query = """
-    SELECT MAX(year) as last_year, MAX(month) as last_month
-    FROM weather_data_monthly 
-    WHERE province = :province
-    """
+    query = text("""
+        SELECT MAX(year) as last_year, MAX(month) as last_month
+        FROM weather_data_monthly 
+        WHERE province = :province
+    """)
     
     with engine.connect() as conn:
-        result = conn.execute(text(query), {"province": province}).fetchone()
+        result = conn.execute(query, {"province": province}).fetchone()
     
     if result and result[0]:
-        return result[0], result[1]  # (year, month)
+        return int(result[0]), int(result[1])  # (year, month)
     else:
         return 2004, 12  # Will start from January 2005 (next month)
 
 
-def fetch_weather_data_monthly(province, lat, lon, start_date, end_date):
+def fetch_weather_data_monthly(
+    province: str,
+    lat: float,
+    lon: float,
+    start_date: str,
+    end_date: str
+) -> Optional[Dict[str, Any]]:
     """Fetch monthly weather data from Open-Meteo API"""
     url = (
         f"https://archive-api.open-meteo.com/v1/archive?"
@@ -126,73 +158,86 @@ def fetch_weather_data_monthly(province, lat, lon, start_date, end_date):
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching data for {province}: {e}")
+        print(f"❌ Error fetching data for {province}: {e}")
         return None
 
 
-def aggregate_to_monthly(daily_data):
+def aggregate_to_monthly(daily_data: Optional[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Aggregate daily data to monthly averages"""
     if not daily_data or 'daily' not in daily_data:
         return []
     
-    df = pd.DataFrame(daily_data['daily'])
-    df['time'] = pd.to_datetime(df['time'])
-    df['year'] = df['time'].dt.year
-    df['month'] = df['time'].dt.month
-    
-    # Group by year-month and aggregate
-    monthly = df.groupby(['year', 'month']).agg({
-        'temperature_2m_mean': 'mean',
-        'precipitation_sum': 'sum',
-        'relative_humidity_2m_mean': 'mean'
-    }).reset_index()
-    
-    return monthly.to_dict('records')
+    try:
+        df = pd.DataFrame(daily_data['daily'])
+        df['time'] = pd.to_datetime(df['time'])
+        df['year'] = df['time'].dt.year
+        df['month'] = df['time'].dt.month
+        
+        # Group by year-month and aggregate
+        monthly = df.groupby(['year', 'month']).agg({
+            'temperature_2m_mean': 'mean',
+            'precipitation_sum': 'sum',
+            'relative_humidity_2m_mean': 'mean'
+        }).reset_index()
+        
+        return monthly.to_dict('records')
+    except Exception as e:
+        print(f"❌ Error aggregating data: {e}")
+        return []
 
 
-def save_to_database(province, monthly_records):
+def save_to_database(province: str, monthly_records: List[Dict[str, Any]]) -> int:
     """Save monthly weather data to MySQL database, skip duplicates"""
     if not monthly_records:
-        print(f"No data to save for {province}")
+        print(f"⚠️  No data to save for {province}")
         return 0
     
-    print(f"  Preparing {len(monthly_records)} monthly records...")
-    print(f"  Inserting to database...")
+    print(f"  📝 Preparing {len(monthly_records)} monthly records...")
     
-    insert_query = """
-    INSERT IGNORE INTO weather_data_monthly 
-    (province, year, month, temperature_mean, precipitation_sum, humidity_mean)
-    VALUES (:province, :year, :month, :temperature_mean, :precipitation_sum, :humidity_mean)
-    """
+    insert_query = text("""
+        INSERT IGNORE INTO weather_data_monthly 
+        (province, year, month, temperature_mean, precipitation_sum, humidity_mean)
+        VALUES (:province, :year, :month, :temperature_mean, :precipitation_sum, :humidity_mean)
+    """)
     
-    with engine.connect() as conn:
-        count_before = conn.execute(
-            text("SELECT COUNT(*) FROM weather_data_monthly WHERE province = :prov"),
-            {"prov": province}
-        ).scalar()
+    try:
+        with engine.connect() as conn:
+            count_before = conn.execute(
+                text("SELECT COUNT(*) FROM weather_data_monthly WHERE province = :prov"),
+                {"prov": province}
+            ).scalar()
+            
+            # Batch insert for better performance
+            records_to_insert = []
+            for record in monthly_records:
+                records_to_insert.append({
+                    'province': province,
+                    'year': int(record['year']),
+                    'month': int(record['month']),
+                    'temperature_mean': record.get('temperature_2m_mean'),
+                    'precipitation_sum': record.get('precipitation_sum'),
+                    'humidity_mean': record.get('relative_humidity_2m_mean')
+                })
+            
+            # Insert all records
+            for record in records_to_insert:
+                conn.execute(insert_query, record)
+            
+            conn.commit()
+            
+            count_after = conn.execute(
+                text("SELECT COUNT(*) FROM weather_data_monthly WHERE province = :prov"),
+                {"prov": province}
+            ).scalar()
         
-        for record in monthly_records:
-            conn.execute(text(insert_query), {
-                'province': province,
-                'year': int(record['year']),
-                'month': int(record['month']),
-                'temperature_mean': record.get('temperature_2m_mean'),
-                'precipitation_sum': record.get('precipitation_sum'),
-                'humidity_mean': record.get('relative_humidity_2m_mean')
-            })
+        inserted_count = count_after - count_before
+        duplicate_count = len(monthly_records) - inserted_count
         
-        conn.commit()
-        
-        count_after = conn.execute(
-            text("SELECT COUNT(*) FROM weather_data_monthly WHERE province = :prov"),
-            {"prov": province}
-        ).scalar()
-    
-    inserted_count = count_after - count_before
-    duplicate_count = len(monthly_records) - inserted_count
-    
-    print(f"{province}: {inserted_count} new records, {duplicate_count} duplicates skipped")
-    return inserted_count
+        print(f"  ✅ {province}: {inserted_count} new records, {duplicate_count} duplicates skipped")
+        return inserted_count
+    except Exception as e:
+        print(f"  ❌ Error saving data for {province}: {e}")
+        return 0
 
 
 # ============================================================================
@@ -249,7 +294,6 @@ def update_weather_data():
             if end_month == 12:
                 end_date_str = f"{end_year}-12-31"
             else:
-                import calendar
                 last_day = calendar.monthrange(end_year, end_month)[1]
                 end_date_str = f"{end_year}-{end_month:02d}-{last_day}"
             
@@ -344,26 +388,19 @@ def check_duplicates():
 
 
 if __name__ == "__main__":
-    import sys
-    
     # Check if user wants to clear data first
     if len(sys.argv) > 1 and sys.argv[1] == "--clear":
-        print("Clearing all existing data...")
+        print("🗑️  Clearing all existing data...")
         clear_all_data()
         print()
     
     update_weather_data()
     
-    print("\nMonthly Data Summary:")
+    print("\n📊 Monthly Data Summary:")
     print(view_data_summary())
     
-    print("\nRecent Monthly Records (10):")
+    print("\n📅 Recent Monthly Records (10):")
     print(view_recent_data(limit=10))
     
-    print("\nChecking for duplicates:")
-    check_duplicates()
-
-    print(view_recent_data(limit=10))
-    
-    print("\nChecking for duplicates:")
+    print("\n🔍 Checking for duplicates:")
     check_duplicates()

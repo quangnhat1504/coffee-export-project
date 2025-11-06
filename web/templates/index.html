@@ -3,31 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="theme-color" content="#2B1E16">
+    <meta name="msapplication-navbutton-color" content="#2B1E16">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Vietnam Coffee Data Portal</title>
-    <link rel="stylesheet" href="../static/css/styles.css">
-    <link rel="stylesheet" href="../static/css/contact-modern.css">
+    <link rel="stylesheet" href="../static/css/styles.css?v=20251107003">
+    <link rel="stylesheet" href="../static/css/contact-modern.css?v=20251107003">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
-    <!-- Horizontal Navigation Bar -->
+
+    <!-- Navigation Bar -->
     <nav class="top-navbar">
         <div class="navbar-container">
-            <div class="navbar-brand">
-                <i class="fas fa-mug-hot"></i>
-                <span class="brand-text">VN Coffee Data</span>
-            </div>
+            <!-- Brand Logo -->
+            <a href="#home" class="navbar-brand">
+                <i class="fas fa-coffee"></i>
+                <span class="brand-text">Coffee Portal</span>
+            </a>
+
+            <!-- Navigation Menu -->
             <div class="navbar-menu">
-                <a href="#home" class="nav-link"><i class="fas fa-home"></i><span>Home</span></a>
-                <a href="#market" class="nav-link"><i class="fas fa-chart-line"></i><span>Market</span></a>
-                <a href="#exports" class="nav-link"><i class="fas fa-globe-asia"></i><span>Exports</span></a>
-                <a href="#weather" class="nav-link"><i class="fas fa-cloud-sun"></i><span>Weather</span></a>
-                <a href="#forecast" class="nav-link"><i class="fas fa-brain"></i><span>AI Forecast</span></a>
-                <a href="#news" class="nav-link"><i class="fas fa-newspaper"></i><span>News</span></a>
-                <a href="#contact" class="nav-link"><i class="fas fa-envelope"></i><span>Contact</span></a>
+                <a href="#home" class="nav-link active" data-section="home">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="#market" class="nav-link" data-section="market">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#exports" class="nav-link" data-section="exports">
+                    <i class="fas fa-globe"></i>
+                    <span>Exports</span>
+                </a>
+                <a href="#news" class="nav-link" data-section="news">
+                    <i class="fas fa-newspaper"></i>
+                    <span>News</span>
+                </a>
+                <a href="#about" class="nav-link" data-section="about">
+                    <i class="fas fa-info-circle"></i>
+                    <span>About</span>
+                </a>
+                <a href="#contact" class="nav-link" data-section="contact">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a>
             </div>
+
+            <!-- Navbar Actions -->
+            <div class="navbar-actions">
+                <button class="nav-link" id="themeToggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="nav-link mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu (hidden by default) -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a href="#home" class="mobile-nav-link active">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#market" class="mobile-nav-link">
+                <i class="fas fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="#exports" class="mobile-nav-link">
+                <i class="fas fa-globe"></i>
+                <span>Exports</span>
+            </a>
+            <a href="#news" class="mobile-nav-link">
+                <i class="fas fa-newspaper"></i>
+                <span>News</span>
+            </a>
+            <a href="#about" class="mobile-nav-link">
+                <i class="fas fa-info-circle"></i>
+                <span>About</span>
+            </a>
+            <a href="#contact" class="mobile-nav-link">
+                <i class="fas fa-envelope"></i>
+                <span>Contact</span>
+            </a>
         </div>
     </nav>
 
@@ -55,90 +120,35 @@
             <!-- hero-right panels removed per user request -->
         </div>
     </section>
+    <!-- AI Forecast Details moved below hero section for professional layout -->
+        </div>
+    </section>
+    <!-- AI Forecast Details moved below hero section for professional layout -->
+    <!-- ...existing code... -->
+    <!-- AI Forecast Details moved below AI Forecast & Insights section -->
+        </div>
+    </section>
+    <!-- AI Forecast Details moved below hero section for professional layout -->
 
     <!-- Market Overview -->
     <section id="market" class="market-section">
         <div class="container">
             <h2 class="section-title">Market Overview</h2>
             <div class="market-stack">
+                <!-- Daily Coffee Prices (Last 7 Days) -->
                 <div class="chart-card">
-                        <div class="chart-card-header">
-                            <h3>Export Volume & Prices (2005-2024) <span class="unit-label">Tons & USD/ton</span></h3>
-                        </div>
-                        <div class="production-toggles-wrapper">
-                            <div class="production-toggles" role="group" aria-label="Toggle datasets">
-                                <label class="prod-checkbox-label">
-                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="volume" checked>
-                                    <span class="checkbox-custom"></span>
-                                    <span class="checkbox-text">Export Volume</span>
-                                </label>
-                                <label class="prod-checkbox-label">
-                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="worldPrice" checked>
-                                    <span class="checkbox-custom"></span>
-                                    <span class="checkbox-text">World Price</span>
-                                </label>
-                                <label class="prod-checkbox-label">
-                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="vnPrice" checked>
-                                    <span class="checkbox-custom"></span>
-                                    <span class="checkbox-text">VN Price</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="priceChart"></canvas>
-                        </div>
-                </div>
-                <div class="price-cards-row">
-                    <div class="price-card" data-commodity="export-value" role="button" tabindex="0" aria-label="Export value card" title="Annual coffee export value">
-                        <div class="card-header">
-                            <h3 class="commodity-title">Export Value</h3>
-                            <i class="fas fa-shipping-fast card-icon"></i>
-                        </div>
-                        <div class="price-value">$5,620 M</div>
-                        <div class="price-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+32.5%</span>
-                        </div>
-                        <div class="price-label">million USD</div>
-                        <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-calendar"></i><span>2024 Total</span></span>
-                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-database"></i><span>Export Data</span></span>
+                    <div class="chart-card-header">
+                        <h3><span class="unit-label">VND/kg</span> Daily Coffee Prices - Last 7 Days</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Real-time prices from major coffee regions</span>
                         </div>
                     </div>
-                    <div class="price-card" data-commodity="world-price" role="button" tabindex="0" aria-label="World price card" title="International coffee market price">
-                        <div class="card-header">
-                            <h3 class="commodity-title">World Price</h3>
-                            <i class="fas fa-globe-americas card-icon"></i>
-                        </div>
-                        <div class="price-value">$4,426</div>
-                        <div class="price-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+68.5%</span>
-                        </div>
-                        <div class="price-label">per ton</div>
-                        <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>Rising Trend</span></span>
-                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-globe"></i><span>ICO</span></span>
-                        </div>
+                    <div class="daily-prices-summary" id="dailyPricesSummary">
+                        <!-- Will be populated by JavaScript -->
                     </div>
-                    <div class="price-card" data-commodity="vn-price" role="button" tabindex="0" aria-label="Vietnam price card" title="Vietnam domestic coffee price">
-                        <div class="card-header">
-                            <h3 class="commodity-title">VN Price</h3>
-                            <i class="fas fa-flag card-icon"></i>
-                        </div>
-                        <div class="price-value">$4,178</div>
-                        <div class="price-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+59.9%</span>
-                        </div>
-                        <div class="price-label">per ton</div>
-                        <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-percentage"></i><span>94.4% vs World</span></span>
-                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-leaf"></i><span>VICOFA</span></span>
-                        </div>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="dailyPricesChart"></canvas>
                     </div>
                 </div>
         </div>
@@ -325,14 +335,14 @@
                             <h3 class="commodity-title">Production</h3>
                             <i class="fas fa-seedling card-icon"></i>
                         </div>
-                        <div class="price-value">2.5 M t</div>
+                        <div class="price-value">Loading...</div>
                         <div class="price-change positive">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+4.2%</span>
+                            <span>--</span>
                         </div>
                         <div class="price-label">2024 total</div>
                         <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>Growth: 3.8%/year</span></span>
+                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>Growth trend</span></span>
                             <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
                             <span class="meta-item source"><i class="fas fa-leaf"></i><span>Ministry of Agri.</span></span>
                         </div>
@@ -342,14 +352,14 @@
                             <h3 class="commodity-title">Area</h3>
                             <i class="fas fa-map card-icon"></i>
                         </div>
-                        <div class="price-value">650 K ha</div>
+                        <div class="price-value">Loading...</div>
                         <div class="price-change positive">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+1.8%</span>
+                            <span>--</span>
                         </div>
                         <div class="price-label">cultivated area</div>
                         <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-mountain"></i><span>Dak Lak: 45%</span></span>
+                            <span class="meta-item volume"><i class="fas fa-mountain"></i><span>Dak Lak region</span></span>
                             <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
                             <span class="meta-item source"><i class="fas fa-leaf"></i><span>Land Use Survey</span></span>
                         </div>
@@ -359,14 +369,14 @@
                             <h3 class="commodity-title">Yield</h3>
                             <i class="fas fa-balance-scale card-icon"></i>
                         </div>
-                        <div class="price-value">3.2 t/ha</div>
+                        <div class="price-value">Loading...</div>
                         <div class="price-change positive">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+2.4%</span>
+                            <span>--</span>
                         </div>
                         <div class="price-label">per hectare</div>
                         <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-trophy"></i><span>Above avg: +15%</span></span>
+                            <span class="meta-item volume"><i class="fas fa-trophy"></i><span>Productivity</span></span>
                             <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
                             <span class="meta-item source"><i class="fas fa-leaf"></i><span>Farm Statistics</span></span>
                         </div>
@@ -384,20 +394,30 @@
             <div class="production-stack">
                 <div class="chart-card">
                     <div class="chart-card-header">
-                        <h3>Export Value & Prices <span class="unit-label">(Million USD / USD per ton)</span></h3>
-                    </div>
-                    <div class="production-toggles-wrapper">
-                        <div class="production-toggles" role="group" aria-label="Focus dataset">
-                            <button class="export-toggle-btn active" data-focus="value" aria-pressed="true">Export Value</button>
-                            <button class="export-toggle-btn" data-focus="world-price" aria-pressed="false">World Price</button>
-                            <button class="export-toggle-btn" data-focus="vn-price" aria-pressed="false">VN Price</button>
-                        </div>
+                        <h3>Production & Export Value <span class="unit-label">(Thousand tons / Million USD)</span></h3>
                     </div>
                     <div class="chart-container">
-                        <canvas id="exportPerformanceChart" aria-label="Export value and price trends" role="img"></canvas>
+                        <canvas id="exportPerformanceChart" aria-label="Production and export value trends" role="img"></canvas>
                     </div>
                 </div>
                 <div class="production-cards-row">
+                    <div class="price-card" data-commodity="export-production" role="button" tabindex="0" aria-label="Production card" title="Annual coffee production">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Production</h3>
+                            <i class="fas fa-seedling card-icon"></i>
+                        </div>
+                        <div class="price-value">1,800 K tons</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+15.2%</span>
+                        </div>
+                        <div class="price-label">2024 total</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>CAGR: 4.5%</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-database"></i><span>Production Data</span></span>
+                        </div>
+                    </div>
                     <div class="price-card" data-commodity="export-value" role="button" tabindex="0" aria-label="Export value card" title="Annual export value">
                         <div class="card-header">
                             <h3 class="commodity-title">Export Value</h3>
@@ -413,40 +433,6 @@
                             <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>CAGR: 6.2%</span></span>
                             <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
                             <span class="meta-item source"><i class="fas fa-database"></i><span>Export Data</span></span>
-                        </div>
-                    </div>
-                    <div class="price-card" data-commodity="world-price" role="button" tabindex="0" aria-label="World price card" title="International market price">
-                        <div class="card-header">
-                            <h3 class="commodity-title">World Price</h3>
-                            <i class="fas fa-globe-americas card-icon"></i>
-                        </div>
-                        <div class="price-value">$4,426</div>
-                        <div class="price-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+68.5%</span>
-                        </div>
-                        <div class="price-label">per ton</div>
-                        <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-arrow-trend-up"></i><span>Trend: Rising</span></span>
-                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-globe"></i><span>ICO</span></span>
-                        </div>
-                    </div>
-                    <div class="price-card" data-commodity="vn-price" role="button" tabindex="0" aria-label="Vietnam price card" title="Domestic market price">
-                        <div class="card-header">
-                            <h3 class="commodity-title">VN Price</h3>
-                            <i class="fas fa-flag card-icon"></i>
-                        </div>
-                        <div class="price-value">$4,178</div>
-                        <div class="price-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+59.9%</span>
-                        </div>
-                        <div class="price-label">per ton</div>
-                        <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-percentage"></i><span>vs World: 94.4%</span></span>
-                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-leaf"></i><span>VICOFA</span></span>
                         </div>
                     </div>
                 </div>
@@ -473,10 +459,10 @@
                             <h3 class="commodity-title">AI Prediction</h3>
                             <i class="fas fa-brain card-icon"></i>
                         </div>
-                        <div class="price-value">$3,420</div>
+                        <div class="price-value" style="color:#22c55e;font-size:2rem;font-weight:700;">$3,420</div>
                         <div class="price-change positive">
                             <i class="fas fa-arrow-up"></i>
-                            <span>+8-12%</span>
+                            <span>+8.5%</span>
                         </div>
                         <div class="price-label">Q1 2026 forecast</div>
                         <div class="price-meta">
@@ -490,7 +476,7 @@
                             <h3 class="commodity-title">Market Trend</h3>
                             <i class="fas fa-chart-line card-icon"></i>
                         </div>
-                        <div class="price-value">+15%</div>
+                        <div class="price-value" style="color:#3b82f6;font-size:2rem;font-weight:700;">+15%</div>
                         <div class="price-change positive">
                             <i class="fas fa-arrow-up"></i>
                             <span>Japan exports</span>
@@ -507,7 +493,7 @@
                             <h3 class="commodity-title">Climate Risk</h3>
                             <i class="fas fa-cloud-sun-rain card-icon"></i>
                         </div>
-                        <div class="price-value">Medium</div>
+                        <div class="price-value" style="color:#ef4444;font-size:2rem;font-weight:700;">Medium</div>
                         <div class="price-change negative">
                             <i class="fas fa-exclamation-triangle"></i>
                             <span>El Niño</span>
@@ -700,7 +686,7 @@
                                 </div>
                                 <div class="info-text" style="flex: 1; min-width: 0;">
                                     <span class="info-label" style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">EMAIL</span>
-                                    <a href="mailto:phamtien@coffeedata.vn" class="info-link" style="display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis;">phamtien@coffeedata.vn</a>
+                                    <a href="mailto:abc@coffeedata.vn" class="info-link" style="display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis;">phamtien@coffeedata.vn</a>
                                 </div>
                             </div>
 
@@ -720,7 +706,7 @@
                                 </div>
                                 <div class="info-text" style="flex: 1; min-width: 0;">
                                     <span class="info-label" style="display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">LOCATION</span>
-                                    <p class="info-link" style="display: block; font-weight: 500; margin: 0;">Ho Chi Minh City, Vietnam</p>
+                                    <p class="info-link" style="display: block; font-weight: 500; margin: 0;">Da Nang City, Vietnam</p>
                                 </div>
                             </div>
 
@@ -861,6 +847,13 @@
         </div>
     </footer>
 
-    <script src="../static/js/script.js"></script>
+    <script src="../static/js/script.js?v=20251107003"></script>
 </body>
 </html>
+<div class="ai-forecast-wrapper" style="...background:#fff;...">
+    <div class="ai-forecast-details" style="...">
+        <div class="forecast-detail-box" style="background:#fff;...">
+        ...
+        </div>
+    </div>
+</div>
