@@ -2675,6 +2675,14 @@ canvas {
     color: var(--text-muted);
     margin-top: 0.25rem;
 }
+.news-updated-time {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+
 
 
 

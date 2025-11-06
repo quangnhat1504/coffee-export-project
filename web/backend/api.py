@@ -1031,102 +1031,152 @@ def get_coffee_news():
             "success": False,
             "error": str(e)
         })
+
 # ==========================================================
-# 📰 MULTI-CATEGORY NEWS ENDPOINTS (BAOMOI)
+# 📰 MULTI-CATEGORY NEWS ENDPOINTS (BAOMOI) + CACHE 10 MINUTES
 # ==========================================================
+import time, requests, random, re
+from bs4 import BeautifulSoup
+
+# Cache riêng cho từng chuyên mục
+news_cache_by_category = {}
+CACHE_DURATION = 600  # 10 phút = 600 giây
+
 
 def crawl_news_from_baomoi(url):
-    import requests, random, re
-    from bs4 import BeautifulSoup
+    """Hàm crawl dữ liệu thật từ Baomoi"""
+    r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+    soup = BeautifulSoup(r.text, "html.parser")
+    articles = []
 
-    try:
-        r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
-        articles = []
+    for card in soup.select("div.bm-card"):
+        a_tag = card.select_one("a[title]")
+        if not a_tag:
+            continue
+        title = a_tag.get("title").strip()
+        href = a_tag.get("href")
+        link = "https://baomoi.com" + href if href and href.startswith("/") else href
 
-        for card in soup.select("div.bm-card"):
-            a_tag = card.select_one("a[title]")
-            if not a_tag:
-                continue
-            title = a_tag.get("title").strip()
-            href = a_tag.get("href")
-            link = "https://baomoi.com" + href if href and href.startswith("/") else href
+        # --- Ảnh (fix lazyload + fallback regex) ---
+        img = None
+        img_tag = card.select_one("img")
+        if img_tag:
+            src = img_tag.get("src")
+            if src and not src.startswith("data:image"):
+                img = src
+            elif img_tag.get("data-src"):
+                img = img_tag.get("data-src")
 
-            # --- Ảnh (lazyload fix) ---
-            img = None
-            img_tag = card.select_one("img")
-            if img_tag:
-                src = img_tag.get("src")
-                if src and not src.startswith("data:image"):
-                    img = src
-                elif img_tag.get("data-src"):
-                    img = img_tag.get("data-src")
+        if not img:
+            source_tag = card.select_one("source[srcset], source[data-srcset]")
+            if source_tag:
+                srcset = source_tag.get("srcset") or source_tag.get("data-srcset")
+                if srcset:
+                    img = srcset.split()[0]
 
-            if not img:
-                source_tag = card.select_one("source[srcset], source[data-srcset]")
-                if source_tag:
-                    srcset = source_tag.get("srcset") or source_tag.get("data-srcset")
-                    if srcset:
-                        img = srcset.split()[0]
+        if not img:
+            match = re.search(r"https://photo-baomoi\.bmcdn\.me/[^\s\"']+\.(jpg|webp|avif)", str(card))
+            if match:
+                img = match.group(0)
 
-            if not img:
-                match = re.search(r"https://photo-baomoi\.bmcdn\.me/[^\s\"']+\.(jpg|webp|avif)", str(card))
-                if match:
-                    img = match.group(0)
+        if not img:
+            fallback_images = [
+                "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=300&fit=crop"
+            ]
+            img = random.choice(fallback_images)
 
-            if not img:
-                fallback_images = [
-                    "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=300&fit=crop"
-                ]
-                img = random.choice(fallback_images)
+        # --- Nguồn, thời gian, category ---
+        source_tag = card.select_one(".bm-card-source")
+        source = source_tag.get("title") if source_tag else "Báo Mới"
+        time_tag = card.select_one("time")
+        time_text = time_tag.get_text(strip=True) if time_tag else ""
 
-            # --- Nguồn, thời gian, category ---
-            source_tag = card.select_one(".bm-card-source")
-            source = source_tag.get("title") if source_tag else "Báo Mới"
-            time_tag = card.select_one("time")
-            time_text = time_tag.get_text(strip=True) if time_tag else ""
+        categories = [a.get_text(strip=True) for a in card.select(".content-tags a") if a.get_text(strip=True)]
 
-            categories = [a.get_text(strip=True) for a in card.select(".content-tags a") if a.get_text(strip=True)]
+        articles.append({
+            "title": title,
+            "url": link,
+            "image": img,
+            "source": source,
+            "time": time_text,
+            "category": categories
+        })
 
-            articles.append({
-                "title": title,
-                "url": link,
-                "image": img,
-                "source": source,
-                "time": time_text,
-                "category": categories
-            })
-
-        return {"success": True, "count": len(articles), "data": articles[:9]}
-
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+    return {"success": True, "count": len(articles), "data": articles[:9]}
 
 
-# --- 5 ENDPOINTS CHO CÁC CATEGORY ---
+def get_cached_news(category_key, url):
+    """Kiểm tra cache từng chuyên mục (10 phút/lần)"""
+    current_time = time.time()
+    cached = news_cache_by_category.get(category_key)
+
+    # Nếu có cache và chưa hết hạn
+    if cached and current_time - cached["timestamp"] < CACHE_DURATION:
+        data = cached["data"]
+        data["cached"] = True
+        data["updated_at"] = time.strftime(
+            "%H:%M:%S %d/%m/%Y", time.localtime(cached["timestamp"])
+        )
+        return data
+
+    # Crawl mới
+    fresh_data = crawl_news_from_baomoi(url)
+    news_cache_by_category[category_key] = {
+        "data": fresh_data,
+        "timestamp": current_time
+    }
+
+    fresh_data["cached"] = False
+    fresh_data["updated_at"] = time.strftime(
+        "%H:%M:%S %d/%m/%Y", time.localtime(current_time)
+    )
+    return fresh_data
+
+
+
+# ==========================================================
+# 🧭 5 ENDPOINTS TƯƠNG ỨNG 5 CATEGORY
+# ==========================================================
+
 @app.route('/api/news/gia-ca-phe', methods=['GET'])
 def news_gia_ca_phe():
-    return jsonify(crawl_news_from_baomoi("https://baomoi.com/tim-kiem/giá%20cà%20phê.epi"))
+    return jsonify(get_cached_news(
+        "gia-ca-phe",
+        "https://baomoi.com/tim-kiem/giá%20cà%20phê.epi"
+    ))
 
 @app.route('/api/news/thi-truong', methods=['GET'])
 def news_thi_truong():
-    return jsonify(crawl_news_from_baomoi("https://baomoi.com/tim-kiem/thị%20trường%20cà%20phê.epi"))
+    return jsonify(get_cached_news(
+        "thi-truong",
+        "https://baomoi.com/tim-kiem/thị%20trường%20cà%20phê.epi"
+    ))
 
 @app.route('/api/news/xuat-khau', methods=['GET'])
 def news_xuat_khau():
-    return jsonify(crawl_news_from_baomoi("https://baomoi.com/tim-kiem/xuất%20khẩu%20cà%20phê.epi"))
+    return jsonify(get_cached_news(
+        "xuat-khau",
+        "https://baomoi.com/tim-kiem/xuất%20khẩu%20cà%20phê.epi"
+    ))
 
 @app.route('/api/news/nong-san', methods=['GET'])
 def news_nong_san():
-    return jsonify(crawl_news_from_baomoi("https://baomoi.com/tim-kiem/nông%20sản%20cà%20phê.epi"))
+    return jsonify(get_cached_news(
+        "nong-san",
+        "https://baomoi.com/tim-kiem/nông%20sản%20cà%20phê.epi"
+    ))
 
 @app.route('/api/news/chinh-sach', methods=['GET'])
 def news_chinh_sach():
-    return jsonify(crawl_news_from_baomoi("https://baomoi.com/tim-kiem/chính%20sách%20cà%20phê.epi"))
+    return jsonify(get_cached_news(
+        "chinh-sach",
+        "https://baomoi.com/tim-kiem/chính%20sách%20cà%20phê.epi"
+    ))
+
 
 # ============================================================================
 # MAIN

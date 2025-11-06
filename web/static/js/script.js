@@ -202,33 +202,48 @@ document.addEventListener('DOMContentLoaded', function() {
 // 📢 Load Coffee News from Flask API (/api/news)
 // ================================================================
 async function loadCoffeeNews(category = "gia-ca-phe") {
-    const container = document.querySelector(".news-list");
-    container.innerHTML = "<p>🔄 Đang tải tin tức...</p>";
+  const container = document.querySelector(".news-list");
+  const updatedText = document.getElementById("news-updated-time");
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/news`);
-        const data = await res.json();
+  container.innerHTML = "<p>🔄 Đang tải tin tức...</p>";
 
-        container.innerHTML = "";
-        data.data.forEach(item => {
-            container.innerHTML += `
-                <article class="news-item">
-                    <div class="news-thumbnail">
-                        <img src="${item.image}" alt="Coffee news">
-                        <div class="news-category">BÁO MỚI</div>
-                    </div>
-                    <div class="news-item-content">
-                        <h3 class="news-item-title">
-                            <a href="${item.url}" target="_blank">${item.title}</a>
-                        </h3>
-                        <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
-                    </div>
-                </article>`;
-        });
-    } catch (err) {
-        container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
+  try {
+    const res = await fetch(`${API_BASE_URL}/news/${category}`);
+    const data = await res.json();
+
+    if (!data.success) throw new Error("Không lấy được dữ liệu tin tức");
+
+    // 🕓 Hiển thị thời gian cập nhật
+    if (data.updated_at) {
+      updatedText.textContent = `Cập nhật lần cuối: ${data.updated_at}` +
+        (data.cached ? " (từ bộ nhớ đệm)" : " (vừa cập nhật)");
+    } else {
+      updatedText.textContent = "";
     }
+
+    // Hiển thị bài báo
+    container.innerHTML = "";
+    data.data.forEach(item => {
+      container.innerHTML += `
+        <article class="news-item">
+          <div class="news-thumbnail">
+            <img src="${item.image}" alt="Coffee news">
+            <div class="news-category">${item.source}</div>
+          </div>
+          <div class="news-item-content">
+            <h3 class="news-item-title">
+              <a href="${item.url}" target="_blank">${item.title}</a>
+            </h3>
+            <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
+          </div>
+        </article>`;
+    });
+  } catch (err) {
+    updatedText.textContent = "";
+    container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
+  }
 }
+
 
 
 // Gọi hàm khi DOM sẵn sàng
@@ -2487,15 +2502,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const buttons = document.querySelectorAll(".news-cat-btn");
   buttons.forEach(btn => {
     btn.addEventListener("click", () => {
-      // Bỏ active cũ
       buttons.forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
-      // Gọi API (tạm thời chỉ in log)
       const category = btn.dataset.category;
-      console.log("Selected category:", category);
-
-      // TODO: Giai đoạn 2 - Gọi API Flask theo category
       loadCoffeeNews(category);
     });
   });
