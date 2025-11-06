@@ -1,0 +1,26 @@
+[
+  {
+    "date": "2025-11-07",
+    "region": "DakLak",
+    "price_vnd_per_kg": 119000,
+    "scraped_at": "2025-11-07T01:32:50.073622"
+  },
+  {
+    "date": "2025-11-07",
+    "region": "LamDong",
+    "price_vnd_per_kg": 118200,
+    "scraped_at": "2025-11-07T01:32:50.073677"
+  },
+  {
+    "date": "2025-11-07",
+    "region": "GiaLai",
+    "price_vnd_per_kg": 118200,
+    "scraped_at": "2025-11-07T01:32:50.073720"
+  },
+  {
+    "date": "2025-11-07",
+    "region": "DakNong",
+    "price_vnd_per_kg": 119300,
+    "scraped_at": "2025-11-07T01:32:50.073763"
+  }
+]
