@@ -201,19 +201,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // ================================================================
 // 📢 Load Coffee News from Flask API (/api/news)
 // ================================================================
-async function loadCoffeeNews() {
+async function loadCoffeeNews(category = "gia-ca-phe") {
     const container = document.querySelector(".news-list");
-    if (!container) return;
-    container.innerHTML = "<p>🔄 Đang tải tin tức mới nhất...</p>";
+    container.innerHTML = "<p>🔄 Đang tải tin tức...</p>";
 
     try {
         const res = await fetch(`${API_BASE_URL}/news`);
         const data = await res.json();
-
-        if (!data.success || !data.data.length) {
-            container.innerHTML = "<p>⚠️ Không có tin tức mới.</p>";
-            return;
-        }
 
         container.innerHTML = "";
         data.data.forEach(item => {
@@ -229,13 +223,13 @@ async function loadCoffeeNews() {
                         </h3>
                         <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
                     </div>
-                </article>
-            `;
+                </article>`;
         });
     } catch (err) {
         container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
     }
 }
+
 
 // Gọi hàm khi DOM sẵn sàng
 document.addEventListener("DOMContentLoaded", loadCoffeeNews);
@@ -2486,3 +2480,23 @@ function updateWeatherCards(stats) {
         }
     }
 }
+// ================================================================
+// 🗂 CATEGORY BUTTONS HANDLER
+// ================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll(".news-cat-btn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      // Bỏ active cũ
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // Gọi API (tạm thời chỉ in log)
+      const category = btn.dataset.category;
+      console.log("Selected category:", category);
+
+      // TODO: Giai đoạn 2 - Gọi API Flask theo category
+      loadCoffeeNews(category);
+    });
+  });
+});
