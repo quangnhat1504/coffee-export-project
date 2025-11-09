@@ -12,7 +12,6 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 import pandas as pd
 import os
-from dotenv import load_dotenv
 from datetime import datetime
 import sys
 import traceback
@@ -22,8 +21,23 @@ from functools import wraps
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
-# Load environment variables
-load_dotenv(dotenv_path='../../.env')
+from dotenv import load_dotenv
+import os
+
+# ==========================================================
+# 🧭 Load environment variables (robust path detection)
+# ==========================================================
+# Lấy đường dẫn tuyệt đối của thư mục backend
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Ghép đường dẫn đến file .env ở thư mục cha (../.env)
+ENV_PATH = os.path.join(BASE_DIR, '../.env')
+
+print(f"🔍 Looking for .env at: {ENV_PATH}")
+load_dotenv(ENV_PATH)
+
+# Kiểm tra nhanh
+print("🔍 ENV CHECK:", os.getenv('HOST'), os.getenv('USER'))
+
 
 app = Flask(__name__, 
             template_folder='../templates',
@@ -159,6 +173,17 @@ PROVINCE_NAMES = {
     'KonTum': 'Kon Tum',
     'LamDong': 'Lam Dong'
 }
+# ==========================================================
+# 🧩 TEST DATABASE CONNECTION (for debug)
+# ==========================================================
+try:
+    engine = create_db_engine()
+    with engine.connect() as conn:
+        conn.execute(text("SELECT NOW()"))
+    print("✅ Successfully connected to Aiven MySQL database!")
+except Exception as e:
+    print("❌ Failed to connect to Aiven database.")
+    print(f"Error details: {e}")
 
 # ============================================================================
 # ERROR HANDLERS & HELPER FUNCTIONS
@@ -289,7 +314,10 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     }), 200 if db_status == 'connected' else 503
 
-
+# ==========================================================
+# 🌦️ WEATHER ENDPOINTS - Dữ liệu thời tiết và khí hậu theo tỉnh
+# (Nguồn: weather_data_monthly, hiển thị trong tab "Weather & Climate Impact")
+# ==========================================================
 @app.route('/api/weather/province/<province>', methods=['GET'])
 @cache.cached(timeout=600, query_string=True)  # Cache for 10 minutes
 @safe_db_operation
@@ -464,7 +492,10 @@ def get_weather_summary():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
+# ==========================================================
+# 🌍 EXPORTS ENDPOINTS - Dữ liệu xuất khẩu cà phê theo quốc gia
+# (Phục vụ phần "Export Insights" và Donut chart Top 9 countries)
+# ==========================================================
 @app.route('/api/exports/top-countries', methods=['GET'])
 @cache.cached(timeout=600, query_string=True)  # Cache for 10 minutes
 @safe_db_operation
@@ -692,7 +723,10 @@ def get_available_years():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
+# ==========================================================
+# 🌾 PRODUCTION ENDPOINTS - Dữ liệu sản lượng, diện tích, năng suất cà phê
+# (Hiển thị ở tab "Production Trends" & "AI Forecast")
+# ==========================================================
 @app.route('/api/production', methods=['GET'])
 @cache.cached(timeout=300)  # Cache for 5 minutes
 @safe_db_operation
@@ -822,7 +856,10 @@ def get_production_by_province(province):
     except Exception as e:
         return jsonify({'error': str(e), 'success': False}), 500
 
-
+# ==========================================================
+# 🚢 EXPORT DATA ENDPOINT - Giá thế giới, giá Việt Nam, kim ngạch xuất khẩu
+# (Nguồn: coffee_export, hiển thị ở tab "Export Performance")
+# ==========================================================
 @app.route('/api/export', methods=['GET'])
 @cache.cached(timeout=300)  # Cache for 5 minutes
 @safe_db_operation
