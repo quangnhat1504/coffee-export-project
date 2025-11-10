@@ -201,41 +201,50 @@ document.addEventListener('DOMContentLoaded', function() {
 // ================================================================
 // 📢 Load Coffee News from Flask API (/api/news)
 // ================================================================
-async function loadCoffeeNews() {
-    const container = document.querySelector(".news-list");
-    if (!container) return;
-    container.innerHTML = "<p>🔄 Đang tải tin tức mới nhất...</p>";
+async function loadCoffeeNews(category = "gia-ca-phe") {
+  const container = document.querySelector(".news-list");
+  const updatedText = document.getElementById("news-updated-time");
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/news`);
-        const data = await res.json();
+  container.innerHTML = "<p>🔄 Đang tải tin tức...</p>";
 
-        if (!data.success || !data.data.length) {
-            container.innerHTML = "<p>⚠️ Không có tin tức mới.</p>";
-            return;
-        }
+  try {
+    const res = await fetch(`${API_BASE_URL}/news/${category}`);
+    const data = await res.json();
 
-        container.innerHTML = "";
-        data.data.forEach(item => {
-            container.innerHTML += `
-                <article class="news-item">
-                    <div class="news-thumbnail">
-                        <img src="${item.image}" alt="Coffee news">
-                        <div class="news-category">BÁO MỚI</div>
-                    </div>
-                    <div class="news-item-content">
-                        <h3 class="news-item-title">
-                            <a href="${item.url}" target="_blank">${item.title}</a>
-                        </h3>
-                        <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
-                    </div>
-                </article>
-            `;
-        });
-    } catch (err) {
-        container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
+    if (!data.success) throw new Error("Không lấy được dữ liệu tin tức");
+
+    // 🕓 Hiển thị thời gian cập nhật
+    if (data.updated_at) {
+      updatedText.textContent = `Cập nhật lần cuối: ${data.updated_at}` +
+        (data.cached ? " (từ bộ nhớ đệm)" : " (vừa cập nhật)");
+    } else {
+      updatedText.textContent = "";
     }
+
+    // Hiển thị bài báo
+    container.innerHTML = "";
+    data.data.forEach(item => {
+      container.innerHTML += `
+        <article class="news-item">
+          <div class="news-thumbnail">
+            <img src="${item.image}" alt="Coffee news">
+            <div class="news-category">${item.source}</div>
+          </div>
+          <div class="news-item-content">
+            <h3 class="news-item-title">
+              <a href="${item.url}" target="_blank">${item.title}</a>
+            </h3>
+            <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
+          </div>
+        </article>`;
+    });
+  } catch (err) {
+    updatedText.textContent = "";
+    container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
+  }
 }
+
+
 
 // Gọi hàm khi DOM sẵn sàng
 document.addEventListener("DOMContentLoaded", loadCoffeeNews);
@@ -2953,188 +2962,18 @@ function updateWeatherCards(stats) {
         }
     }
 }
+// ================================================================
+// 🗂 CATEGORY BUTTONS HANDLER
+// ================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll(".news-cat-btn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
 
-// ============================================================================
-// DAILY COFFEE PRICES CHART
-// ============================================================================
-
-function initializeDailyPricesChart() {
-    console.log('📊 Initializing Daily Prices Chart...');
-    const ctx = document.getElementById('dailyPricesChart');
-    if (!ctx) {
-        console.error('❌ dailyPricesChart canvas not found in DOM');
-        return;
-    }
-    console.log('✅ Found dailyPricesChart canvas');
-
-    dailyPricesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [],
-            datasets: []
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: {
-                            family: 'Inter, sans-serif',
-                            size: 12,
-                            weight: 500
-                        },
-                        color: '#2D3748',
-                        padding: 15,
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
-                tooltip: {
-                    enabled: true,
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    titleColor: '#2D3748',
-                    bodyColor: '#4A5568',
-                    borderColor: '#E2E8F0',
-                    borderWidth: 1,
-                    padding: 12,
-                    displayColors: true,
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.dataset.label || '';
-                            const value = context.parsed.y;
-                            return `${label}: ${value.toLocaleString('vi-VN')} VND/kg`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: true,
-                        color: 'rgba(0, 0, 0, 0.05)',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        font: {
-                            family: 'Inter, sans-serif',
-                            size: 11
-                        },
-                        color: '#718096',
-                        maxRotation: 45,
-                        minRotation: 0
-                    }
-                },
-                y: {
-                    beginAtZero: false,
-                    suggestedMin: 110000,  // Narrower range for better visibility
-                    suggestedMax: 140000,  // Balanced view - not too flat, not too steep
-                    grid: {
-                        display: true,
-                        color: 'rgba(0, 0, 0, 0.05)',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        font: {
-                            family: 'Inter, sans-serif',
-                            size: 11
-                        },
-                        color: '#718096',
-                        stepSize: 5000,  // Show ticks every 5,000 VND
-                        callback: function(value) {
-                            return value.toLocaleString('vi-VN');
-                        }
-                    }
-                }
-            }
-        }
+      const category = btn.dataset.category;
+      loadCoffeeNews(category);
     });
-
-    console.log('✅ Daily Prices Chart initialized');
-}
-
-async function loadDailyPricesData() {
-    try {
-        console.log('🔄 Loading daily coffee prices data...');
-        
-        const response = await fetch(`${API_BASE_URL}/daily-coffee-prices?days=7`);
-        console.log('📡 API Response status:', response.status);
-        
-        const result = await response.json();
-        console.log('📊 API Result:', result);
-        
-        if (!result.success) {
-            console.error('❌ Failed to load daily prices:', result.error);
-            return;
-        }
-        
-        const data = result.data;
-        console.log('✅ Data loaded:', {
-            labels: data.labels.length,
-            datasets: data.datasets.length,
-            latest_prices: Object.keys(data.latest_prices).length
-        });
-        
-        // Update chart
-        if (dailyPricesChart) {
-            dailyPricesChart.data.labels = data.labels;
-            dailyPricesChart.data.datasets = data.datasets;
-            dailyPricesChart.update();
-            console.log('✅ Daily prices chart updated with', data.datasets.length, 'datasets');
-        } else {
-            console.error('❌ dailyPricesChart is not initialized!');
-        }
-        
-        // Update summary cards
-        updateDailyPricesSummary(data);
-        
-    } catch (error) {
-        console.error('❌ Error loading daily prices:', error);
-    }
-}
-
-function updateDailyPricesSummary(data) {
-    const summaryDiv = document.getElementById('dailyPricesSummary');
-    if (!summaryDiv) return;
-    
-    const latestPrices = data.latest_prices || {};
-    const priceChanges = data.price_changes || {};
-    
-    let html = '<div class="daily-prices-grid">';
-    
-    const regions = ['DakLak', 'DakNong', 'GiaLai', 'LamDong'];
-    const regionLabels = {
-        'DakLak': 'Đắk Lắk',
-        'DakNong': 'Đắk Nông',
-        'GiaLai': 'Gia Lai',
-        'LamDong': 'Lâm Đồng'
-    };
-    
-    regions.forEach(region => {
-        const price = latestPrices[region];
-        const change = priceChanges[region];
-        
-        if (price !== undefined) {
-            const changeClass = change && change.change >= 0 ? 'positive' : 'negative';
-            const changeIcon = change && change.change >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-            const changeText = change ? `${change.change >= 0 ? '+' : ''}${change.change.toLocaleString('vi-VN')} (${change.percent >= 0 ? '+' : ''}${change.percent}%)` : 'N/A';
-            
-            html += `
-                <div class="daily-price-card">
-                    <div class="region-name">${regionLabels[region] || region}</div>
-                    <div class="price-value">${price.toLocaleString('vi-VN')} <span class="price-unit">VND/kg</span></div>
-                    ${change ? `<div class="price-change ${changeClass}"><i class="fas ${changeIcon}"></i> ${changeText}</div>` : ''}
-                </div>
-            `;
-        }
-    });
-    
-    html += '</div>';
-    summaryDiv.innerHTML = html;
-}
+  });
+});

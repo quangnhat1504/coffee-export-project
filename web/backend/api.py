@@ -12,7 +12,6 @@ from sqlalchemy import create_engine, text, Engine
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 import pandas as pd
 import os
-from dotenv import load_dotenv
 from datetime import datetime
 import sys
 import traceback
@@ -67,13 +66,23 @@ except ImportError as e:
 if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
-# Load environment variables - find .env in project root
-env_path = os.path.join(os.path.dirname(__file__), '../../.env')
-if not os.path.exists(env_path):
-    # If running from project root, try current directory
-    env_path = '.env'
-load_dotenv(dotenv_path=env_path)
-print(f"📁 Loading .env from: {os.path.abspath(env_path)}")
+from dotenv import load_dotenv
+import os
+
+# ==========================================================
+# 🧭 Load environment variables (robust path detection)
+# ==========================================================
+# Lấy đường dẫn tuyệt đối của thư mục backend
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Ghép đường dẫn đến file .env ở thư mục cha (../.env)
+ENV_PATH = os.path.join(BASE_DIR, '../.env')
+
+print(f"🔍 Looking for .env at: {ENV_PATH}")
+load_dotenv(ENV_PATH)
+
+# Kiểm tra nhanh
+print("🔍 ENV CHECK:", os.getenv('HOST'), os.getenv('USER'))
+
 
 app = Flask(__name__, 
             template_folder='../templates',
@@ -141,6 +150,17 @@ PROVINCE_NAMES = {
     'KonTum': 'Kon Tum',
     'LamDong': 'Lam Dong'
 }
+# ==========================================================
+# 🧩 TEST DATABASE CONNECTION (for debug)
+# ==========================================================
+try:
+    engine = create_db_engine()
+    with engine.connect() as conn:
+        conn.execute(text("SELECT NOW()"))
+    print("✅ Successfully connected to Aiven MySQL database!")
+except Exception as e:
+    print("❌ Failed to connect to Aiven database.")
+    print(f"Error details: {e}")
 
 # ============================================================================
 # ERROR HANDLERS & HELPER FUNCTIONS
@@ -277,7 +297,10 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     }), 200 if db_status == 'connected' else 503
 
-
+# ==========================================================
+# 🌦️ WEATHER ENDPOINTS - Dữ liệu thời tiết và khí hậu theo tỉnh
+# (Nguồn: weather_data_monthly, hiển thị trong tab "Weather & Climate Impact")
+# ==========================================================
 @app.route('/api/weather/province/<province>', methods=['GET'])
 @cache.cached(timeout=600, query_string=True)  # Cache for 10 minutes
 @safe_db_operation
@@ -452,7 +475,10 @@ def get_weather_summary():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
+# ==========================================================
+# 🌍 EXPORTS ENDPOINTS - Dữ liệu xuất khẩu cà phê theo quốc gia
+# (Phục vụ phần "Export Insights" và Donut chart Top 9 countries)
+# ==========================================================
 @app.route('/api/exports/top-countries', methods=['GET'])
 @cache.cached(timeout=600, query_string=True)  # Cache for 10 minutes
 @safe_db_operation
@@ -684,7 +710,10 @@ def get_available_years():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-
+# ==========================================================
+# 🌾 PRODUCTION ENDPOINTS - Dữ liệu sản lượng, diện tích, năng suất cà phê
+# (Hiển thị ở tab "Production Trends" & "AI Forecast")
+# ==========================================================
 @app.route('/api/production', methods=['GET'])
 # @cache.cached(timeout=300)  # Cache disabled for testing
 @safe_db_operation
@@ -839,7 +868,10 @@ def get_production_by_province(province):
     except Exception as e:
         return jsonify({'error': str(e), 'success': False}), 500
 
-
+# ==========================================================
+# 🚢 EXPORT DATA ENDPOINT - Giá thế giới, giá Việt Nam, kim ngạch xuất khẩu
+# (Nguồn: coffee_export, hiển thị ở tab "Export Performance")
+# ==========================================================
 @app.route('/api/export', methods=['GET'])
 @cache.cached(timeout=300)  # Cache for 5 minutes
 @safe_db_operation
@@ -923,7 +955,15 @@ def get_export_data():
             'success': False,
             'error': str(e)
         }), 500
-    
+        
+import time
+
+news_cache = {
+    "data": None,
+    "timestamp": 0
+}
+   
+CACHE_DURATION = 600  # 10 phút = 600 giây
 # ==========================================================
 # 📢 NEWS ENDPOINT - Crawl tin tức cà phê từ Báo Mới (Cập nhật chuẩn HTML 2025)
 # ==========================================================
@@ -937,6 +977,16 @@ def get_coffee_news():
     import random
     import re
 
+    # --- 1️⃣ Kiểm tra cache ---
+    current_time = time.time()
+    if news_cache["data"] and (current_time - news_cache["timestamp"] < CACHE_DURATION):
+        return jsonify({
+            "success": True,
+            "cached": True,
+            "count": len(news_cache["data"]),
+            "data": news_cache["data"]
+        })
+    
     try:
         url = "https://baomoi.com/tim-kiem/gi%C3%A1%20c%C3%A0%20ph%C3%AA.epi"
         headers = {"User-Agent": "Mozilla/5.0"}
@@ -969,7 +1019,6 @@ def get_coffee_news():
                 if source_tag:
                     srcset = source_tag.get("srcset") or source_tag.get("data-srcset")
                     if srcset:
-                        # Tách lấy link đầu tiên trong srcset
                         img = srcset.split()[0]
 
             # 3️⃣ Nếu vẫn không có, thử regex tìm đường dẫn ảnh từ HTML (phòng khi HTML rút gọn)
@@ -1021,215 +1070,150 @@ def get_coffee_news():
             "error": str(e)
         })
 
-@app.route('/api/export-performance', methods=['GET'])
-@cache.cached(timeout=300)  # Cache for 5 minutes
-@safe_db_operation
-def get_export_performance():
-    """
-    Get comprehensive export performance data from export_performance table
-    Returns: year, area, production, export volume, export value, world price, VN price
-    """
-    try:
-        query = text("""
-            SELECT 
-                year,
-                area_thousand_ha,
-                production_tons,
-                export_tons,
-                export_value_million_usd,
-                price_world_usd_per_ton,
-                price_vn_usd_per_ton
-            FROM export_performance
-            WHERE year >= 2005 AND year <= 2024
-            ORDER BY year
-        """)
-        
-        with engine.connect() as conn:
-            result = conn.execute(query)
-            data = result.fetchall()
-        
-        if not data:
-            return jsonify({
-                'success': False,
-                'error': 'No export performance data found'
-            }), 404
-        
-        # Convert to DataFrame for easier manipulation
-        df = pd.DataFrame(data, columns=[
-            'year', 'area_thousand_ha', 'production_tons', 'export_tons',
-            'export_value_million_usd', 'price_world_usd_per_ton', 'price_vn_usd_per_ton'
-        ])
-        
-        # Convert numeric columns to proper numeric types
-        numeric_columns = ['area_thousand_ha', 'production_tons', 'export_tons',
-                          'export_value_million_usd', 'price_world_usd_per_ton', 
-                          'price_vn_usd_per_ton']
-        for col in numeric_columns:
-            df[col] = pd.to_numeric(df[col], errors='coerce')
-        
-        # Professional missing data handling using utility function
-        df_interpolated = df.copy()
-        for col in numeric_columns:
-            df_interpolated[col] = interpolate_time_series(df_interpolated, col, method='polynomial', order=2)
-        
-        # Calculate statistics using utility function
-        latest_data = df_interpolated.iloc[-1]
-        
-        stats = {
-            'area': calculate_growth_stats(df_interpolated['area_thousand_ha'], latest_data['area_thousand_ha']),
-            'production': {
-                **calculate_growth_stats(df_interpolated['production_tons'], latest_data['production_tons']),
-                'total': float(df_interpolated['production_tons'].sum())
-            },
-            'export_volume': {
-                **calculate_growth_stats(df_interpolated['export_tons'], latest_data['export_tons']),
-                'total': float(df_interpolated['export_tons'].sum())
-            },
-            'export_value': {
-                **calculate_growth_stats(df_interpolated['export_value_million_usd'], latest_data['export_value_million_usd']),
-                'total': float(df_interpolated['export_value_million_usd'].sum())
-            },
-            'world_price': calculate_growth_stats(df_interpolated['price_world_usd_per_ton'], latest_data['price_world_usd_per_ton']),
-            'vn_price': calculate_growth_stats(df_interpolated['price_vn_usd_per_ton'], latest_data['price_vn_usd_per_ton'])
-        }
-        
-        # Format data for response using utility function
-        formatted_data = format_dataframe_rows(df_interpolated, numeric_columns)
-        
-        return jsonify({
-            'success': True,
-            'data': formatted_data,
-            'stats': stats,
-            'metadata': {
-                'years': len(formatted_data),
-                'source': 'export_performance table',
-                'period': f"{df['year'].min():.0f}-{df['year'].max():.0f}"
-            }
-        }), 200
-        
-    except Exception as e:
-        print(f"❌ Error in get_export_performance: {str(e)}")
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+# ==========================================================
+# 📰 MULTI-CATEGORY NEWS ENDPOINTS (BAOMOI) + CACHE 10 MINUTES
+# ==========================================================
+import time, requests, random, re
+from bs4 import BeautifulSoup
+
+# Cache riêng cho từng chuyên mục
+news_cache_by_category = {}
+CACHE_DURATION = 600  # 10 phút = 600 giây
 
 
-# ============================================================================
-# DAILY COFFEE PRICES API
-# ============================================================================
+def crawl_news_from_baomoi(url):
+    """Hàm crawl dữ liệu thật từ Baomoi"""
+    r = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+    soup = BeautifulSoup(r.text, "html.parser")
+    articles = []
 
-@app.route('/api/daily-coffee-prices', methods=['GET'])
-@cache.cached(timeout=300, query_string=True)
-def get_daily_coffee_prices():
-    """Get daily coffee prices for the last 7 days by region"""
-    try:
-        days = request.args.get('days', 7, type=int)
-        
-        # Validate days parameter
-        if days < 1 or days > 365:
-            days = 7
-        
-        # Query to get last N days of data (using CURRENT_DATE instead of MAX to avoid future dates)
-        query = f"""
-        SELECT 
-            date,
-            region,
-            price_vnd_per_kg
-        FROM daily_coffee_prices
-        WHERE date >= DATE_SUB(CURRENT_DATE, INTERVAL {days} DAY)
-          AND date <= CURRENT_DATE
-        ORDER BY date ASC, region ASC
-        """
-        
-        df = pd.read_sql(query, engine)
-        
-        if df.empty:
-            return jsonify({
-                'success': False,
-                'error': 'No data available'
-            }), 404
-        
-        # Convert date to string for JSON serialization
-        df['date'] = df['date'].astype(str)
-        
-        # Prepare data for Chart.js
-        dates = sorted(df['date'].unique().tolist())
-        regions = sorted(df['region'].unique().tolist())
-        
-        # Create datasets for each region
-        datasets = []
-        region_colors = {
-            'DakLak': {'border': '#E29A2E', 'bg': 'rgba(226, 154, 46, 0.1)'},
-            'DakNong': {'border': '#35B390', 'bg': 'rgba(53, 179, 144, 0.1)'},
-            'GiaLai': {'border': '#B25127', 'bg': 'rgba(178, 81, 39, 0.1)'},
-            'LamDong': {'border': '#8B4513', 'bg': 'rgba(139, 69, 19, 0.1)'}
-        }
-        
-        for region in regions:
-            region_data = df[df['region'] == region].sort_values('date')
-            prices = region_data['price_vnd_per_kg'].tolist()
-            
-            color = region_colors.get(region, {'border': '#666', 'bg': 'rgba(102, 102, 102, 0.1)'})
-            
-            datasets.append({
-                'label': region,
-                'data': prices,
-                'borderColor': color['border'],
-                'backgroundColor': color['bg'],
-                'borderWidth': 2.5,
-                'tension': 0.5,  # Increased for smoother curves
-                'fill': True,
-                'pointRadius': 3,
-                'pointHoverRadius': 6,
-                'pointBackgroundColor': color['border'],
-                'pointBorderColor': '#fff',
-                'pointBorderWidth': 2
-            })
-        
-        # Calculate statistics
-        latest_date = df['date'].max()
-        latest_prices = df[df['date'] == latest_date].set_index('region')['price_vnd_per_kg'].to_dict()
-        
-        # Calculate price changes
-        if len(dates) >= 2:
-            previous_date = dates[-2]
-            previous_prices = df[df['date'] == previous_date].set_index('region')['price_vnd_per_kg'].to_dict()
-            price_changes = {}
-            for region in regions:
-                if region in latest_prices and region in previous_prices:
-                    change = latest_prices[region] - previous_prices[region]
-                    percent_change = (change / previous_prices[region] * 100) if previous_prices[region] > 0 else 0
-                    price_changes[region] = {
-                        'change': int(change),
-                        'percent': round(percent_change, 2)
-                    }
-        else:
-            price_changes = {}
-        
-        return jsonify({
-            'success': True,
-            'data': {
-                'labels': dates,
-                'datasets': datasets,
-                'latest_prices': latest_prices,
-                'price_changes': price_changes,
-                'date_range': {
-                    'start': dates[0] if dates else None,
-                    'end': dates[-1] if dates else None
-                },
-                'total_records': len(df)
-            }
-        }), 200
-        
-    except Exception as e:
-        print(f"❌ Error in get_daily_coffee_prices: {str(e)}")
-        traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+    for card in soup.select("div.bm-card"):
+        a_tag = card.select_one("a[title]")
+        if not a_tag:
+            continue
+        title = a_tag.get("title").strip()
+        href = a_tag.get("href")
+        link = "https://baomoi.com" + href if href and href.startswith("/") else href
+
+        # --- Ảnh (fix lazyload + fallback regex) ---
+        img = None
+        img_tag = card.select_one("img")
+        if img_tag:
+            src = img_tag.get("src")
+            if src and not src.startswith("data:image"):
+                img = src
+            elif img_tag.get("data-src"):
+                img = img_tag.get("data-src")
+
+        if not img:
+            source_tag = card.select_one("source[srcset], source[data-srcset]")
+            if source_tag:
+                srcset = source_tag.get("srcset") or source_tag.get("data-srcset")
+                if srcset:
+                    img = srcset.split()[0]
+
+        if not img:
+            match = re.search(r"https://photo-baomoi\.bmcdn\.me/[^\s\"']+\.(jpg|webp|avif)", str(card))
+            if match:
+                img = match.group(0)
+
+        if not img:
+            fallback_images = [
+                "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=400&h=300&fit=crop",
+                "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=300&fit=crop"
+            ]
+            img = random.choice(fallback_images)
+
+        # --- Nguồn, thời gian, category ---
+        source_tag = card.select_one(".bm-card-source")
+        source = source_tag.get("title") if source_tag else "Báo Mới"
+        time_tag = card.select_one("time")
+        time_text = time_tag.get_text(strip=True) if time_tag else ""
+
+        categories = [a.get_text(strip=True) for a in card.select(".content-tags a") if a.get_text(strip=True)]
+
+        articles.append({
+            "title": title,
+            "url": link,
+            "image": img,
+            "source": source,
+            "time": time_text,
+            "category": categories
+        })
+
+    return {"success": True, "count": len(articles), "data": articles[:9]}
+
+
+def get_cached_news(category_key, url):
+    """Kiểm tra cache từng chuyên mục (10 phút/lần)"""
+    current_time = time.time()
+    cached = news_cache_by_category.get(category_key)
+
+    # Nếu có cache và chưa hết hạn
+    if cached and current_time - cached["timestamp"] < CACHE_DURATION:
+        data = cached["data"]
+        data["cached"] = True
+        data["updated_at"] = time.strftime(
+            "%H:%M:%S %d/%m/%Y", time.localtime(cached["timestamp"])
+        )
+        return data
+
+    # Crawl mới
+    fresh_data = crawl_news_from_baomoi(url)
+    news_cache_by_category[category_key] = {
+        "data": fresh_data,
+        "timestamp": current_time
+    }
+
+    fresh_data["cached"] = False
+    fresh_data["updated_at"] = time.strftime(
+        "%H:%M:%S %d/%m/%Y", time.localtime(current_time)
+    )
+    return fresh_data
+
+
+
+# ==========================================================
+# 🧭 5 ENDPOINTS TƯƠNG ỨNG 5 CATEGORY
+# ==========================================================
+
+@app.route('/api/news/gia-ca-phe', methods=['GET'])
+def news_gia_ca_phe():
+    return jsonify(get_cached_news(
+        "gia-ca-phe",
+        "https://baomoi.com/tim-kiem/giá%20cà%20phê.epi"
+    ))
+
+@app.route('/api/news/thi-truong', methods=['GET'])
+def news_thi_truong():
+    return jsonify(get_cached_news(
+        "thi-truong",
+        "https://baomoi.com/tim-kiem/thị%20trường%20cà%20phê.epi"
+    ))
+
+@app.route('/api/news/xuat-khau', methods=['GET'])
+def news_xuat_khau():
+    return jsonify(get_cached_news(
+        "xuat-khau",
+        "https://baomoi.com/tim-kiem/xuất%20khẩu%20cà%20phê.epi"
+    ))
+
+@app.route('/api/news/nong-san', methods=['GET'])
+def news_nong_san():
+    return jsonify(get_cached_news(
+        "nong-san",
+        "https://baomoi.com/tim-kiem/nông%20sản%20cà%20phê.epi"
+    ))
+
+@app.route('/api/news/chinh-sach', methods=['GET'])
+def news_chinh_sach():
+    return jsonify(get_cached_news(
+        "chinh-sach",
+        "https://baomoi.com/tim-kiem/chính%20sách%20cà%20phê.epi"
+    ))
 
 
 # ============================================================================

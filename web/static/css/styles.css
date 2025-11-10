@@ -1913,7 +1913,59 @@ body.enable-snap section.hero {
     grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
     gap: 1.75rem;
 }
+/* ======================================================= */
+   /* 🗂 CATEGORY BAR (HIỆU ỨNG MƯỢT, FULL WIDTH) */
+/* ======================================================= */
+.news-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 2rem;
+    padding: 0 1rem;
+}
 
+.news-cat-btn {
+    background: linear-gradient(135deg, #f3f3f3, #e9e9e9);
+    border: 2px solid #e0e0e0;
+    border-radius: 40px;
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    text-transform: capitalize;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transform: scale(1);
+}
+
+.news-cat-btn:hover {
+    background: linear-gradient(135deg, #b25127, #e07b48);
+    color: #fff;
+    border-color: transparent;
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(178, 81, 39, 0.3);
+}
+
+.news-cat-btn.active {
+    background: linear-gradient(135deg, #b25127, #e07b48);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 6px 14px rgba(178, 81, 39, 0.25);
+    transform: scale(1.03);
+}
+
+/* Nhẹ nhàng trên mobile */
+@media (max-width: 768px) {
+    .news-cat-btn {
+        font-size: 0.9rem;
+        padding: 0.7rem 1rem;
+    }
+}
 /* --- CARD STYLE --- */
 .news-item {
     background: white;
@@ -2952,6 +3004,14 @@ canvas {
     color: var(--text-muted);
     margin-top: 0.25rem;
 }
+.news-updated-time {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+
 
 
 
