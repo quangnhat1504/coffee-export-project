@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2B1E16">
+    <meta name="msapplication-navbutton-color" content="#2B1E16">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Daily Prices Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .chart-container {
+            height: 400px;
+            margin: 20px 0;
+        }
+        .debug-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Daily Coffee Prices - Debug Page</h1>
+        <p>Testing API and Chart functionality</p>
+        
+        <div id="status"></div>
+        <div id="debug" class="debug-info"></div>
+        
+        <h2>Chart</h2>
+        <div class="chart-container">
+            <canvas id="dailyPricesChart"></canvas>
+        </div>
+        
+        <h2>API Response</h2>
+        <pre id="apiResponse">Loading...</pre>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api/daily-coffee-prices?days=7';
+        let chart = null;
+
+        function showStatus(message, isSuccess = true) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = 'status ' + (isSuccess ? 'success' : 'error');
+            statusDiv.textContent = message;
+        }
+
+        function showDebug(message) {
+            const debugDiv = document.getElementById('debug');
+            debugDiv.innerHTML += `<div>${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+
+        async function loadData() {
+            try {
+                showDebug('📡 Fetching data from API...');
+                showStatus('Loading data from API...');
+                
+                const response = await fetch(API_URL);
+                showDebug(`✅ Response status: ${response.status}`);
+                
+                const result = await response.json();
+                document.getElementById('apiResponse').textContent = JSON.stringify(result, null, 2);
+                
+                if (!result.success) {
+                    showStatus('❌ API Error: ' + result.error, false);
+                    showDebug('❌ API returned error');
+                    return;
+                }
+                
+                const data = result.data;
+                showDebug(`✅ Data loaded: ${data.labels.length} days, ${data.datasets.length} regions`);
+                showStatus(`✅ Loaded ${data.labels.length} days of price data`);
+                
+                // Create chart
+                const ctx = document.getElementById('dailyPricesChart');
+                if (!ctx) {
+                    showStatus('❌ Canvas not found!', false);
+                    return;
+                }
+                
+                showDebug('📊 Creating chart...');
+                
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: data.datasets
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.parsed.y.toLocaleString('vi-VN') + ' VND/kg';
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value.toLocaleString('vi-VN');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                showDebug('✅ Chart created successfully!');
+                showStatus('✅ Chart loaded successfully!');
+                
+            } catch (error) {
+                showStatus('❌ Error: ' + error.message, false);
+                showDebug('❌ Error: ' + error.message);
+                console.error('Error:', error);
+            }
+        }
+
+        // Load data when page loads
+        window.addEventListener('load', loadData);
+    </script>
+</body>
+</html>
