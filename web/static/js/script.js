@@ -4,7 +4,7 @@ let priceChart, exportPieChart, climateChart, trendsChart, exportPerformanceChar
 let apiAvailable = false;
 
 // Cache configuration
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds (increased from 5)
 const apiCache = new Map();
 
 console.log('🚀 Script.js loaded at:', new Date().toLocaleTimeString());
@@ -1043,8 +1043,8 @@ function togglePriceChartSeries(dataset, visible) {
         // Update Y-axes visibility based on which datasets are visible
         updatePriceChartAxes();
         
-        // Update chart
-        priceChart.update();
+        // Update chart with no animation for better performance
+        priceChart.update('none');
         
         console.log(`${visible ? 'Showing' : 'Hiding'} ${dataset} in market chart`);
     }
@@ -2430,9 +2430,9 @@ function generateTrendData(min, max, years) {
 
 // Real-time Data Updates - Reload from API periodically
 function startRealTimeUpdates() {
-    console.log('🔄 Starting periodic API data refresh (every 5 minutes)');
+    console.log('🔄 Starting periodic API data refresh (every 10 minutes)');
     
-    // Refresh data from API every 5 minutes instead of using fake data
+    // Refresh data from API every 10 minutes instead of 5 for better performance
     setInterval(async () => {
         console.log('⏱️ Refreshing data from API...');
         try {
@@ -2443,7 +2443,7 @@ function startRealTimeUpdates() {
         } catch (error) {
             console.error('❌ Error refreshing data:', error);
         }
-    }, 300000); // Update every 5 minutes (300000 ms)
+    }, 600000); // Update every 10 minutes (600000 ms) - reduced frequency for better performance
 }
 
 // DEPRECATED: This function used fake/simulated data - no longer used

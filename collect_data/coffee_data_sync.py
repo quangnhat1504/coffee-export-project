@@ -256,10 +256,18 @@ with engine.begin() as conn:
 
     # Upsert coffee_long (using raw cursor for fast executemany)
     if rows:
-        print(f"📥 Inserting {len(rows)} records into coffee_long...")
+        print(f"📥 Inserting {len(rows)} records into coffee_long in batches...")
         raw = conn.connection
+        batch_size = 1000  # Process in batches for better performance
+        total_batches = (len(rows) + batch_size - 1) // batch_size
+        
         with raw.cursor() as cur:
-            cur.executemany(upsert_sql, rows)
+            for i in range(0, len(rows), batch_size):
+                batch = rows[i:i + batch_size]
+                cur.executemany(upsert_sql, batch)
+                batch_num = (i // batch_size) + 1
+                if batch_num % 5 == 0 or batch_num == total_batches:
+                    print(f"  Progress: {batch_num}/{total_batches} batches completed")
         print("✅ coffee_long data inserted")
 
     # ===== Pivot to Domain Tables =====
@@ -342,8 +350,13 @@ with engine.begin() as conn:
     ]
     if mt_rows:
         raw3 = conn.connection
+        batch_size = 500  # Batch size for market trade data
+        total_batches = (len(mt_rows) + batch_size - 1) // batch_size
+        
         with raw3.cursor() as cur:
-            cur.executemany(upsert_mt_sql, mt_rows)
+            for i in range(0, len(mt_rows), batch_size):
+                batch = mt_rows[i:i + batch_size]
+                cur.executemany(upsert_mt_sql, batch)
         print(f"  ✅ Inserted {len(mt_rows)} market trade records")
 
 

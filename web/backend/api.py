@@ -97,7 +97,7 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 # Configure Caching (Simple in-memory cache)
 app.config['CACHE_TYPE'] = 'SimpleCache'
-app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # 5 minutes default
+app.config['CACHE_DEFAULT_TIMEOUT'] = 600  # 10 minutes default (increased from 5)
 cache = Cache(app)
 
 # Enable Response Compression
@@ -715,7 +715,7 @@ def get_available_years():
 # (Hiển thị ở tab "Production Trends" & "AI Forecast")
 # ==========================================================
 @app.route('/api/production', methods=['GET'])
-# @cache.cached(timeout=300)  # Cache disabled for testing
+@cache.cached(timeout=600)  # Cache for 10 minutes (enabled)
 @safe_db_operation
 def get_production_data():
     """
@@ -873,7 +873,7 @@ def get_production_by_province(province):
 # (Nguồn: coffee_export, hiển thị ở tab "Export Performance")
 # ==========================================================
 @app.route('/api/export', methods=['GET'])
-@cache.cached(timeout=300)  # Cache for 5 minutes
+@cache.cached(timeout=600)  # Cache for 10 minutes (increased from 5)
 @safe_db_operation
 def get_export_data():
     """
@@ -963,7 +963,7 @@ news_cache = {
     "timestamp": 0
 }
    
-CACHE_DURATION = 600  # 10 phút = 600 giây
+CACHE_DURATION = 1800  # 30 minutes = 1800 seconds (increased from 10 minutes for better performance)
 # ==========================================================
 # 📢 NEWS ENDPOINT - Crawl tin tức cà phê từ Báo Mới (Cập nhật chuẩn HTML 2025)
 # ==========================================================
@@ -1078,7 +1078,7 @@ from bs4 import BeautifulSoup
 
 # Cache riêng cho từng chuyên mục
 news_cache_by_category = {}
-CACHE_DURATION = 600  # 10 phút = 600 giây
+CACHE_DURATION = 1800  # 30 minutes = 1800 seconds (increased for better performance)
 
 
 def crawl_news_from_baomoi(url):
