@@ -29,6 +29,19 @@ app = Flask(__name__,
             template_folder='../templates',
             static_folder='../static')
 
+# Disable template caching for development
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+# Add after_request to disable all caching
+@app.after_request
+def add_header(response):
+    """Add headers to disable caching"""
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 # Configure Caching (Simple in-memory cache)
 app.config['CACHE_TYPE'] = 'SimpleCache'
 app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # 5 minutes default
@@ -156,7 +169,6 @@ PROVINCE_NAMES = {
     'DakLak': 'Dak Lak',
     'GiaLai': 'Gia Lai',
     'DakNong': 'Dak Nong',
-    'KonTum': 'Kon Tum',
     'LamDong': 'Lam Dong'
 }
 
@@ -441,6 +453,7 @@ def get_weather_summary():
                AVG(humidity_mean) as avg_humidity,
                COUNT(*) as record_count
         FROM weather_data_monthly
+        WHERE province IN ('DakLak', 'GiaLai', 'DakNong', 'LamDong')
         GROUP BY province
         """
         df = pd.read_sql(query, engine)
@@ -917,103 +930,222 @@ def get_export_data():
             'success': False,
             'error': str(e)
         }), 500
-    
-# ==========================================================
-# 📢 NEWS ENDPOINT - Crawl tin tức cà phê từ Báo Mới (Cập nhật chuẩn HTML 2025)
-# ==========================================================
-@app.route('/api/news', methods=['GET'])
-def get_coffee_news():
-    """
-    Lấy 9 bài viết mới nhất liên quan đến cà phê từ Baomoi.com
-    """
-    import requests
-    from bs4 import BeautifulSoup
-    import random
-    import re
 
+# ==========================================================
+# ☕ COFFEE PRICES ENDPOINT - Daily prices by province (last 7 days)
+# ==========================================================
+@app.route('/api/coffee-prices/recent', methods=['GET'])
+# @cache.cached(timeout=60)  # TEMPORARILY DISABLED for testing 7-day filter
+@safe_db_operation
+def get_recent_coffee_prices():
+    """
+    Get recent daily coffee prices by province (last 7 days by default)
+    Query params:
+        - days: Number of recent days to fetch (default: 7)
+    Returns: List of provinces with their daily prices
+    """
     try:
-        url = "https://baomoi.com/tim-kiem/gi%C3%A1%20c%C3%A0%20ph%C3%AA.epi"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        r = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(r.text, "html.parser")
-
-        articles = []
-        for card in soup.select("div.bm-card"):
-            # --- Tiêu đề & link ---
-            a_tag = card.select_one("a[title]")
-            if not a_tag:
+        # Get days parameter from query string (default 7)
+        days = request.args.get('days', 7, type=int)
+        
+        # Limit to reasonable range
+        if days < 1:
+            days = 7
+        elif days > 30:
+            days = 30
+        
+        # CRITICAL FIX: Get the most recent date in the database first,
+        # then calculate 7 days from that date (not from CURDATE())
+        # This ensures we always show exactly 7 days of available data
+        max_date_query = text("""
+            SELECT MAX(date) as max_date
+            FROM daily_coffee_prices
+            WHERE region IN ('DakLak', 'GiaLai', 'DakNong', 'LamDong')
+        """)
+        
+        with engine.connect() as conn:
+            max_date_result = conn.execute(max_date_query)
+            max_date_row = max_date_result.fetchone()
+            
+            if not max_date_row or not max_date_row[0]:
+                return jsonify({
+                    'success': False,
+                    'error': 'No coffee price data found'
+                }), 404
+            
+            max_date = max_date_row[0]
+            print(f"\n📅 Most recent date in database: {max_date}")
+        
+        # Now query for exactly N days from the most recent date
+        query = text("""
+            SELECT 
+                region,
+                date,
+                price_vnd_per_kg,
+                scraped_at
+            FROM daily_coffee_prices
+            WHERE date > DATE_SUB(:max_date, INTERVAL :days DAY)
+              AND date <= :max_date
+              AND region IN ('DakLak', 'GiaLai', 'DakNong', 'LamDong')
+            ORDER BY date DESC, region ASC
+        """)
+        
+        with engine.connect() as conn:
+            result = conn.execute(query, {"days": days, "max_date": max_date})
+            data = result.fetchall()
+        
+        if not data:
+            return jsonify({
+                'success': False,
+                'error': 'No coffee price data found'
+            }), 404
+        
+        # Group data by province
+        provinces_data = {}
+        all_dates = set()
+        
+        # Define allowed provinces (must match PROVINCE_NAMES)
+        ALLOWED_PROVINCES = ['DakLak', 'GiaLai', 'DakNong', 'LamDong']
+        
+        for row in data:
+            region = row[0]
+            
+            # CRITICAL: Skip KonTum and any other unwanted provinces
+            if region not in ALLOWED_PROVINCES:
                 continue
-            title = a_tag.get("title").strip()
-            href = a_tag.get("href")
-            link = "https://baomoi.com" + href if href and href.startswith("/") else href
-
-            # --- Ảnh (Cập nhật dò đa tầng + fallback regex) ---
-            import re
-
-            img = None
-
-            # 1️⃣ Ưu tiên <img src> hoặc <img data-src>
-            img_tag = card.select_one("img")
-            if img_tag:
-                img = img_tag.get("src") or img_tag.get("data-src")
-
-            # 2️⃣ Nếu chưa có, tìm <source srcset> hoặc <source data-srcset>
-            if not img:
-                source_tag = card.select_one("source[srcset], source[data-srcset]")
-                if source_tag:
-                    srcset = source_tag.get("srcset") or source_tag.get("data-srcset")
-                    if srcset:
-                        # Tách lấy link đầu tiên trong srcset
-                        img = srcset.split()[0]
-
-            # 3️⃣ Nếu vẫn không có, thử regex tìm đường dẫn ảnh từ HTML (phòng khi HTML rút gọn)
-            if not img:
-                match = re.search(r"https://photo-baomoi\.bmcdn\.me/[^\s\"']+\.(jpg|webp|avif)", str(card))
-                if match:
-                    img = match.group(0)
-
-            # 4️⃣ Nếu vẫn không có, dùng ảnh fallback ngẫu nhiên
-            if not img:
-                fallback_images = [
-                    "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=300&fit=crop"
-                ]
-                img = random.choice(fallback_images)
-
-            # --- Nguồn báo ---
-            source_tag = card.select_one(".bm-card-source")
-            source = source_tag.get("title") if source_tag else "Báo Mới"
-
-            # --- Thời gian đăng ---
-            time_tag = card.select_one("time")
-            time_text = time_tag.get_text(strip=True) if time_tag else ""
-
-            # --- Ghi lại dữ liệu ---
-            articles.append({
-                "title": title,
-                "url": link,
-                "image": img,
-                "source": source,
-                "time": time_text
+            
+            date_val = row[1]
+            price = float(row[2]) if row[2] else None
+            
+            # Convert date to string format
+            date_str = date_val.strftime('%Y-%m-%d') if hasattr(date_val, 'strftime') else str(date_val)
+            all_dates.add(date_str)
+            
+            if region not in provinces_data:
+                provinces_data[region] = {
+                    'name': region,
+                    'prices': []
+                }
+            
+            provinces_data[region]['prices'].append({
+                'date': date_str,
+                'price': price
             })
-
-        # Giới hạn 9 bài đầu
-        articles = articles[:9]
-
+        
+        # Get only the most recent N days (to ensure exactly 'days' parameter is used)
+        sorted_dates = sorted(list(all_dates), reverse=True)  # Newest first
+        recent_dates = sorted_dates[:days]  # Take only first N days
+        
+        print(f"\n📅 Date filtering:")
+        print(f"   Total unique dates found: {len(sorted_dates)}")
+        print(f"   Requested days: {days}")
+        print(f"   Using dates: {recent_dates}")
+        
+        # Convert to list and filter by recent dates only
+        provinces_list = []
+        for region, data in provinces_data.items():
+            # Filter prices to only include recent dates
+            data['prices'] = [p for p in data['prices'] if p['date'] in recent_dates]
+            
+            # Sort prices by date descending
+            data['prices'].sort(key=lambda x: x['date'], reverse=True)
+            
+            # DEBUG: Print LamDong data
+            if region == 'LamDong':
+                print(f"\n🔍 DEBUG - LamDong data:")
+                print(f"   Total prices: {len(data['prices'])}")
+                print(f"   Dates: {[p['date'] for p in data['prices']]}")
+                print(f"   First 3 prices: {data['prices'][:3]}")
+                print(f"   Last 3 prices: {data['prices'][-3:]}\n")
+            
+            # Calculate statistics
+            prices_only = [p['price'] for p in data['prices'] if p['price'] is not None]
+            if prices_only:
+                data['current_price'] = prices_only[0]  # Most recent price
+                data['avg_price'] = round(sum(prices_only) / len(prices_only), 0)
+                data['min_price'] = min(prices_only)
+                data['max_price'] = max(prices_only)
+                
+                # Calculate price change (current vs oldest in range)
+                if len(prices_only) > 1:
+                    price_change = prices_only[0] - prices_only[-1]
+                    price_change_pct = round((price_change / prices_only[-1]) * 100, 2)
+                    data['price_change'] = price_change
+                    data['price_change_percent'] = price_change_pct
+            
+            provinces_list.append(data)
+        
+        # Sort provinces by name
+        provinces_list.sort(key=lambda x: x['name'])
+        
         return jsonify({
-            "success": True,
-            "count": len(articles),
-            "data": articles
+            'success': True,
+            'count': len(provinces_list),
+            'days': days,
+            'provinces': provinces_list,
+            'metadata': {
+                'unique_dates': recent_dates,  # Use filtered dates, not all_dates
+                'total_records': len(provinces_list)
+            }
         })
-
+        
     except Exception as e:
         return jsonify({
-            "success": False,
-            "error": str(e)
+            'success': False,
+            'error': str(e)
+        }), 500
+    
+# ==========================================================
+# 📢 NEWS ENDPOINT - Crawl tin tức cà phê từ nhiều nguồn
+# ==========================================================
+@app.route('/api/news', methods=['GET'])
+@cache.cached(timeout=300)  # Cache for 5 minutes
+def get_coffee_news():
+    """
+    Lấy tin tức cà phê từ nhiều nguồn, sắp xếp theo thời gian
+    Supports query params: ?limit=9 (default)
+    """
+    try:
+        # Import news crawler
+        from news_crawler import NewsAggregator
+        
+        # Get limit from query params
+        limit = request.args.get('limit', 9, type=int)
+        limit = min(limit, 50)  # Max 50 articles
+        
+        # Initialize aggregator and get news
+        aggregator = NewsAggregator()
+        articles = aggregator.get_all_news(limit=limit)
+        
+        # Format response
+        formatted_articles = []
+        for article in articles:
+            formatted_articles.append({
+                "title": article['title'],
+                "url": article['url'],
+                "image": article['image'],
+                "source": article['source'],
+                "time": article['time'],
+                "timestamp": article['timestamp']
+            })
+        
+        return jsonify({
+            "success": True,
+            "count": len(formatted_articles),
+            "data": formatted_articles,
+            "cached": False
         })
+    
+    except Exception as e:
+        print(f"❌ Error in get_coffee_news: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "data": []
+        }), 500
 
 # ============================================================================
 # MAIN

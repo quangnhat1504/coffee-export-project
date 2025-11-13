@@ -10,12 +10,15 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import create_engine, text
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 # ============================================================================
 # ENVIRONMENT VARIABLES
 # ============================================================================
 
-load_dotenv()
+# Find .env in parent directory (project root)
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT", "3306"))
@@ -51,7 +54,6 @@ locations = {
     "DakLak": (12.6663, 108.0383),
     "GiaLai": (13.9833, 108.0),
     "DakNong": (12.0086, 107.6907),
-    "KonTum": (14.3545, 108.0076),
     "LamDong": (11.5475, 107.8070)
 }
 

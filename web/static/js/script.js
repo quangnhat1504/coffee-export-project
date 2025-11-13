@@ -204,7 +204,54 @@ document.addEventListener('DOMContentLoaded', function() {
 async function loadCoffeeNews() {
     const container = document.querySelector(".news-list");
     if (!container) return;
-    container.innerHTML = "<p>🔄 Đang tải tin tức mới nhất...</p>";
+    container.innerHTML = "<p>🔄 Đang tải tin tức mới nhất từ nhiều nguồn...</p>";
+
+    // Fallback images array
+    const fallbackImages = [
+        "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1610889556528-9a770e32642f?w=400&h=300&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400&h=300&fit=crop&q=80",
+        "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=400&h=300&fit=crop&q=80",
+    ];
+
+    // Function to get random fallback image
+    function getRandomFallbackImage() {
+        return fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+    }
+
+    // Function to validate and fix image URL
+    function validateImageUrl(url) {
+        if (!url) return getRandomFallbackImage();
+        
+        // Check if it's a valid URL
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            return getRandomFallbackImage();
+        }
+        
+        // Check if it's a data URL or placeholder
+        if (url.startsWith('data:') || url.includes('placeholder')) {
+            return getRandomFallbackImage();
+        }
+        
+        return url;
+    }
+
+    // Function to get category CSS class based on source
+    function getCategoryClass(source) {
+        const sourceMap = {
+            'VOV': 'vov',
+            'Báo Mới': 'baomoi',
+            'VnExpress': 'vnexpress',
+            'CafeControl': 'cafecontrol',
+            'Thanh Niên': 'thanhnien',
+            'Tuổi Trẻ': 'tuoitre'
+        };
+        return sourceMap[source] || 'default';
+    }
 
     try {
         const res = await fetch(`${API_BASE_URL}/news`);
@@ -216,33 +263,50 @@ async function loadCoffeeNews() {
         }
 
         container.innerHTML = "";
-        data.data.forEach(item => {
-            container.innerHTML += `
-                <article class="news-item">
-                    <div class="news-thumbnail">
-                        <img src="${item.image}" alt="Coffee news">
-                        <div class="news-category">BÁO MỚI</div>
-                    </div>
-                    <div class="news-item-content">
-                        <h3 class="news-item-title">
-                            <a href="${item.url}" target="_blank">${item.title}</a>
-                        </h3>
-                        <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
-                    </div>
-                </article>
+        data.data.forEach((item, index) => {
+            // Validate and ensure image URL is proper
+            const imageUrl = validateImageUrl(item.image);
+            const categoryClass = getCategoryClass(item.source);
+            
+            const newsElement = document.createElement('article');
+            newsElement.className = 'news-item';
+            newsElement.innerHTML = `
+                <div class="news-thumbnail">
+                    <img src="${imageUrl}" 
+                         alt="${item.title}" 
+                         onerror="this.onerror=null; this.src='${getRandomFallbackImage()}';"
+                         loading="lazy">
+                    <div class="news-category ${categoryClass}">${item.source}</div>
+                </div>
+                <div class="news-item-content">
+                    <h3 class="news-item-title">
+                        <a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.title}</a>
+                    </h3>
+                    <p class="news-item-desc">
+                        <i class="fas fa-newspaper"></i> ${item.source} • 
+                        <i class="fas fa-clock"></i> ${item.time}
+                    </p>
+                </div>
             `;
+            container.appendChild(newsElement);
         });
+        
+        console.log(`✅ Loaded ${data.data.length} news items from multiple sources`);
     } catch (err) {
-        container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
+        console.error('❌ Error loading news:', err);
+        container.innerHTML = `
+            <div style="padding: 2rem; text-align: center; color: #dc3545;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">Lỗi khi tải tin tức</p>
+                <p style="font-size: 0.9rem; opacity: 0.8;">${err.message}</p>
+            </div>
+        `;
     }
 }
 
 // Gọi hàm khi DOM sẵn sàng
 document.addEventListener("DOMContentLoaded", loadCoffeeNews);
 
-
-// Gọi hàm khi trang News được load
-document.addEventListener("DOMContentLoaded", loadCoffeeNews);
 // Initialize Application
 async function initializeApp() {
     console.log('🎯 initializeApp() called');
@@ -1002,16 +1066,20 @@ function initializeExportPieChart() {
     exportPieChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['United States', 'Germany', 'Japan', 'Italy', 'France', 'Others'],
+            labels: ['Germany', 'Italy', 'United States', 'Japan', 'Russian Federation', 'Belgium', 'Spain', 'Algeria', 'Thailand', 'Others'],
             datasets: [{
-                data: [22.5, 18.3, 15.7, 12.1, 9.8, 21.6],
+                data: [18.3, 10.7, 9.2, 7.6, 6.5, 6.1, 5.9, 4.7, 2.5, 28.5],
                 backgroundColor: [
-                    '#d29a52', // US
-                    '#b77b40', // Germany
-                    '#9c6644', // Japan
-                    '#c69253', // Italy
-                    '#e3b17a', // France
-                    '#d8c2a6'  // Others
+                    '#8B4513',  // Germany - SaddleBrown (nâu đậm)
+                    '#A0522D',  // Italy - Sienna (nâu đỏ)
+                    '#D2691E',  // US - Chocolate đậm
+                    '#CD853F',  // Japan - Peru (vàng nâu sáng)
+                    '#B8860B',  // Russian Federation - DarkGoldenrod (vàng đậm)
+                    '#8B7355',  // Belgium - Burlywood4 (nâu xám)
+                    '#DEB887',  // Spain - Burlywood (be vàng nhạt)
+                    '#D2B48C',  // Algeria - Tan (be sáng)
+                    '#F4A460',  // Thailand - SandyBrown (cam nâu)
+                    '#BC8F8F'   // Others - RosyBrown (nâu hồng)
                 ],
                 borderColor: '#fff',
                 borderWidth: 2,
@@ -1573,7 +1641,100 @@ function updateExportPerformanceCards(data) {
         }
     }
     
+    // Update NEW Export Stats Cards (3 cards below title)
+    updateExportStatsCards(data);
+    
     console.log('💳 Export performance cards updated');
+}
+
+/**
+ * Update Export Stats Cards (2024 Data Summary Cards)
+ */
+function updateExportStatsCards(data) {
+    if (!data || data.length === 0) return;
+    
+    console.log('💳 Updating export stats cards...');
+    
+    const latest = data[data.length - 1];  // 2024 data
+    const previous = data[data.length - 2]; // 2023 data
+    
+    // 1. Update Export Value Card
+    const valueElement = document.getElementById('value-export');
+    const changeExportElement = document.getElementById('change-export');
+    
+    if (valueElement && latest.export_value_million_usd) {
+        const valueInBillions = (latest.export_value_million_usd / 1000).toFixed(2);
+        valueElement.innerHTML = `$${valueInBillions}B`;
+        
+        // Calculate year-over-year change
+        if (changeExportElement && previous) {
+            const change = latest.export_value_million_usd - previous.export_value_million_usd;
+            const changePct = ((change / previous.export_value_million_usd) * 100).toFixed(1);
+            const isPositive = change >= 0;
+            
+            changeExportElement.classList.remove('positive', 'negative', 'neutral');
+            changeExportElement.classList.add(isPositive ? 'positive' : 'negative');
+            
+            changeExportElement.innerHTML = `
+                <i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i>
+                <span>${isPositive ? '+' : ''}${changePct}% </span>
+            `;
+        }
+    }
+    
+    // 2. Update World Price Card
+    const worldPriceElement = document.getElementById('value-world-price');
+    const changeWorldPriceElement = document.getElementById('change-world-price');
+    
+    if (worldPriceElement && latest.price_world_usd_per_ton) {
+        const formattedPrice = Math.round(latest.price_world_usd_per_ton).toLocaleString('en-US');
+        worldPriceElement.innerHTML = `$${formattedPrice}`;
+        
+        // Calculate year-over-year change
+        if (changeWorldPriceElement && previous) {
+            const change = latest.price_world_usd_per_ton - previous.price_world_usd_per_ton;
+            const changePct = ((change / previous.price_world_usd_per_ton) * 100).toFixed(1);
+            const isPositive = change >= 0;
+            
+            changeWorldPriceElement.classList.remove('positive', 'negative', 'neutral');
+            changeWorldPriceElement.classList.add(isPositive ? 'positive' : 'negative');
+            
+            changeWorldPriceElement.innerHTML = `
+                <i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i>
+                <span>${isPositive ? '+' : ''}${changePct}% </span>
+            `;
+        }
+    }
+    
+    // 3. Update VN Price Card
+    const vnPriceElement = document.getElementById('value-vn-price');
+    const changeVnPriceElement = document.getElementById('change-vn-price');
+    
+    if (vnPriceElement && latest.price_vn_usd_per_ton) {
+        const formattedPrice = Math.round(latest.price_vn_usd_per_ton).toLocaleString('en-US');
+        vnPriceElement.innerHTML = `$${formattedPrice}`;
+        
+        // Calculate year-over-year change
+        if (changeVnPriceElement && previous) {
+            const change = latest.price_vn_usd_per_ton - previous.price_vn_usd_per_ton;
+            const changePct = ((change / previous.price_vn_usd_per_ton) * 100).toFixed(1);
+            const isPositive = change >= 0;
+            
+            changeVnPriceElement.classList.remove('positive', 'negative', 'neutral');
+            changeVnPriceElement.classList.add(isPositive ? 'positive' : 'negative');
+            
+            changeVnPriceElement.innerHTML = `
+                <i class="fas fa-arrow-${isPositive ? 'up' : 'down'}"></i>
+                <span>${isPositive ? '+' : ''}${changePct}% </span>
+            `;
+        }
+    }
+    
+    console.log('✅ Export stats cards updated:', {
+        exportValue: `$${(latest.export_value_million_usd / 1000).toFixed(2)}B`,
+        worldPrice: `$${Math.round(latest.price_world_usd_per_ton)}`,
+        vnPrice: `$${Math.round(latest.price_vn_usd_per_ton)}`
+    });
 }
 
 // Setup Export Performance Toggle Buttons
@@ -1730,12 +1891,16 @@ let selectedProductionProvince = 'national';
 
 async function loadProductionData() {
     try {
+        console.log('🔄 Fetching production data from:', `${API_BASE_URL}/production`);
         const response = await fetch(`${API_BASE_URL}/production`);
         const result = await response.json();
         
-        if (result.success) {
+        console.log('📦 Production API response:', result);
+        
+        if (result.success && result.data && result.data.length > 0) {
             productionData = result.data;
-            console.log('Production data loaded:', productionData.length, 'years');
+            console.log('✅ Production data loaded:', productionData.length, 'years');
+            console.log('📊 Sample data:', productionData[0]);
             
             // Update chart with real data
             updateTrendsChartWithData();
@@ -1743,21 +1908,37 @@ async function loadProductionData() {
             // Update production cards
             updateProductionCards(productionData);
         } else {
-            console.error('Failed to load production data:', result.error);
+            console.error('❌ Failed to load production data:', result.error || 'No data');
+            console.log('Using fallback generated data');
         }
     } catch (error) {
-        console.error('Error loading production data:', error);
+        console.error('❌ Error loading production data:', error);
+        console.log('Using fallback generated data');
     }
 }
 
 function updateTrendsChartWithData() {
-    if (!trendsChart || !productionData) return;
+    if (!trendsChart) {
+        console.warn('⚠️ trendsChart not initialized');
+        return;
+    }
+    if (!productionData) {
+        console.warn('⚠️ productionData not available');
+        return;
+    }
+    
+    console.log('📈 Updating trends chart with real data...');
     
     const years = productionData.map(d => d.year.toString());
     // Convert from millions to tons and thousands to hectares
     const production = productionData.map(d => d.output_million_tons * 1000000);
     const area = productionData.map(d => d.area_thousand_ha * 1000);
     const yieldData = productionData.map(d => d.yield_tons_per_ha);
+    
+    console.log('Years:', years);
+    console.log('Production sample:', production.slice(0, 3));
+    console.log('Area sample:', area.slice(0, 3));
+    console.log('Yield sample:', yieldData.slice(0, 3));
     
     // Update chart labels and datasets
     trendsChart.data.labels = years;
@@ -1766,6 +1947,7 @@ function updateTrendsChartWithData() {
     trendsChart.data.datasets[2].data = yieldData;
     
     trendsChart.update();
+    console.log('✅ Trends chart updated successfully');
 }
 
 function updateProductionCards(data) {
@@ -2276,12 +2458,31 @@ function updatePieChart(countries, othersData) {
     const dataValues = [...countries.map(c => c.percentage), othersData.percentage || othersData];
     const volumeData = [...countries.map(c => c.volume), othersData.volume || 0];
 
+    // Define color palette for countries (10 distinct colors)
+    const colorPalette = [
+        '#8B4513',  // 1st - SaddleBrown (nâu đậm)
+        '#A0522D',  // 2nd - Sienna (nâu đỏ)
+        '#D2691E',  // 3rd - Chocolate đậm
+        '#CD853F',  // 4th - Peru (vàng nâu sáng)
+        '#B8860B',  // 5th - DarkGoldenrod (vàng đậm)
+        '#8B7355',  // 6th - Burlywood4 (nâu xám)
+        '#DEB887',  // 7th - Burlywood (be vàng nhạt)
+        '#D2B48C',  // 8th - Tan (be sáng)
+        '#F4A460',  // 9th - SandyBrown (cam nâu)
+        '#BC8F8F'   // Others - RosyBrown (nâu hồng)
+    ];
+
+    // Generate colors based on number of countries
+    const colors = countries.map((_, index) => colorPalette[index % colorPalette.length]);
+    colors.push(colorPalette[colorPalette.length - 1]); // Others color
+
     // Store volume data for tooltip
     exportPieChart.data.datasets[0].volumeData = volumeData;
     
     // Update chart data
     exportPieChart.data.labels = labels;
     exportPieChart.data.datasets[0].data = dataValues;
+    exportPieChart.data.datasets[0].backgroundColor = colors;
     
     // Update tooltip to show volume in tons
     exportPieChart.options.plugins.tooltip.callbacks.label = function(context) {
@@ -2486,3 +2687,371 @@ function updateWeatherCards(stats) {
         }
     }
 }
+
+// ==========================================================
+// ☕ PROVINCE COFFEE PRICES CHART (Last 7 Days) - Multi-line Chart
+// ==========================================================
+
+let provincePricesChart = null;
+
+/**
+ * Fetch recent coffee prices by province from API
+ */
+async function fetchProvincePrices(days = 7) {
+    console.log('🔵 fetchProvincePrices called - v5.0');
+    try {
+        const url = `${API_BASE_URL}/coffee-prices/recent?days=${days}`;
+        console.log('🔵 Fetching from:', url);
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        console.log('🔵 API Response:', data);
+        
+        if (data.success && data.provinces) {
+            console.log('🔵 Initializing chart with', data.provinces.length, 'provinces');
+            
+            // Update info cards first
+            updateProvincePriceCards(data.provinces);
+            
+            // Then initialize chart
+            initializeProvincePricesChart(data.provinces);
+        } else {
+            console.error('❌ Failed to load province prices:', data.error);
+        }
+    } catch (error) {
+        console.error('❌ Error fetching province prices:', error);
+    }
+}
+
+/**
+ * Update province price info cards with latest data
+ */
+function updateProvincePriceCards(provinces) {
+    console.log('💳 Updating province price cards:', provinces);
+    
+    const provinceMapping = {
+        'DakLak': 'daklak',
+        'DakNong': 'daknong',
+        'GiaLai': 'gialai',
+        'LamDong': 'lamdong'
+    };
+    
+    provinces.forEach(province => {
+        const cardId = provinceMapping[province.name];
+        if (!cardId) return;
+        
+        // Get DOM elements
+        const priceElement = document.getElementById(`price-${cardId}`);
+        const changeElement = document.getElementById(`change-${cardId}`);
+        const dateElement = document.getElementById(`date-${cardId}`);
+        
+        if (!priceElement || !changeElement || !dateElement) {
+            console.warn(`⚠️ Card elements not found for ${cardId}`);
+            return;
+        }
+        
+        // Update price
+        const currentPrice = province.current_price || 0;
+        const formattedPrice = new Intl.NumberFormat('vi-VN').format(Math.round(currentPrice));
+        priceElement.innerHTML = `₫${formattedPrice}`;
+        
+        // Update change percentage
+        const changePercent = province.price_change_percent || 0;
+        const changeValue = province.price_change || 0;
+        const isPositive = changePercent > 0;
+        const isNegative = changePercent < 0;
+        const isNeutral = changePercent === 0;
+        
+        // Remove all classes
+        changeElement.classList.remove('positive', 'negative', 'neutral');
+        
+        // Add appropriate class
+        if (isPositive) {
+            changeElement.classList.add('positive');
+            changeElement.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${changePercent.toFixed(2)}%</span>`;
+        } else if (isNegative) {
+            changeElement.classList.add('negative');
+            changeElement.innerHTML = `<i class="fas fa-arrow-down"></i><span>${changePercent.toFixed(2)}%</span>`;
+        } else {
+            changeElement.classList.add('neutral');
+            changeElement.innerHTML = `<i class="fas fa-minus"></i><span>0.0%</span>`;
+        }
+        
+        // Update date (get most recent date from prices)
+        if (province.prices && province.prices.length > 0) {
+            const mostRecentDate = province.prices[0].date; // Already sorted DESC
+            const dateObj = new Date(mostRecentDate);
+            const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            dateElement.textContent = formattedDate;
+        }
+        
+        console.log(`✅ Updated card for ${province.name}:`, {
+            price: formattedPrice,
+            change: changePercent,
+            date: dateElement.textContent
+        });
+    });
+}
+
+/**
+ * Initialize province prices line chart (4 lines, 1 per province)
+ */
+function initializeProvincePricesChart(provinces) {
+    console.log('🟢 initializeProvincePricesChart called with:', provinces);
+    
+    // Color palette for provinces
+    const provinceColors = {
+        'DakLak': { border: '#8B4513', bg: 'rgba(139, 69, 19, 0.1)' },
+        'DakNong': { border: '#D2691E', bg: 'rgba(210, 105, 30, 0.1)' },
+        'GiaLai': { border: '#CD853F', bg: 'rgba(205, 133, 63, 0.1)' },
+        'LamDong': { border: '#A0522D', bg: 'rgba(160, 82, 45, 0.1)' }
+    };
+    
+    // Get all unique dates and sort them
+    const allDates = new Set();
+    provinces.forEach(province => {
+        province.prices.forEach(p => allDates.add(p.date));
+    });
+    const sortedDates = Array.from(allDates).sort();
+    
+    console.log('🟢 All unique dates:', sortedDates);
+    console.log('🟢 Provinces data:', provinces.map(p => ({
+        name: p.name,
+        priceCount: p.prices.length,
+        dates: p.prices.map(x => x.date)
+    })));
+    
+    // Format labels (MM/DD)
+    const labels = sortedDates.map(dateStr => {
+        const date = new Date(dateStr);
+        return `${date.getMonth() + 1}/${date.getDate()}`;
+    });
+    
+    // Create datasets (one line per province)
+    const datasets = provinces.map(province => {
+        // Create price array matching sorted dates (sortedDates is ASC)
+        // Need to map each date in sortedDates to corresponding price from province.prices
+        const priceData = sortedDates.map(date => {
+            // Find price object for this specific date
+            const priceObj = province.prices.find(p => p.date === date);
+            if (!priceObj) {
+                console.warn(`⚠️ ${province.name}: No price found for date ${date}`);
+                return null;
+            }
+            return priceObj.price;
+        });
+        
+        // DEBUG: Detailed log for LamDong
+        if (province.name === 'LamDong') {
+            console.log('🔴 LAMDONG DEBUG:');
+            console.log('  - Total dates in sortedDates:', sortedDates.length);
+            console.log('  - SortedDates:', JSON.stringify(sortedDates));
+            console.log('  - Province.prices length:', province.prices.length);
+            console.log('  - Province.prices:', JSON.stringify(province.prices));
+            console.log('  - Mapping check:');
+            sortedDates.forEach((date, idx) => {
+                const found = province.prices.find(p => p.date === date);
+                console.log(`    ${date} → ${found ? found.price : 'NULL'} (index ${idx})`);
+            });
+            console.log('  - Final PriceData array:', JSON.stringify(priceData));
+            console.log('  - Non-null count:', priceData.filter(p => p !== null).length);
+        }
+        
+        console.log(`🟢 ${province.name} price data:`, priceData);
+        
+        const color = provinceColors[province.name] || { 
+            border: '#666', 
+            bg: 'rgba(102, 102, 102, 0.1)' 
+        };
+        
+        return {
+            label: province.name,
+            data: priceData,
+            borderColor: color.border,
+            backgroundColor: color.bg,
+            borderWidth: 3,
+            fill: false,  // Changed from true - disable fill to avoid overlap issues
+            tension: 0.4,
+            spanGaps: true,  // Draw line even when there are null values
+            pointRadius: 5,  // Increased from 4
+            pointHoverRadius: 7,  // Increased from 6
+            pointBackgroundColor: color.border,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: color.border,
+            pointHoverBorderWidth: 3
+        };
+    });
+    
+    // Calculate min/max for Y-axis with expanded range (to flatten the curves)
+    let allPrices = [];
+    datasets.forEach(dataset => {
+        const validPrices = dataset.data.filter(v => v !== null && v !== undefined);
+        allPrices = allPrices.concat(validPrices);
+    });
+    
+    const minPrice = Math.min(...allPrices);
+    const maxPrice = Math.max(...allPrices);
+    const priceRange = maxPrice - minPrice;
+    
+    // Expand range by 50% on each side to make curves appear flatter
+    const expandedMin = Math.floor(minPrice - (priceRange * 0.5));
+    const expandedMax = Math.ceil(maxPrice + (priceRange * 0.5));
+    
+    console.log('📊 Y-axis range adjustment:', {
+        dataMin: minPrice,
+        dataMax: maxPrice,
+        range: priceRange,
+        chartMin: expandedMin,
+        chartMax: expandedMax
+    });
+    
+    // Chart configuration
+    const config = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 13,
+                            weight: '600',
+                            family: "'Inter', sans-serif"
+                        },
+                        color: '#2c3e50',
+                        padding: 15,
+                        usePointStyle: true,
+                        pointStyle: 'circle'
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    titleFont: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
+                    padding: 12,
+                    displayColors: true,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderWidth: 1,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.parsed.y;
+                            return `${label}: ${formatNumber(value)} ₫/kg`;
+                        }
+                    }
+                },
+                title: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: true,
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12,
+                            family: "'Inter', sans-serif"
+                        },
+                        color: '#666',
+                        maxRotation: 0,
+                        autoSkip: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Date',
+                        font: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        color: '#2c3e50'
+                    }
+                },
+                y: {
+                    min: expandedMin,
+                    max: expandedMax,
+                    beginAtZero: false,
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12,
+                            family: "'Inter', sans-serif"
+                        },
+                        color: '#666',
+                        callback: function(value) {
+                            return formatNumber(value);
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Price (₫/kg)',
+                        font: {
+                            size: 13,
+                            weight: '600'
+                        },
+                        color: '#2c3e50'
+                    }
+                }
+            }
+        }
+    };
+    
+    // Initialize chart (Market Overview section only)
+    const canvas1 = document.getElementById('provincePricesChart');
+    
+    console.log('🟢 Canvas element:', { canvas1: !!canvas1 });
+    
+    if (canvas1) {
+        console.log('🟢 Creating province prices chart');
+        if (provincePricesChart) provincePricesChart.destroy();
+        const ctx1 = canvas1.getContext('2d');
+        provincePricesChart = new Chart(ctx1, config);
+        console.log('✅ Chart created successfully');
+    } else {
+        console.error('❌ Canvas provincePricesChart not found!');
+    }
+}
+
+/**
+ * Format number with thousand separators
+ */
+function formatNumber(num) {
+    if (num === null || num === undefined) return 'N/A';
+    return Math.round(num).toLocaleString('en-US');
+}
+
+// Initialize province prices chart on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🟡 DOM loaded - calling fetchProvincePrices (v5.0)');
+    fetchProvincePrices(7);
+});

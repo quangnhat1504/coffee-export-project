@@ -4,6 +4,7 @@ import os, sys, math
 import pandas as pd
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+from pathlib import Path
 
 # In Unicode đẹp trên Windows (tránh lỗi emoji/Unicode)
 try:
@@ -12,7 +13,9 @@ except Exception:
     pass
 
 # ===== 0) Load .env =====
-load_dotenv(dotenv_path='../.env')
+# Find .env in parent directory (project root)
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 HOST = os.getenv("HOST")
 PORT = int(os.getenv("PORT", "3306"))
 USER = os.getenv("USER")
