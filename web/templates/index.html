@@ -6,12 +6,18 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+<<<<<<< HEAD
+    <title>Vietnam Coffee Data Portal</title>
+    <link rel="stylesheet" href="../static/css/styles.css?t=1731430800">
+    <link rel="stylesheet" href="../static/css/contact-modern.css">
+=======
     <meta name="theme-color" content="#2B1E16">
     <meta name="msapplication-navbutton-color" content="#2B1E16">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Vietnam Coffee Data Portal</title>
     <link rel="stylesheet" href="../static/css/styles.css?v=20251107003">
     <link rel="stylesheet" href="../static/css/contact-modern.css?v=20251107003">
+>>>>>>> origin/main
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -137,6 +143,186 @@
             <div class="market-stack">
                 <!-- Daily Coffee Prices (Last 7 Days) -->
                 <div class="chart-card">
+<<<<<<< HEAD
+                        <div class="chart-card-header">
+                            <h3>Export Volume & Prices (2005-2024) <span class="unit-label">Tons & USD/ton</span></h3>
+                        </div>
+                        <div class="production-toggles-wrapper">
+                            <div class="production-toggles" role="group" aria-label="Toggle datasets">
+                                <label class="prod-checkbox-label">
+                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="volume" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">Export Volume</span>
+                                </label>
+                                <label class="prod-checkbox-label">
+                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="worldPrice" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">World Price</span>
+                                </label>
+                                <label class="prod-checkbox-label">
+                                    <input type="checkbox" class="prod-checkbox market-checkbox" data-dataset="vnPrice" checked>
+                                    <span class="checkbox-custom"></span>
+                                    <span class="checkbox-text">VN Price</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="priceChart"></canvas>
+                        </div>
+                    </div>
+                    
+                <div class="price-cards-row">
+                    <div class="price-card" data-commodity="export-value" role="button" tabindex="0" aria-label="Export value card" title="Annual coffee export value">
+                        <div class="card-header">
+                            <h3 class="commodity-title">Export Value</h3>
+                            <i class="fas fa-shipping-fast card-icon"></i>
+                        </div>
+                        <div class="price-value">$5,620 M</div>
+                        <div class="price-change positive">
+                            <i class="fas fa-arrow-up"></i>
+                            <span>+32.5%</span>
+                        </div>
+                        <div class="price-label">million USD</div>
+                        <div class="price-meta">
+                            <span class="meta-item volume"><i class="fas fa-calendar"></i><span>2024 Total</span></span>
+                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
+                            <span class="meta-item source"><i class="fas fa-database"></i><span>Export Data</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Province Coffee Prices Chart (Last 7 Days) -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3>
+                            <i class="fas fa-map-marker-alt"></i>
+                            Coffee Prices by Province (Last 7 Days)
+                        </h3>
+                        <div class="chart-subtitle">Daily market prices across major coffee-producing regions</div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="provincePricesChart" aria-label="Province coffee prices over 7 days" role="img"></canvas>
+                    </div>
+
+                    <!-- Province Price Info Cards -->
+                    <div class="province-price-cards">
+                        <div class="province-price-card" id="card-daklak">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Đắk Lắk</span>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-coffee"></i>
+                                </div>
+                            </div>
+                            <div class="card-price" id="price-daklak">
+                                <span class="loading">Loading...</span>
+                            </div>
+                            <div class="card-change" id="change-daklak">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>-0.0%</span>
+                            </div>
+                            <div class="card-footer">
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span id="date-daklak">Nov 13, 2025</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Last 7 days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="province-price-card" id="card-daknong">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Đắk Nông</span>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-coffee"></i>
+                                </div>
+                            </div>
+                            <div class="card-price" id="price-daknong">
+                                <span class="loading">Loading...</span>
+                            </div>
+                            <div class="card-change" id="change-daknong">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>-0.0%</span>
+                            </div>
+                            <div class="card-footer">
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span id="date-daknong">Nov 13, 2025</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Last 7 days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="province-price-card" id="card-gialai">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Gia Lai</span>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-coffee"></i>
+                                </div>
+                            </div>
+                            <div class="card-price" id="price-gialai">
+                                <span class="loading">Loading...</span>
+                            </div>
+                            <div class="card-change" id="change-gialai">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>-0.0%</span>
+                            </div>
+                            <div class="card-footer">
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span id="date-gialai">Nov 13, 2025</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Last 7 days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="province-price-card" id="card-lamdong">
+                            <div class="card-header">
+                                <div class="card-title">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Lâm Đồng</span>
+                                </div>
+                                <div class="card-icon">
+                                    <i class="fas fa-coffee"></i>
+                                </div>
+                            </div>
+                            <div class="card-price" id="price-lamdong">
+                                <span class="loading">Loading...</span>
+                            </div>
+                            <div class="card-change" id="change-lamdong">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>-0.0%</span>
+                            </div>
+                            <div class="card-footer">
+                                <div class="meta-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span id="date-lamdong">Nov 13, 2025</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-chart-line"></i>
+                                    <span>Last 7 days</span>
+                                </div>
+                            </div>
+                        </div>
+=======
                     <div class="chart-card-header">
                         <h3><span class="unit-label">VND/kg</span> Daily Coffee Prices - Last 7 Days</h3>
                         <div class="chart-info">
@@ -149,8 +335,10 @@
                     </div>
                     <div class="chart-container" style="height: 400px;">
                         <canvas id="dailyPricesChart"></canvas>
+>>>>>>> origin/main
                     </div>
                 </div>
+            </div>
         </div>
     </section>
 
@@ -231,7 +419,6 @@
                                 <option value="DakLak">Đắk Lắk</option>
                                 <option value="GiaLai">Gia Lai</option>
                                 <option value="DakNong">Đắk Nông</option>
-                                <option value="KonTum">Kon Tum</option>
                                 <option value="LamDong">Lâm Đồng</option>
                             </select>
                         </div>
@@ -391,6 +578,7 @@
     <section id="export-performance" class="trends-section">
         <div class="container">
             <h2 class="section-title">Export Performance (2005–2024)</h2>
+            
             <div class="production-stack">
                 <div class="chart-card">
                     <div class="chart-card-header">
@@ -400,6 +588,17 @@
                         <canvas id="exportPerformanceChart" aria-label="Production and export value trends" role="img"></canvas>
                     </div>
                 </div>
+<<<<<<< HEAD
+            </div>
+
+            <!-- Export Stats Cards (2024 Data) -->
+            <div class="export-stats-cards">
+                <div class="export-stat-card" id="card-export-value">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">
+                            <i class="fas fa-dollar-sign"></i>
+                            <span>Export Value</span>
+=======
                 <div class="production-cards-row">
                     <div class="price-card" data-commodity="export-production" role="button" tabindex="0" aria-label="Production card" title="Annual coffee production">
                         <div class="card-header">
@@ -422,19 +621,90 @@
                         <div class="card-header">
                             <h3 class="commodity-title">Export Value</h3>
                             <i class="fas fa-dollar-sign card-icon"></i>
+>>>>>>> origin/main
                         </div>
-                        <div class="price-value">$5.6 B</div>
-                        <div class="price-change positive">
-                            <i class="fas fa-arrow-up"></i>
-                            <span>+32.5%</span>
-                        </div>
-                        <div class="price-label">2024 total</div>
-                        <div class="price-meta">
-                            <span class="meta-item volume"><i class="fas fa-chart-line"></i><span>CAGR: 6.2%</span></span>
-                            <span class="meta-item updated"><i class="fas fa-clock"></i><span class="dynamic-date"></span></span>
-                            <span class="meta-item source"><i class="fas fa-database"></i><span>Export Data</span></span>
+                        <div class="stat-card-icon">
+                            <i class="fas fa-shipping-fast"></i>
                         </div>
                     </div>
+<<<<<<< HEAD
+                    <div class="stat-card-value" id="value-export">
+                        <span class="loading">Loading...</span>
+                    </div>
+                    <div class="stat-card-change" id="change-export">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+0.0%</span>
+                    </div>
+                    <div class="stat-card-footer">
+                        <div class="stat-meta">
+                            <i class="fas fa-calendar"></i>
+                            <span>Year 2024</span>
+                        </div>
+                        <div class="stat-meta">
+                            <i class="fas fa-chart-line"></i>
+                            <span>Million USD</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-stat-card" id="card-world-price">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">
+                            <i class="fas fa-globe"></i>
+                            <span>World Price</span>
+                        </div>
+                        <div class="stat-card-icon">
+                            <i class="fas fa-chart-area"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value" id="value-world-price">
+                        <span class="loading">Loading...</span>
+                    </div>
+                    <div class="stat-card-change" id="change-world-price">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+0.0%</span>
+                    </div>
+                    <div class="stat-card-footer">
+                        <div class="stat-meta">
+                            <i class="fas fa-calendar"></i>
+                            <span>Year 2024</span>
+                        </div>
+                        <div class="stat-meta">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>USD/ton</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="export-stat-card" id="card-vn-price">
+                    <div class="stat-card-header">
+                        <div class="stat-card-title">
+                            <i class="fas fa-flag"></i>
+                            <span>VN Price</span>
+                        </div>
+                        <div class="stat-card-icon">
+                            <i class="fas fa-coffee"></i>
+                        </div>
+                    </div>
+                    <div class="stat-card-value" id="value-vn-price">
+                        <span class="loading">Loading...</span>
+                    </div>
+                    <div class="stat-card-change" id="change-vn-price">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>+0.0%</span>
+                    </div>
+                    <div class="stat-card-footer">
+                        <div class="stat-meta">
+                            <i class="fas fa-calendar"></i>
+                            <span>Year 2024</span>
+                        </div>
+                        <div class="stat-meta">
+                            <i class="fas fa-money-bill-wave"></i>
+                            <span>USD/ton</span>
+                        </div>
+                    </div>
+=======
+>>>>>>> origin/main
                 </div>
             </div>
         </div>
@@ -621,40 +891,142 @@
             <div class="about-content">
                 <div class="team-profile">
                     <h3 class="team-title">Team Members</h3>
-                    <div class="team-grid">
-                        <div class="team-member">
-                            <div class="member-photo"><img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=60" alt="Portrait of Phạm Minh Tiến" loading="lazy"></div>
-                            <div class="member-info">
-                                <h4 class="member-name">Phạm Minh Tiến</h4>
-                                <p class="member-role">Data Scientist / Developer</p>
+                    <div class="team-cards-grid">
+                        <!-- Team Member Card 1 -->
+                        <div class="team-member-card">
+                            <div class="member-card-header">
+                                <div class="member-photo-large">
+                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=60" alt="Portrait of Phạm Minh Tiến" loading="lazy">
+                                </div>
+                                <div class="member-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="member-card-body">
+                                <h4 class="member-card-name">Phạm Minh Tiến</h4>
+                                <p class="member-card-role">DATA SCIENTIST / DEVELOPER</p>
+                            </div>
+                            <div class="member-card-footer">
+                                <div class="member-meta">
+                                    <i class="fas fa-briefcase"></i>
+                                    <span>Data Science</span>
+                                </div>
+                                <div class="member-meta">
+                                    <i class="fas fa-code"></i>
+                                    <span>Python, ML</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="team-member">
-                            <div class="member-photo"><img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=200&q=60" alt="Portrait of Trương Công Phúc" loading="lazy"></div>
-                            <div class="member-info">
-                                <h4 class="member-name">Trương Công Phúc</h4>
-                                <p class="member-role">Backend Engineer</p>
+
+                        <!-- Team Member Card 2 -->
+                        <div class="team-member-card">
+                            <div class="member-card-header">
+                                <div class="member-photo-large">
+                                    <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=200&q=60" alt="Portrait of Trương Công Phúc" loading="lazy">
+                                </div>
+                                <div class="member-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="member-card-body">
+                                <h4 class="member-card-name">Trương Công Phúc</h4>
+                                <p class="member-card-role">BACKEND ENGINEER</p>
+                            </div>
+                            <div class="member-card-footer">
+                                <div class="member-meta">
+                                    <i class="fas fa-server"></i>
+                                    <span>Backend Dev</span>
+                                </div>
+                                <div class="member-meta">
+                                    <i class="fas fa-database"></i>
+                                    <span>API Design</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="team-member">
-                            <div class="member-photo"><img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=60" alt="Portrait of Nguyễn Thái Hưng" loading="lazy"></div>
-                            <div class="member-info">
-                                <h4 class="member-name">Nguyễn Thái Hưng</h4>
-                                <p class="member-role">Data Analyst</p>
+
+                        <!-- Team Member Card 3 -->
+                        <div class="team-member-card">
+                            <div class="member-card-header">
+                                <div class="member-photo-large">
+                                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=60" alt="Portrait of Nguyễn Thái Hưng" loading="lazy">
+                                </div>
+                                <div class="member-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="member-card-body">
+                                <h4 class="member-card-name">Nguyễn Thái Hưng</h4>
+                                <p class="member-card-role">DATA ANALYST</p>
+                            </div>
+                            <div class="member-card-footer">
+                                <div class="member-meta">
+                                    <i class="fas fa-chart-bar"></i>
+                                    <span>Analytics</span>
+                                </div>
+                                <div class="member-meta">
+                                    <i class="fas fa-table"></i>
+                                    <span>Data Viz</span>
+                                </div>
                             </div>
                         </div>
+<<<<<<< HEAD
+
+                        <!-- Team Member Card 4 -->
+                        <div class="team-member-card">
+                            <div class="member-card-header">
+                                <div class="member-photo-large">
+                                    <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=200&q=60" alt="Portrait of Phan Tuấn Hưng" loading="lazy">
+                                </div>
+                                <div class="member-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="member-card-body">
+                                <h4 class="member-card-name">Phan Tuấn Hưng</h4>
+                                <p class="member-card-role">AI/ML ENGINEER</p>
+                            </div>
+                            <div class="member-card-footer">
+                                <div class="member-meta">
+                                    <i class="fas fa-brain"></i>
+                                    <span>AI/ML</span>
+                                </div>
+                                <div class="member-meta">
+                                    <i class="fas fa-robot"></i>
+                                    <span>Deep Learning</span>
+                                </div>
+=======
                         <div class="team-member">
                             <div class="member-photo"><img src="https://avatars.githubusercontent.com/u/194874947?s=400&u=94b07a92cacbb8444c4764e1c2b7305468d4527a&v=4" alt="Portrait of Phan Tuấn Hưng" loading="lazy"></div>
                             <div class="member-info">
                                 <h4 class="member-name">Phan Tuấn Hưng</h4>
                                 <p class="member-role">Data Engineer</p>
+>>>>>>> origin/main
                             </div>
                         </div>
-                        <div class="team-member">
-                            <div class="member-photo"><img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=200&q=60" alt="Portrait of Đặng Quang Nhật" loading="lazy"></div>
-                            <div class="member-info">
-                                <h4 class="member-name">Đặng Quang Nhật</h4>
-                                <p class="member-role">Full Stack Developer</p>
+
+                        <!-- Team Member Card 5 -->
+                        <div class="team-member-card">
+                            <div class="member-card-header">
+                                <div class="member-photo-large">
+                                    <img src="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=200&q=60" alt="Portrait of Đặng Quang Nhật" loading="lazy">
+                                </div>
+                                <div class="member-icon">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            </div>
+                            <div class="member-card-body">
+                                <h4 class="member-card-name">Đặng Quang Nhật</h4>
+                                <p class="member-card-role">FULL STACK DEVELOPER</p>
+                            </div>
+                            <div class="member-card-footer">
+                                <div class="member-meta">
+                                    <i class="fas fa-layer-group"></i>
+                                    <span>Full Stack</span>
+                                </div>
+                                <div class="member-meta">
+                                    <i class="fas fa-laptop-code"></i>
+                                    <span>Web Dev</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -783,25 +1155,25 @@
                             <i class="fas fa-chart-bar"></i> Platform Statistics
                         </h4>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div class="stat-box" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; text-align: center;">
-                                <i class="fas fa-database" style="color: white; font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                                <div class="stat-value" style="color: white; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">10,000+</div>
-                                <div class="stat-name" style="color: rgba(255,255,255,0.9); font-size: 0.85rem;">Data Points</div>
+                            <div class="stat-box" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.9); padding: 1.5rem; text-align: center;">
+                                <i class="fas fa-database" style="color: #2B1E16; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                <div class="stat-value" style="color: #2B1E16; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">10,000+</div>
+                                <div class="stat-name" style="color: #514338; font-size: 0.85rem;">Data Points</div>
                             </div>
-                            <div class="stat-box" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; text-align: center;">
-                                <i class="fas fa-map-marked-alt" style="color: white; font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                                <div class="stat-value" style="color: white; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">63</div>
-                                <div class="stat-name" style="color: rgba(255,255,255,0.9); font-size: 0.85rem;">Provinces</div>
+                            <div class="stat-box" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.9); padding: 1.5rem; text-align: center;">
+                                <i class="fas fa-map-marked-alt" style="color: #2B1E16; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                <div class="stat-value" style="color: #2B1E16; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">63</div>
+                                <div class="stat-name" style="color: #514338; font-size: 0.85rem;">Provinces</div>
                             </div>
-                            <div class="stat-box" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; text-align: center;">
-                                <i class="fas fa-sync-alt" style="color: white; font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                                <div class="stat-value" style="color: white; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">24/7</div>
-                                <div class="stat-name" style="color: rgba(255,255,255,0.9); font-size: 0.85rem;">Updates</div>
+                            <div class="stat-box" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.9); padding: 1.5rem; text-align: center;">
+                                <i class="fas fa-sync-alt" style="color: #2B1E16; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                <div class="stat-value" style="color: #2B1E16; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">24/7</div>
+                                <div class="stat-name" style="color: #514338; font-size: 0.85rem;">Updates</div>
                             </div>
-                            <div class="stat-box" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); padding: 1.5rem; text-align: center;">
-                                <i class="fas fa-globe" style="color: white; font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                                <div class="stat-value" style="color: white; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">40+</div>
-                                <div class="stat-name" style="color: rgba(255,255,255,0.9); font-size: 0.85rem;">Markets</div>
+                            <div class="stat-box" style="background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.9); padding: 1.5rem; text-align: center;">
+                                <i class="fas fa-globe" style="color: #2B1E16; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                <div class="stat-value" style="color: #2B1E16; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">40+</div>
+                                <div class="stat-name" style="color: #514338; font-size: 0.85rem;">Markets</div>
                             </div>
                         </div>
                     </div>
@@ -859,7 +1231,14 @@
         </div>
     </footer>
 
+<<<<<<< HEAD
+        <!-- Custom JavaScript -->
+    <script src="../static/js/script.js?t=1731430800"></script>
+</body>
+</html>
+=======
     <script src="../static/js/script.js?v=20251107003"></script>
+>>>>>>> origin/main
 </body>
 </html>
 <div class="ai-forecast-wrapper" style="...background:#fff;...">

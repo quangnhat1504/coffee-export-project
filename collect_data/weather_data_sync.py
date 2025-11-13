@@ -13,6 +13,7 @@ import os
 import sys
 import calendar
 from dotenv import load_dotenv
+from pathlib import Path
 
 # Add parent directory to path to import db_utils
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'web', 'backend'))
@@ -26,7 +27,9 @@ except ImportError:
 # ENVIRONMENT VARIABLES
 # ============================================================================
 
-load_dotenv()
+# Find .env in parent directory (project root)
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 HOST = os.getenv("HOST")
 PORT = os.getenv("PORT", "3306")
@@ -77,7 +80,6 @@ locations = {
     "DakLak": (12.6663, 108.0383),
     "GiaLai": (13.9833, 108.0),
     "DakNong": (12.0086, 107.6907),
-    "KonTum": (14.3545, 108.0076),
     "LamDong": (11.5475, 107.8070)
 }
 

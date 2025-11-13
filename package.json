@@ -4,7 +4,7 @@
   "description": "Vietnam Coffee Export Data Analytics Portal - Professional dashboard with real-time data visualization",
   "main": "index.js",
   "scripts": {
-    "postinstall": "python -m pip install --upgrade pip && pip install -r requirements.txt",
+    "postinstall": "python -m pip install --upgrade pip && pip install -r requirements.txt && node scripts/postinstall.js",
     "prestart": "python -c \"import flask, flask_cors, flask_caching, flask_compress\" || npm run postinstall",
     "start": "npm run dev",
     "dev": "cd web/backend && python api.py",
@@ -12,6 +12,7 @@
     "api:debug": "cd web/backend && set FLASK_DEBUG=1 && python api.py",
     "health": "curl http://localhost:5000/api/health",
     "test:api": "curl http://localhost:5000/api/health && curl http://localhost:5000/api/production",
+    "update:data": "python scripts/auto_update_data.py",
     "clean": "rm -rf node_modules package-lock.json && rm -rf web/backend/__pycache__",
     "reinstall": "npm run clean && npm install"
   },
