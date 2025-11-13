@@ -74,14 +74,13 @@ with engine.connect() as conn:
     conn.commit()
 print("✅ Table created successfully")
 
-# Generate sample data for 5 provinces with realistic proportions
+# Generate sample data for 4 provinces with realistic proportions
 # Based on actual coffee production distribution in Vietnam
 provinces = {
     'DakLak': 0.45,      # 45% of national production (largest)
     'GiaLai': 0.20,      # 20% 
     'DakNong': 0.15,     # 15%
-    'LamDong': 0.12,     # 12%
-    'KonTum': 0.08       # 8% (smallest)
+    'LamDong': 0.20      # 20%
 }
 
 # Get national data to base provincial data on
@@ -113,8 +112,8 @@ for province, proportion in provinces.items():
         export = float(record['export_tons']) * proportion * variation if record['export_tons'] else None
         
         # Intentionally create some missing data (like in the notebook example)
-        # Missing data for early years (2005-2006) for some provinces
-        if year in [2005, 2006] and province in ['DakNong', 'KonTum']:
+        # Missing data for early years (2005-2006) for DakNong
+        if year in [2005, 2006] and province == 'DakNong':
             area = None
             export = None
         
