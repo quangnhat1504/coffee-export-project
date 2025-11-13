@@ -1,6 +1,6 @@
 // Global variables
 const API_BASE_URL = 'http://localhost:5000/api';
-let priceChart, exportPieChart, climateChart, trendsChart, exportPerformanceChart, forecastChart;
+let priceChart, exportPieChart, climateChart, trendsChart, exportPerformanceChart, forecastChart, dailyPricesChart;
 let apiAvailable = false;
 
 // Cache configuration
@@ -201,6 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ================================================================
 // 📢 Load Coffee News from Flask API (/api/news)
 // ================================================================
+<<<<<<< HEAD
 async function loadCoffeeNews() {
     const container = document.querySelector(".news-list");
     if (!container) return;
@@ -252,16 +253,19 @@ async function loadCoffeeNews() {
         };
         return sourceMap[source] || 'default';
     }
+=======
+async function loadCoffeeNews(category = "gia-ca-phe") {
+  const container = document.querySelector(".news-list");
+  const updatedText = document.getElementById("news-updated-time");
+>>>>>>> origin/main
 
-    try {
-        const res = await fetch(`${API_BASE_URL}/news`);
-        const data = await res.json();
+  container.innerHTML = "<p>🔄 Đang tải tin tức...</p>";
 
-        if (!data.success || !data.data.length) {
-            container.innerHTML = "<p>⚠️ Không có tin tức mới.</p>";
-            return;
-        }
+  try {
+    const res = await fetch(`${API_BASE_URL}/news/${category}`);
+    const data = await res.json();
 
+<<<<<<< HEAD
         container.innerHTML = "";
         data.data.forEach((item, index) => {
             // Validate and ensure image URL is proper
@@ -301,8 +305,42 @@ async function loadCoffeeNews() {
                 <p style="font-size: 0.9rem; opacity: 0.8;">${err.message}</p>
             </div>
         `;
+=======
+    if (!data.success) throw new Error("Không lấy được dữ liệu tin tức");
+
+    // 🕓 Hiển thị thời gian cập nhật
+    if (data.updated_at) {
+      updatedText.textContent = `Cập nhật lần cuối: ${data.updated_at}` +
+        (data.cached ? " (từ bộ nhớ đệm)" : " (vừa cập nhật)");
+    } else {
+      updatedText.textContent = "";
+>>>>>>> origin/main
     }
+
+    // Hiển thị bài báo
+    container.innerHTML = "";
+    data.data.forEach(item => {
+      container.innerHTML += `
+        <article class="news-item">
+          <div class="news-thumbnail">
+            <img src="${item.image}" alt="Coffee news">
+            <div class="news-category">${item.source}</div>
+          </div>
+          <div class="news-item-content">
+            <h3 class="news-item-title">
+              <a href="${item.url}" target="_blank">${item.title}</a>
+            </h3>
+            <p class="news-item-desc">Nguồn: ${item.source} • ${item.time}</p>
+          </div>
+        </article>`;
+    });
+  } catch (err) {
+    updatedText.textContent = "";
+    container.innerHTML = `<p style="color:red;">❌ Lỗi khi tải tin: ${err.message}</p>`;
+  }
 }
+
+
 
 // Gọi hàm khi DOM sẵn sàng
 document.addEventListener("DOMContentLoaded", loadCoffeeNews);
@@ -369,8 +407,170 @@ function enableScrollSnap() {
     document.body.classList.add('enable-snap');
 }
 
-// Navigation Setup - Simplified for desktop only
+// Navigation Setup - Including mobile menu and active states
 function setupNavigation() {
+    // Mobile menu toggle
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    if (mobileMenuToggle && mobileMenu) {
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+            const icon = mobileMenuToggle.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-times');
+            }
+        });
+        
+        // Close mobile menu when clicking on a link
+        const mobileLinks = mobileMenu.querySelectorAll('.mobile-nav-link');
+        mobileLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+                const icon = mobileMenuToggle.querySelector('i');
+                if (icon) {
+                    icon.classList.add('fa-bars');
+                    icon.classList.remove('fa-times');
+                }
+            });
+        });
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+                mobileMenu.classList.remove('active');
+                const icon = mobileMenuToggle.querySelector('i');
+                if (icon) {
+                    icon.classList.add('fa-bars');
+                    icon.classList.remove('fa-times');
+                }
+            }
+        });
+    }
+    
+    // Smooth scroll for anchor links - all links stay on same page
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            // Skip if it's just '#'
+            if (href === '#' || href.length <= 1) {
+                return;
+            }
+            
+            // Extract section ID from href (handle both /#section and #section formats)
+            let targetId = href.replace(/^.*#/, '');
+            
+            // Always handle smooth scroll on same page
+            if (targetId) {
+                e.preventDefault();
+                const targetElement = document.getElementById(targetId);
+                
+                if (targetElement) {
+                    const navbarHeight = document.querySelector('.top-navbar')?.offsetHeight || 70;
+                    const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+                    
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Update URL without reload
+                    history.pushState(null, null, `#${targetId}`);
+                }
+            }
+        });
+    });
+    
+    // Handle page load with hash (e.g., /#news)
+    if (window.location.hash) {
+        window.addEventListener('load', () => {
+            const targetId = window.location.hash.substring(1);
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+                setTimeout(() => {
+                    const navbarHeight = document.querySelector('.top-navbar')?.offsetHeight || 70;
+                    const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }, 100);
+            }
+        });
+    }
+    
+    // Update active state based on scroll position
+    function updateActiveNavLink() {
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+        const scrollPosition = window.pageYOffset + 150;
+        
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            const sectionId = section.getAttribute('id');
+            
+            if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    const href = link.getAttribute('href') || '';
+                    // Extract section ID from href (handle #section format)
+                    const linkSection = href.replace(/^.*#/, '').replace(/^\//, '');
+                    if (linkSection === sectionId || (sectionId === 'home' && (linkSection === '' || linkSection === 'home'))) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+        
+        // Handle home section specially
+        if (window.pageYOffset < 100) {
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href') || '';
+                const linkSection = href.replace(/^.*#/, '').replace(/^\//, '');
+                if (linkSection === '' || linkSection === 'home') {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+    }
+    
+    // Update active state on scroll
+    let scrollTimeout;
+    window.addEventListener('scroll', () => {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(updateActiveNavLink, 10);
+        
+        // Add scrolled class to navbar
+        const navbar = document.querySelector('.top-navbar');
+        if (navbar) {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        }
+    });
+    
+    // Initial active state update
+    updateActiveNavLink();
+    
+    // Theme toggle functionality
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            // Toggle theme logic can be added here
+            console.log('Theme toggle clicked');
+            // You can implement dark mode here if needed
+        });
+    }
+}
+
+// Legacy function - keeping for compatibility
+function setupNavigationOld() {
     const navLinks = document.querySelectorAll('.sidebar-link');
 
     // Active link highlighting on scroll
@@ -470,20 +670,17 @@ async function updateHeroMetrics() {
         if (productionResult.success && productionResult.data.length > 0) {
             const latestProduction = productionResult.data[productionResult.data.length - 1];
             
-            // Update Production (convert to M tons with 1 decimal)
-            const productionMT = (latestProduction.output_million_tons).toFixed(1);
+            // Hiển thị đúng số nguyên thủy từ API
+            // Hiển thị đúng giá trị thực tế, không làm tròn
+            // Hiển thị đúng số nguyên thủy, không chia, không format
             const heroProduction = document.getElementById('hero-production');
-            if (heroProduction) heroProduction.textContent = `${productionMT}M t`;
-            
-            // Update Area (convert to K ha)
-            const areaKHa = Math.round(latestProduction.area_thousand_ha);
+            if (heroProduction) heroProduction.textContent = `${Number(latestProduction.output_tons).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} M t`;
+
             const heroArea = document.getElementById('hero-area');
-            if (heroArea) heroArea.textContent = `${areaKHa}K ha`;
-            
-            // Update Yield (2 decimals)
-            const yieldValue = latestProduction.yield_tons_per_ha.toFixed(1);
+            if (heroArea) heroArea.textContent = `${Number(latestProduction.area_thousand_ha).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} K ha`;
+
             const heroYield = document.getElementById('hero-yield');
-            if (heroYield) heroYield.textContent = `${yieldValue} t/ha`;
+            if (heroYield) heroYield.textContent = `${Number(latestProduction.yield_tons_per_ha).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} t/ha`;
         }
         
         // Fetch export data for value and prices
@@ -493,14 +690,14 @@ async function updateHeroMetrics() {
             const latestExport = exportResult.data[exportResult.data.length - 1];
             
             // Update Export Value (convert to billions with 1 decimal)
-            const exportValueB = (latestExport.export_value_million_usd / 1000).toFixed(1);
+            const exportValueB = (latestExport.export_value_million_usd / 1000).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
             const heroValue = document.getElementById('hero-value');
             if (heroValue) heroValue.textContent = `$${exportValueB}B`;
-            
+
             // Update Domestic Price (VN price per ton)
             if (latestExport.price_vn_usd_per_ton) {
                 const heroPrice = document.getElementById('hero-price');
-                if (heroPrice) heroPrice.textContent = `$${Math.round(latestExport.price_vn_usd_per_ton).toLocaleString()}`;
+                if (heroPrice) heroPrice.textContent = `$${parseFloat(latestExport.price_vn_usd_per_ton).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             }
         }
         
@@ -520,13 +717,72 @@ async function initializeCharts() {
     initializeTrendsChart();
     initializeExportPerformanceChart();
     initializeForecastChart();
+    initializeDailyPricesChart();
     // Load production data from API
     console.log('🔄 Loading production data...');
     await loadProductionData();
+
+    // Load production data for Production card
+    console.log('🔄 Loading production data for Production card...');
+    try {
+        const productionResult = await fetchWithRetry(`${API_BASE_URL}/production`);
+        if (productionResult.success && productionResult.data.length > 0) {
+            const latest = productionResult.data[productionResult.data.length - 1];
+            const previous = productionResult.data.length > 1 ? productionResult.data[productionResult.data.length - 2] : latest;
+
+            // Update Production card (export-production)
+            const prodCard = document.querySelector('[data-commodity="export-production"]');
+            if (prodCard) {
+                const prodValueEl = prodCard.querySelector('.price-value');
+                if (prodValueEl) {
+                    let prodVal = Number(latest.output_tons || 0) / 1000; // Chuyển sang K tons
+                    prodValueEl.textContent = prodVal > 0 ? `${prodVal.toFixed(2)} K tons` : '0 K tons';
+                }
+                const prodChangeEl = prodCard.querySelector('.price-change span');
+                if (prodChangeEl) {
+                    let prevVal = Number(previous.output_tons || 0) / 1000;
+                    let change = prevVal > 0 ? ((prodVal - prevVal) / prevVal * 100).toFixed(2) : '0.00';
+                    prodChangeEl.textContent = `${change > 0 ? '+' : ''}${change}%`;
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('Production API error:', err);
+    }
+
+    // Load export performance data for Export Value card
+    console.log('🔄 Loading export performance data for Export Value card...');
+    try {
+        const exportPerfResult = await fetchWithRetry(`${API_BASE_URL}/export_performance`);
+        if (exportPerfResult.success && exportPerfResult.data.length > 0) {
+            const latest = exportPerfResult.data[exportPerfResult.data.length - 1];
+            const previous = exportPerfResult.data.length > 1 ? exportPerfResult.data[exportPerfResult.data.length - 2] : latest;
+
+            // Update Export Value card
+            const exportValueCard = document.querySelector('[data-commodity="export-value"]');
+            if (exportValueCard) {
+                const valueEl = exportValueCard.querySelector('.price-value');
+                if (valueEl) {
+                    let val = Number(latest.export_value_million_usd || 0);
+                    valueEl.textContent = val > 0 ? `$${(val / 1000).toFixed(2)} B` : 'N/A';
+                }
+                const changeEl = exportValueCard.querySelector('.price-change span');
+                if (changeEl) {
+                    let prevVal = Number(previous.export_value_million_usd || 0);
+                    let change = prevVal > 0 ? ((val - prevVal) / prevVal * 100).toFixed(2) : '0.00';
+                    changeEl.textContent = `${change > 0 ? '+' : ''}${change}%`;
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('Export performance API error:', err);
+    }
     // Load export/price data from API
     await loadMarketPrices();
     // Load export performance data
     await loadExportPerformanceData();
+    // Load daily coffee prices
+    await loadDailyPricesData();
     console.log('✅ initializeCharts() complete - Production data loaded');
 }
 
@@ -675,7 +931,8 @@ function initializePriceChart() {
 
     const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
     gradient.addColorStop(0, 'rgba(218, 165, 32, 0.3)');
-    gradient.addColorStop(1, 'rgba(218, 165, 32, 0.05)');
+    gradient.addColorStop(0, 'rgba(77, 163, 255, 0.3)');
+    gradient.addColorStop(1, 'rgba(77, 163, 255, 0.05)');
 
     priceChart = new Chart(ctx, {
         type: 'line',
@@ -685,40 +942,46 @@ function initializePriceChart() {
                 {
                     label: 'Export Volume (Tons)',
                     data: [],  // Will be filled from API
-                    borderColor: '#DAA520',
+                    borderColor: '#4DA3FF',
                     backgroundColor: gradient,
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#DAA520',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#4DA3FF',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 4,
+                    pointHoverRadius: 6,
                     yAxisID: 'y-volume'
                 },
                 {
                     label: 'World Price (USD/ton)',
                     data: [],  // Will be filled from API
-                    borderColor: '#CD853F',
-                    backgroundColor: 'rgba(205, 133, 63, 0.1)',
+                    borderColor: '#A855F7',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#CD853F',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#A855F7',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 4,
+                    pointHoverRadius: 6,
                     yAxisID: 'y-price'
                 },
                 {
                     label: 'VN Price (USD/ton)',
                     data: [],  // Will be filled from API
-                    borderColor: '#8B4513',
-                    backgroundColor: 'rgba(139, 69, 19, 0.1)',
+                    borderColor: '#FF7A59',
+                    backgroundColor: 'rgba(255, 122, 89, 0.1)',
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#8B4513',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#FF7A59',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     pointRadius: 4,
+                    pointHoverRadius: 6,
                     yAxisID: 'y-price'
                 }
             ]
@@ -1247,14 +1510,14 @@ function initializeTrendsChart(){
     const years = Array.from({length:20},(_,i)=> (2005+i).toString());
 
     const gProd = ctx.getContext('2d').createLinearGradient(0,0,0,300);
-    gProd.addColorStop(0,'rgba(196,127,78,0.4)');
-    gProd.addColorStop(1,'rgba(196,127,78,0.05)');
+    gProd.addColorStop(0,'rgba(216, 106, 48, 0.5)');
+    gProd.addColorStop(1,'rgba(216, 106, 48, 0.05)');
     const gArea = ctx.getContext('2d').createLinearGradient(0,0,0,300);
-    gArea.addColorStop(0,'rgba(166,94,46,0.35)');
-    gArea.addColorStop(1,'rgba(166,94,46,0.05)');
+    gArea.addColorStop(0,'rgba(53, 179, 144, 0.4)');
+    gArea.addColorStop(1,'rgba(53, 179, 144, 0.05)');
     const gYield = ctx.getContext('2d').createLinearGradient(0,0,0,300);
-    gYield.addColorStop(0,'rgba(227,177,122,0.45)');
-    gYield.addColorStop(1,'rgba(227,177,122,0.06)');
+    gYield.addColorStop(0,'rgba(246, 185, 85, 0.45)');
+    gYield.addColorStop(1,'rgba(246, 185, 85, 0.06)');
 
     trendsChart = new Chart(ctx, {
         type:'line',
@@ -1264,35 +1527,45 @@ function initializeTrendsChart(){
                 {
                     label:'Production (Tons)',
                     data: generateTrendData(1.5, 2.5, years.length),
-                    borderColor:'#c47f4e',
+                    borderColor:'#D86A30',
                     backgroundColor:gProd,
                     fill:true,
                     tension:0.35,
-                    pointBackgroundColor:'#c47f4e',
+                    borderWidth: 3,
+                    pointBackgroundColor:'#D86A30',
                     pointBorderColor:'#fff',
-                    pointBorderWidth:2
+                    pointBorderWidth:2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label:'Area (ha)',
                     data: generateTrendData(450, 650, years.length),
-                    borderColor:'#a65e2e',
+                    borderColor:'#35B390',
                     backgroundColor:gArea,
                     fill:true,
                     tension:0.35,
-                    pointBackgroundColor:'#a65e2e',
+                    borderWidth: 3,
+                    pointBackgroundColor:'#35B390',
                     pointBorderColor:'#fff',
-                    pointBorderWidth:2
+                    pointBorderWidth:2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 },
                 {
                     label:'Yield (t/ha)',
                     data: generateTrendData(2.2, 3.2, years.length).map(v=> (v/years.length)+(2.2 + Math.random()*1)),
-                    borderColor:'#e3b17a',
+                    borderColor:'#F6B955',
                     backgroundColor:gYield,
                     fill:true,
                     tension:0.35,
-                    pointBackgroundColor:'#e3b17a',
+                    borderWidth: 3,
+                    pointBackgroundColor:'#F6B955',
                     pointBorderColor:'#fff',
-                    pointBorderWidth:2
+                    pointBorderWidth:2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'y-yield'
                 }
             ]
         },
@@ -1320,6 +1593,14 @@ function initializeTrendsChart(){
             scales:{
                 x:{ ticks:{ color:textColor.trim() }, grid:{ color:gridColor } },
                 y:{ 
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Production (Tons) / Area (ha)',
+                        color: textColor.trim(),
+                        font: { family: 'Inter', size: 11, weight: 600 }
+                    },
                     ticks:{ 
                         color:textColor.trim(),
                         callback: function(value) {
@@ -1328,6 +1609,28 @@ function initializeTrendsChart(){
                         }
                     }, 
                     grid:{ color:gridColor } 
+                },
+                'y-yield': {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Yield (t/ha)',
+                        color: '#E29A2E',
+                        font: { family: 'Inter', size: 11, weight: 600 }
+                    },
+                    min: 0,
+                    max: 5,
+                    ticks: {
+                        color: '#E29A2E',
+                        callback: function(value) {
+                            return value.toFixed(1);
+                        },
+                        stepSize: 0.5
+                    },
+                    grid: {
+                        drawOnChartArea: false, // Don't draw grid lines for this axis
+                    }
                 }
             },
             animation:{ duration:1400, easing:'easeOutQuart' }
@@ -1338,13 +1641,27 @@ function initializeTrendsChart(){
 
 function setupProductionToggles(){
     const checkboxes = document.querySelectorAll('.prod-checkbox');
-    if(!checkboxes.length || !trendsChart) return;
+    console.log('🔧 Setting up production toggles...', {
+        checkboxCount: checkboxes.length,
+        hasTrendsChart: !!trendsChart
+    });
     
-    checkboxes.forEach((checkbox)=>{
-        checkbox.addEventListener('change',()=>{
+    if(!checkboxes.length || !trendsChart) {
+        console.warn('⚠️ Cannot setup production toggles - missing checkboxes or chart');
+        return;
+    }
+    
+    checkboxes.forEach((checkbox, index)=>{
+        checkbox.addEventListener('change',(e)=>{
+            console.log(`✅ Checkbox ${index} changed:`, {
+                dataset: checkbox.getAttribute('data-dataset'),
+                checked: checkbox.checked
+            });
             updateProductionChart();
         });
     });
+    
+    console.log('✅ Production toggles setup complete');
 }
 
 function updateProductionChart() {
@@ -1353,6 +1670,11 @@ function updateProductionChart() {
         .filter(cb => cb.checked)
         .map(cb => cb.getAttribute('data-dataset'));
     
+    // Check which types of data are selected
+    const hasProductionOrArea = checkedDatasets.includes('production') || checkedDatasets.includes('area');
+    const hasYield = checkedDatasets.includes('yield');
+    
+    // Update dataset visibility
     trendsChart.data.datasets.forEach(ds => {
         const datasetName = ds.label.toLowerCase();
         let isVisible = false;
@@ -1370,11 +1692,44 @@ function updateProductionChart() {
         ds.hidden = !isVisible;
     });
     
-    trendsChart.update();
+    // Update Y-axis visibility and labels
+    // Left Y-axis (Production/Area)
+    if (hasProductionOrArea) {
+        trendsChart.options.scales.y.display = true;
+        // Update title based on what's selected
+        if (checkedDatasets.includes('production') && checkedDatasets.includes('area')) {
+            trendsChart.options.scales.y.title.text = 'Production (Tons) / Area (ha)';
+        } else if (checkedDatasets.includes('production')) {
+            trendsChart.options.scales.y.title.text = 'Production (Tons)';
+        } else if (checkedDatasets.includes('area')) {
+            trendsChart.options.scales.y.title.text = 'Area (ha)';
+        }
+    } else {
+        // Hide left axis if neither Production nor Area is checked
+        trendsChart.options.scales.y.display = false;
+    }
+    
+    // Right Y-axis (Yield)
+    if (hasYield) {
+        trendsChart.options.scales['y-yield'].display = true;
+    } else {
+        trendsChart.options.scales['y-yield'].display = false;
+    }
+    
+    console.log('📊 Production chart updated:', {
+        checkedDatasets,
+        hasProductionOrArea,
+        hasYield,
+        leftAxisDisplay: trendsChart.options.scales.y.display,
+        rightAxisDisplay: trendsChart.options.scales['y-yield'].display,
+        leftAxisTitle: trendsChart.options.scales.y.title.text
+    });
+    
+    trendsChart.update('none'); // Update without animation
 }
 
 // ============================================================================
-// EXPORT PERFORMANCE CHART (3 columns from coffee_export table)
+// EXPORT PERFORMANCE CHART - Area, Production, Export Volume, Export Value
 // ============================================================================
 
 // Initialize Export Performance Chart
@@ -1392,40 +1747,28 @@ function initializeExportPerformanceChart() {
             labels: [],
             datasets: [
                 {
-                    label: 'Export Value (Million USD)',
+                    label: 'Production (Thousand tons)',
                     data: [],
                     borderColor: '#2ecc71',
                     backgroundColor: 'rgba(46, 204, 113, 0.1)',
                     borderWidth: 3,
                     tension: 0.4,
                     fill: true,
-                    yAxisID: 'y-value',
+                    yAxisID: 'y-volume',
                     pointRadius: 4,
                     pointHoverRadius: 6
                 },
                 {
-                    label: 'World Price (USD/ton)',
-                    data: [],
-                    borderColor: '#3498db',
-                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: false,
-                    yAxisID: 'y-price',
-                    pointRadius: 3,
-                    pointHoverRadius: 5
-                },
-                {
-                    label: 'VN Price (USD/ton)',
+                    label: 'Export Value (Million USD)',
                     data: [],
                     borderColor: '#e74c3c',
                     backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    borderWidth: 2,
+                    borderWidth: 3,
                     tension: 0.4,
                     fill: false,
-                    yAxisID: 'y-price',
-                    pointRadius: 3,
-                    pointHoverRadius: 5
+                    yAxisID: 'y-value',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
                 }
             ]
         },
@@ -1433,8 +1776,9 @@ function initializeExportPerformanceChart() {
             responsive: true,
             maintainAspectRatio: false,
             interaction: {
-                mode: 'index',
-                intersect: false,
+                mode: 'nearest',
+                intersect: true,
+                axis: 'xy'
             },
             plugins: {
                 legend: {
@@ -1462,12 +1806,12 @@ function initializeExportPerformanceChart() {
                                 label += ': ';
                             }
                             if (context.parsed.y !== null) {
-                                if (context.datasetIndex === 0) {
+                                if (context.datasetIndex === 1) {
                                     // Export value
                                     label += '$' + context.parsed.y.toLocaleString() + ' M';
                                 } else {
-                                    // Prices
-                                    label += '$' + context.parsed.y.toLocaleString();
+                                    // Production
+                                    label += context.parsed.y.toLocaleString() + ' thousand tons';
                                 }
                             }
                             return label;
@@ -1486,13 +1830,13 @@ function initializeExportPerformanceChart() {
                         font: { size: 11 }
                     }
                 },
-                'y-value': {
+                'y-volume': {
                     type: 'linear',
                     display: true,
                     position: 'left',
                     title: {
                         display: true,
-                        text: 'Export Value (Million USD)',
+                        text: 'Production (Thousand tons)',
                         color: '#2ecc71',
                         font: { size: 12, weight: 'bold' }
                     },
@@ -1502,18 +1846,18 @@ function initializeExportPerformanceChart() {
                     ticks: {
                         color: textColor,
                         callback: function(value) {
-                            return '$' + value.toLocaleString();
+                            return value.toLocaleString();
                         }
                     }
                 },
-                'y-price': {
+                'y-value': {
                     type: 'linear',
                     display: true,
                     position: 'right',
                     title: {
                         display: true,
-                        text: 'Price (USD per ton)',
-                        color: '#3498db',
+                        text: 'Export Value (Million USD)',
+                        color: '#e74c3c',
                         font: { size: 12, weight: 'bold' }
                     },
                     grid: {
@@ -1534,7 +1878,7 @@ function initializeExportPerformanceChart() {
 // Load Export Performance Data from API
 async function loadExportPerformanceData() {
     try {
-        const response = await fetch(`${API_BASE_URL}/export`);
+        const response = await fetch(`${API_BASE_URL}/export-performance`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -1545,11 +1889,20 @@ async function loadExportPerformanceData() {
         // Update chart
         updateExportPerformanceChart(result.data);
         
-        // Update cards
-        updateExportPerformanceCards(result.data);
+        // Update cards with stats
+        updateExportPerformanceCards(result.stats);
         
     } catch (error) {
         console.error('❌ Error loading export performance data:', error);
+        // Fallback to old endpoint if new one fails
+        try {
+            const response = await fetch(`${API_BASE_URL}/export`);
+            const result = await response.json();
+            updateExportPerformanceChart(result.data);
+            updateExportPerformanceCards(result.data);
+        } catch (fallbackError) {
+            console.error('❌ Fallback also failed:', fallbackError);
+        }
     }
 }
 
@@ -1558,86 +1911,87 @@ function updateExportPerformanceChart(data) {
     if (!exportPerformanceChart || !data || data.length === 0) return;
     
     const years = data.map(d => d.year);
-    const exportValues = data.map(d => d.export_value_million_usd);
-    const worldPrices = data.map(d => d.price_world_usd_per_ton);
-    const vnPrices = data.map(d => d.price_vn_usd_per_ton);
+    const production = data.map(d => d.production_tons ? d.production_tons / 1000 : null); // Convert to thousand tons
+    const exportValue = data.map(d => d.export_value_million_usd);
+    
+    console.log('🔍 Chart data check:');
+    console.log('   Years:', years.length);
+    console.log('   Production sample:', production.slice(0, 3));
+    console.log('   Export Value sample:', exportValue.slice(0, 3));
     
     exportPerformanceChart.data.labels = years;
-    exportPerformanceChart.data.datasets[0].data = exportValues;
-    exportPerformanceChart.data.datasets[1].data = worldPrices;
-    exportPerformanceChart.data.datasets[2].data = vnPrices;
+    exportPerformanceChart.data.datasets[0].data = production;
+    exportPerformanceChart.data.datasets[1].data = exportValue;
     
     exportPerformanceChart.update();
     
     console.log('📊 Export performance chart updated with', data.length, 'years');
+    console.log('   - Production, Export Value');
 }
 
-// Update Export Performance Cards
-function updateExportPerformanceCards(data) {
-    if (!data || data.length === 0) return;
+// Update Export Performance Cards - Updated to use stats object
+function updateExportPerformanceCards(statsOrData) {
+    // Handle both stats object (from new API) and data array (from old API)
+    let stats = statsOrData;
     
-    const latest = data[data.length - 1];
-    const previous = data[data.length - 2];
+    // If it's an array (old format), convert to stats
+    if (Array.isArray(statsOrData)) {
+        const latest = statsOrData[statsOrData.length - 1];
+        const previous = statsOrData[statsOrData.length - 2];
+        
+        stats = {
+            production: {
+                current: latest.production_tons,
+                growth_rate: previous ? ((latest.production_tons - previous.production_tons) / previous.production_tons * 100) : 0
+            },
+            export_value: {
+                current: latest.export_value_million_usd,
+                growth_rate: previous ? ((latest.export_value_million_usd - previous.export_value_million_usd) / previous.export_value_million_usd * 100) : 0
+            }
+        };
+    }
+    
+    // Update Production card (Export Performance section)
+    const productionCard = document.querySelector('[data-commodity="export-production"]');
+    if (productionCard && stats.production) {
+        const valueEl = productionCard.querySelector('.price-value');
+        const changeEl = productionCard.querySelector('.price-change span');
+        const changeContainer = productionCard.querySelector('.price-change');
+        
+    const kTons = stats.production.current / 1000;
+    if (valueEl) valueEl.textContent = `${Number(kTons).toFixed(2)} K tons`;
+        
+        if (changeEl && stats.production.growth_rate !== undefined) {
+            const pctChange = stats.production.growth_rate;
+            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(2)}%`;
+            if (changeContainer) {
+                changeContainer.classList.toggle('positive', pctChange >= 0);
+                changeContainer.classList.toggle('negative', pctChange < 0);
+                const icon = changeContainer.querySelector('i');
+                if (icon) icon.className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+            }
+        }
+    }
     
     // Update Export Value card
     const exportValueCard = document.querySelector('[data-commodity="export-value"]');
-    if (exportValueCard) {
+    if (exportValueCard && stats.export_value) {
         const valueEl = exportValueCard.querySelector('.price-value');
         const changeEl = exportValueCard.querySelector('.price-change span');
         const changeContainer = exportValueCard.querySelector('.price-change');
         
-        const billions = (latest.export_value_million_usd / 1000).toFixed(1);
+        const billions = (stats.export_value.current / 1000).toFixed(1);
         if (valueEl) valueEl.textContent = `$${billions} B`;
         
-        if (previous && changeEl) {
-            const pctChange = ((latest.export_value_million_usd - previous.export_value_million_usd) / previous.export_value_million_usd * 100);
-            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(1)}%`;
-            changeContainer.classList.toggle('positive', pctChange >= 0);
-            changeContainer.classList.toggle('negative', pctChange < 0);
-            changeContainer.querySelector('i').className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
-        }
-    }
-    
-    // Update World Price card
-    const worldPriceCard = document.querySelector('[data-commodity="world-price"]');
-    if (worldPriceCard) {
-        const valueEl = worldPriceCard.querySelector('.price-value');
-        const changeEl = worldPriceCard.querySelector('.price-change span');
-        const changeContainer = worldPriceCard.querySelector('.price-change');
-        
-        if (valueEl) valueEl.textContent = `$${Math.round(latest.price_world_usd_per_ton).toLocaleString()}`;
-        
-        if (previous && changeEl) {
-            const pctChange = ((latest.price_world_usd_per_ton - previous.price_world_usd_per_ton) / previous.price_world_usd_per_ton * 100);
-            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(1)}%`;
-            changeContainer.classList.toggle('positive', pctChange >= 0);
-            changeContainer.classList.toggle('negative', pctChange < 0);
-            changeContainer.querySelector('i').className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
-        }
-    }
-    
-    // Update VN Price card
-    const vnPriceCard = document.querySelector('[data-commodity="vn-price"]');
-    if (vnPriceCard) {
-        const valueEl = vnPriceCard.querySelector('.price-value');
-        const changeEl = vnPriceCard.querySelector('.price-change span');
-        const changeContainer = vnPriceCard.querySelector('.price-change');
-        
-        if (valueEl) valueEl.textContent = `$${Math.round(latest.price_vn_usd_per_ton).toLocaleString()}`;
-        
-        if (previous && changeEl) {
-            const pctChange = ((latest.price_vn_usd_per_ton - previous.price_vn_usd_per_ton) / previous.price_vn_usd_per_ton * 100);
-            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(1)}%`;
-            changeContainer.classList.toggle('positive', pctChange >= 0);
-            changeContainer.classList.toggle('negative', pctChange < 0);
-            changeContainer.querySelector('i').className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
-        }
-        
-        // Update comparison with world price
-        const volumeSpan = vnPriceCard.querySelector('.meta-item.volume span:last-child');
-        if (volumeSpan) {
-            const ratio = (latest.price_vn_usd_per_ton / latest.price_world_usd_per_ton * 100).toFixed(1);
-            volumeSpan.textContent = `vs World: ${ratio}%`;
+        if (changeEl && stats.export_value.growth_rate !== undefined) {
+            const pctChange = stats.export_value.growth_rate;
+            changeEl.textContent = `${pctChange > 0 ? '↑' : '↓'}${Math.abs(pctChange).toFixed(2)}%`;
+            if (changeContainer) {
+                changeContainer.classList.toggle('positive', pctChange >= 0);
+                changeContainer.classList.toggle('negative', pctChange < 0);
+                const icon = changeContainer.querySelector('i');
+                if (icon) icon.className = pctChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+            }
         }
     }
     
@@ -1887,10 +2241,11 @@ function setupTrendButtons() {
 
 // Load Production Data from API
 let productionData = null;
-let selectedProductionProvince = 'national';
+    console.log('🔄 Loading export performance data for cards...');
 
 async function loadProductionData() {
     try {
+<<<<<<< HEAD
         console.log('🔄 Fetching production data from:', `${API_BASE_URL}/production`);
         const response = await fetch(`${API_BASE_URL}/production`);
         const result = await response.json();
@@ -1901,6 +2256,16 @@ async function loadProductionData() {
             productionData = result.data;
             console.log('✅ Production data loaded:', productionData.length, 'years');
             console.log('📊 Sample data:', productionData[0]);
+=======
+        console.log('🔄 Fetching production data from API...');
+        const response = await fetch(`${API_BASE_URL}/production`);
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.length > 0) {
+            productionData = result.data;
+            console.log('✅ Production data loaded:', productionData.length, 'years');
+            console.log('   Latest year:', productionData[productionData.length - 1]);
+>>>>>>> origin/main
             
             // Update chart with real data
             updateTrendsChartWithData();
@@ -1908,12 +2273,21 @@ async function loadProductionData() {
             // Update production cards
             updateProductionCards(productionData);
         } else {
+<<<<<<< HEAD
             console.error('❌ Failed to load production data:', result.error || 'No data');
             console.log('Using fallback generated data');
         }
     } catch (error) {
         console.error('❌ Error loading production data:', error);
         console.log('Using fallback generated data');
+=======
+            console.error('❌ Failed to load production data:', result.error || 'No data returned');
+            console.log('   Using default values from HTML');
+        }
+    } catch (error) {
+        console.error('❌ Error loading production data:', error);
+        console.log('   Using default values from HTML');
+>>>>>>> origin/main
     }
 }
 
@@ -1951,52 +2325,151 @@ function updateTrendsChartWithData() {
 }
 
 function updateProductionCards(data) {
-    if (!data || data.length === 0) return;
+    if (!data || data.length === 0) {
+        console.warn('No production data available for cards');
+        return;
+    }
     
     // Get latest year data
     const latest = data[data.length - 1];
     const previous = data[data.length - 2];
     
-    // Calculate changes
-    const prodChange = ((latest.output_million_tons - previous.output_million_tons) / previous.output_million_tons * 100).toFixed(1);
-    const areaChange = ((latest.area_thousand_ha - previous.area_thousand_ha) / previous.area_thousand_ha * 100).toFixed(1);
-    const yieldChange = ((latest.yield_tons_per_ha - previous.yield_tons_per_ha) / previous.yield_tons_per_ha * 100).toFixed(1);
+    if (!latest) {
+        console.warn('No latest production data available');
+        return;
+    }
+    
+    console.log('📊 Updating production cards with data:', latest);
+    console.log('   output_million_tons:', latest.output_million_tons);
+    console.log('   area_thousand_ha:', latest.area_thousand_ha);
+    console.log('   yield_tons_per_ha:', latest.yield_tons_per_ha);
+    
+    // Calculate yield if not present in data (fallback calculation)
+    let yieldValue = latest.yield_tons_per_ha;
+    if (!yieldValue || isNaN(yieldValue) || yieldValue === null || yieldValue === undefined) {
+        // Calculate yield from output_tons and area_thousand_ha
+        const outputTons = latest.output_tons || (latest.output_million_tons * 1000000);
+        const areaHa = latest.area_thousand_ha ? (latest.area_thousand_ha * 1000) : null;
+        if (outputTons && areaHa && areaHa > 0) {
+            yieldValue = (outputTons / areaHa);
+            console.log('   Calculated yield from output/area:', yieldValue);
+        } else {
+            console.warn('   Cannot calculate yield - missing data');
+            yieldValue = null;
+        }
+    }
+    
+    // Calculate changes - handle division by zero and null values
+    let prodChange = 0;
+    let areaChange = 0;
+    let yieldChange = 0;
+    
+    if (previous) {
+        if (previous.output_million_tons && previous.output_million_tons !== 0) {
+            prodChange = Number((latest.output_million_tons - previous.output_million_tons) / previous.output_million_tons * 100);
+        }
+        if (previous.area_thousand_ha && previous.area_thousand_ha !== 0) {
+            areaChange = Number((latest.area_thousand_ha - previous.area_thousand_ha) / previous.area_thousand_ha * 100);
+        }
+        
+        // Calculate yield change safely
+        const previousYield = previous.yield_tons_per_ha;
+        if (!previousYield || isNaN(previousYield)) {
+            // Try to calculate previous yield
+            const prevOutputTons = previous.output_tons || (previous.output_million_tons * 1000000);
+            const prevAreaHa = previous.area_thousand_ha ? (previous.area_thousand_ha * 1000) : null;
+            if (prevOutputTons && prevAreaHa && prevAreaHa > 0) {
+                const calculatedPrevYield = prevOutputTons / prevAreaHa;
+                if (yieldValue && calculatedPrevYield > 0) {
+                    yieldChange = Number((yieldValue - calculatedPrevYield) / calculatedPrevYield * 100);
+                }
+            }
+        } else if (previousYield !== 0 && yieldValue) {
+            yieldChange = Number((yieldValue - previousYield) / previousYield * 100);
+        }
+    }
     
     // Update Production card
     const prodCard = document.querySelector('[data-commodity="production"]');
     if (prodCard) {
-        const outputTons = Math.round(latest.output_million_tons * 1000000);
-        prodCard.querySelector('.price-value').textContent = outputTons.toLocaleString() + ' t';
+        // Use raw value from database without rounding
+        const priceValueEl = prodCard.querySelector('.price-value');
+        if (priceValueEl) {
+            priceValueEl.textContent = `${Number(latest.output_million_tons).toFixed(2)} M t`;
+        }
         const changeEl = prodCard.querySelector('.price-change');
-        changeEl.querySelector('span').textContent = `${prodChange > 0 ? '+' : ''}${prodChange}%`;
-        changeEl.classList.toggle('positive', prodChange >= 0);
-        changeEl.classList.toggle('negative', prodChange < 0);
-        changeEl.querySelector('i').className = prodChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
-        prodCard.querySelector('.price-label').textContent = `${latest.year} total`;
+        if (changeEl) {
+            const spanEl = changeEl.querySelector('span');
+            if (spanEl) {
+                spanEl.textContent = `${prodChange > 0 ? '+' : ''}${prodChange}%`;
+            }
+            changeEl.classList.toggle('positive', prodChange >= 0);
+            changeEl.classList.toggle('negative', prodChange < 0);
+            const iconEl = changeEl.querySelector('i');
+            if (iconEl) {
+                iconEl.className = prodChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+            }
+        }
+        const labelEl = prodCard.querySelector('.price-label');
+        if (labelEl) {
+            labelEl.textContent = `${latest.year} total`;
+        }
     }
     
     // Update Area card
     const areaCard = document.querySelector('[data-commodity="area"]');
     if (areaCard) {
-        const areaHa = Math.round(latest.area_thousand_ha * 1000);
-        areaCard.querySelector('.price-value').textContent = areaHa.toLocaleString() + ' ha';
+        // Use raw value from database without rounding
+        const priceValueEl = areaCard.querySelector('.price-value');
+        if (priceValueEl) {
+            priceValueEl.textContent = `${Number(latest.area_thousand_ha).toFixed(2)} K ha`;
+        }
         const changeEl = areaCard.querySelector('.price-change');
-        changeEl.querySelector('span').textContent = `${areaChange > 0 ? '+' : ''}${areaChange}%`;
-        changeEl.classList.toggle('positive', areaChange >= 0);
-        changeEl.classList.toggle('negative', areaChange < 0);
-        changeEl.querySelector('i').className = areaChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+        if (changeEl) {
+            const spanEl = changeEl.querySelector('span');
+            if (spanEl) {
+                spanEl.textContent = `${areaChange > 0 ? '+' : ''}${areaChange.toFixed(2)}%`;
+            }
+            changeEl.classList.toggle('positive', areaChange >= 0);
+            changeEl.classList.toggle('negative', areaChange < 0);
+            const iconEl = changeEl.querySelector('i');
+            if (iconEl) {
+                iconEl.className = areaChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+            }
+        }
     }
     
     // Update Yield card
     const yieldCard = document.querySelector('[data-commodity="yield"]');
     if (yieldCard) {
-        const yieldValue = parseFloat(latest.yield_tons_per_ha).toFixed(2);
-        yieldCard.querySelector('.price-value').textContent = `${yieldValue} t/ha`;
+        const priceValueEl = yieldCard.querySelector('.price-value');
+        if (priceValueEl) {
+            if (yieldValue !== null && yieldValue !== undefined && !isNaN(yieldValue)) {
+                priceValueEl.textContent = `${Number(yieldValue).toFixed(2)} t/ha`;
+                console.log('✅ Yield card updated:', yieldValue);
+            } else {
+                priceValueEl.textContent = 'N/A';
+                console.warn('⚠️ Yield value is invalid, showing N/A');
+            }
+        }
         const changeEl = yieldCard.querySelector('.price-change');
-        changeEl.querySelector('span').textContent = `${yieldChange > 0 ? '+' : ''}${yieldChange}%`;
-        changeEl.classList.toggle('positive', yieldChange >= 0);
-        changeEl.classList.toggle('negative', yieldChange < 0);
-        changeEl.querySelector('i').className = yieldChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+        if (changeEl) {
+            const spanEl = changeEl.querySelector('span');
+            if (spanEl) {
+                if (yieldChange !== null && yieldChange !== undefined && !isNaN(yieldChange)) {
+                    spanEl.textContent = `${yieldChange >= 0 ? '+' : ''}${yieldChange.toFixed(2)}%`;
+                    changeEl.classList.toggle('positive', yieldChange >= 0);
+                    changeEl.classList.toggle('negative', yieldChange < 0);
+                    const iconEl = changeEl.querySelector('i');
+                    if (iconEl) {
+                        iconEl.className = yieldChange >= 0 ? 'fas fa-arrow-up' : 'fas fa-arrow-down';
+                    }
+                } else {
+                    spanEl.textContent = '--';
+                    changeEl.classList.remove('positive', 'negative');
+                }
+            }
+        }
     }
     
     // Update summary text
@@ -2103,6 +2576,34 @@ function setupSmoothScrolling() {
 // Utility Functions
 function scrollToSection(sectionId) {
     const section = document.getElementById(sectionId);
+    if (!section) {
+        console.warn(`Section with id "${sectionId}" not found`);
+        return;
+    }
+    
+    const navbar = document.querySelector('.top-navbar');
+    const navbarHeight = navbar ? navbar.offsetHeight : 70;
+    const targetPosition = section.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+    
+    window.scrollTo({
+        top: targetPosition,
+        behavior: 'smooth'
+    });
+    
+    // Update active nav link
+    document.querySelectorAll('.nav-link, .mobile-nav-link').forEach(link => {
+        link.classList.remove('active');
+        const href = link.getAttribute('href') || '';
+        const linkSection = href.replace(/^.*#/, '').replace(/^\//, '');
+        if (linkSection === sectionId || (sectionId === 'home' && (linkSection === '' || linkSection === 'home'))) {
+            link.classList.add('active');
+        }
+    });
+}
+
+// Legacy scrollToSection - keeping for compatibility
+function scrollToSectionOld(sectionId) {
+    const section = document.getElementById(sectionId);
     if (section) {
         const offsetTop = section.offsetTop - 80;
         window.scrollTo({
@@ -2154,16 +2655,32 @@ function generateTrendData(min, max, years) {
     return data;
 }
 
-// Real-time Data Updates (Simulated)
+// Real-time Data Updates - Reload from API periodically
 function startRealTimeUpdates() {
-    setInterval(() => {
-        updatePriceCards();
-        updateWeatherData();
-    }, 30000); // Update every 30 seconds
+    console.log('🔄 Starting periodic API data refresh (every 5 minutes)');
+    
+    // Refresh data from API every 5 minutes instead of using fake data
+    setInterval(async () => {
+        console.log('⏱️ Refreshing data from API...');
+        try {
+            await loadMarketPrices();
+            await loadProductionData();
+            await updateHeroMetrics();
+            console.log('✅ Data refreshed successfully');
+        } catch (error) {
+            console.error('❌ Error refreshing data:', error);
+        }
+    }, 300000); // Update every 5 minutes (300000 ms)
 }
 
+// DEPRECATED: This function used fake/simulated data - no longer used
+// Data is now loaded from API via loadMarketPrices() and updated periodically
+/*
 function updatePriceCards() {
-    const priceCards = document.querySelectorAll('.price-card');
+    // Only update price cards (export-value, world-price, vn-price), NOT production cards
+    const priceCards = document.querySelectorAll('.price-card[data-commodity="export-value"], .price-card[data-commodity="world-price"], .price-card[data-commodity="vn-price"]');
+    
+    console.log(`💰 Updating ${priceCards.length} price cards with simulated data...`);
     
     priceCards.forEach(card => {
         const priceValue = card.querySelector('.price-value');
@@ -2189,7 +2706,11 @@ function updatePriceCards() {
         }
     });
 }
+*/
 
+// DEPRECATED: This function used fake/simulated data - no longer used  
+// Weather data is now loaded from API via loadWeatherData()
+/*
 function updateWeatherData() {
     const temperature = document.querySelector('.temperature');
     const humiditySpan = document.querySelector('.weather-details .weather-item:nth-child(1) span');
@@ -2210,7 +2731,7 @@ function updateWeatherData() {
         rainfallSpan.textContent = 'Rainfall: ' + Math.round(rain) + 'mm';
     }
 }
-
+*/
 
 
 // News Card Interactions
@@ -2687,6 +3208,7 @@ function updateWeatherCards(stats) {
         }
     }
 }
+<<<<<<< HEAD
 
 // ==========================================================
 // ☕ PROVINCE COFFEE PRICES CHART (Last 7 Days) - Multi-line Chart
@@ -3055,3 +3577,20 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🟡 DOM loaded - calling fetchProvincePrices (v5.0)');
     fetchProvincePrices(7);
 });
+=======
+// ================================================================
+// 🗂 CATEGORY BUTTONS HANDLER
+// ================================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const buttons = document.querySelectorAll(".news-cat-btn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const category = btn.dataset.category;
+      loadCoffeeNews(category);
+    });
+  });
+});
+>>>>>>> origin/main

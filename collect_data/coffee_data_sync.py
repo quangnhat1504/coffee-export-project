@@ -1,60 +1,92 @@
-# sync_coffee.py
-# 1 file: CSV -> coffee_long (long format, upsert) -> pivot ra 3 bảng domain
-import os, sys, math
+"""
+Coffee Data Synchronization Script
+Syncs CSV data to MySQL database: CSV -> coffee_long (long format) -> pivot to domain tables
+"""
+import os
+import sys
+import math
+from typing import List, Tuple, Optional
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, Engine
 from dotenv import load_dotenv
 from pathlib import Path
 
-# In Unicode đẹp trên Windows (tránh lỗi emoji/Unicode)
+# Add parent directory to path to import db_utils
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'web', 'backend'))
+try:
+    from db_utils import create_database_engine
+except ImportError:
+    create_database_engine = None
+
+# Configure Unicode output for Windows
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
     pass
 
+<<<<<<< HEAD
 # ===== 0) Load .env =====
 # Find .env in parent directory (project root)
 env_path = Path(__file__).parent.parent / '.env'
 load_dotenv(dotenv_path=env_path)
+=======
+# ===== Load Environment Variables =====
+load_dotenv(dotenv_path='../.env')
+>>>>>>> origin/main
 HOST = os.getenv("HOST")
-PORT = int(os.getenv("PORT", "3306"))
+PORT = os.getenv("PORT", "3306")
 USER = os.getenv("USER")
 PASSWORD = os.getenv("PASSWORD")
 DB = os.getenv("DB")
-CA_CERT = os.getenv("CA_CERT")  # Changed from CA_PEM to CA_CERT
+CA_CERT = os.getenv("CA_CERT")
 
 if not all([HOST, PORT, USER, PASSWORD, DB]):
-    raise SystemExit("Missing env vars. Set HOST, PORT, USER, PASSWORD, DB in .env")
+    raise SystemExit("❌ Missing env vars. Set HOST, PORT, USER, PASSWORD, DB in .env")
 
-# ===== 1) Kết nối MySQL (Support both SSL and non-SSL) =====
-url = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
+# ===== Database Connection =====
+engine: Optional[Engine] = None
 
-# Try SSL first, fallback to non-SSL if certificate not available
-try:
-    if CA_CERT and CA_CERT.strip():
-        # Create temp cert file for SSL connection
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as f:
-            f.write(CA_CERT)
-            cert_file = f.name
-        
+if create_database_engine:
+    try:
+        engine = create_database_engine(
+            host=HOST,
+            user=USER,
+            password=PASSWORD,
+            port=PORT,
+            database=DB,
+            ca_cert=CA_CERT
+        )
+        print("✅ Connected to MySQL database")
+    except Exception as e:
+        print(f"❌ Database connection failed: {e}")
+        raise
+else:
+    # Fallback to simple connection
+    url = f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}"
+    try:
+        if CA_CERT and CA_CERT.strip():
+            import tempfile
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.pem') as f:
+                f.write(CA_CERT)
+                cert_file = f.name
+            
+            engine = create_engine(
+                url,
+                connect_args={"ssl": {"ca": cert_file}},
+                pool_pre_ping=True,
+                pool_recycle=1800,
+            )
+            print("✅ Connected with SSL (fallback mode)")
+        else:
+            raise Exception("No SSL certificate provided")
+    except Exception as e:
+        print(f"⚠️  SSL connection failed ({e}), trying without SSL...")
         engine = create_engine(
-            url,
-            connect_args={"ssl": {"ca": cert_file}},
+            url + "?ssl_disabled=true",
             pool_pre_ping=True,
             pool_recycle=1800,
         )
-        print("✅ Connected with SSL")
-    else:
-        raise Exception("No SSL certificate provided")
-except Exception as e:
-    print(f"⚠️ SSL connection failed ({e}), trying without SSL...")
-    engine = create_engine(
-        url + "?ssl_disabled=true",
-        pool_pre_ping=True,
-        pool_recycle=1800,
-    )
-    print("✅ Connected without SSL")
+        print("✅ Connected without SSL (fallback mode)")
 
 # ===== 2) Đọc CSV =====
 # Use relative paths from current script location
@@ -197,39 +229,52 @@ VALUES (%s, %s, %s)
 ON DUPLICATE KEY UPDATE value = VALUES(value);
 """
 
-def none_if_nan(v):
+def none_if_nan(v: Optional[float]) -> Optional[float]:
+    """Convert NaN values to None for database insertion"""
     if v is None:
         return None
     if isinstance(v, float) and math.isnan(v):
         return None
     return v
 
-rows = [(str(hm), int(y), none_if_nan(v)) for hm, y, v in long_df[["hang_muc","year","value"]].itertuples(index=False, name=None)]
+# Prepare rows for batch insertion
+rows: List[Tuple[str, int, Optional[float]]] = [
+    (str(hm), int(y), none_if_nan(v))
+    for hm, y, v in long_df[["hang_muc", "year", "value"]].itertuples(index=False, name=None)
+]
 
+# ===== Main Data Sync Process =====
 with engine.begin() as conn:
-    #xoad bảng nếu có
+    print("🗑️  Dropping existing tables (if any)...")
+    # Drop tables if they exist (for fresh start)
     conn.execute(text("DROP TABLE IF EXISTS weather"))
     conn.execute(text("DROP TABLE IF EXISTS production"))
     conn.execute(text("DROP TABLE IF EXISTS coffee_export"))
     conn.execute(text("DROP TABLE IF EXISTS market_trade"))
     conn.execute(text("DROP TABLE IF EXISTS coffee_long"))
 
-    # tạo bảng
+    print("📋 Creating tables...")
+    # Create tables
     conn.execute(text(ddl_coffee_long))
     conn.execute(text(ddl_weather))
     conn.execute(text(ddl_production))
     conn.execute(text(ddl_export))
     conn.execute(text(ddl_market_trade))
+    print("✅ Tables created successfully")
 
-
-    # upsert coffee_long (raw cursor cho executemany nhanh)
+    # Upsert coffee_long (using raw cursor for fast executemany)
     if rows:
+        print(f"📥 Inserting {len(rows)} records into coffee_long...")
         raw = conn.connection
         with raw.cursor() as cur:
             cur.executemany(upsert_sql, rows)
+        print("✅ coffee_long data inserted")
 
-    # ===== 7) Pivot sang 3 bảng domain =====
+    # ===== Pivot to Domain Tables =====
+    print("🔄 Pivoting data to domain tables...")
+    
     # a) weather
+    print("  → Processing weather data...")
     conn.execute(text("""
         INSERT INTO weather (year, temperature, humidity, rain)
         SELECT y.year,
@@ -246,6 +291,7 @@ with engine.begin() as conn:
     """))
 
     # b) production
+    print("  → Processing production data...")
     conn.execute(text("""
         INSERT INTO production (year, area_thousand_ha, output_tons, export_tons)
         SELECT y.year,
@@ -262,6 +308,7 @@ with engine.begin() as conn:
     """))
 
     # c) coffee_export
+    print("  → Processing export data...")
     conn.execute(text("""
         INSERT INTO coffee_export (year, export_value_million_usd, price_world_usd_per_ton, price_vn_usd_per_ton)
         SELECT y.year,
@@ -282,7 +329,8 @@ with engine.begin() as conn:
           price_vn_usd_per_ton     = VALUES(price_vn_usd_per_ton);
     """))
 
-    # d) market_trade: upsert từ mt
+    # d) market_trade: upsert from market trade CSV
+    print("  → Processing market trade data...")
     upsert_mt_sql = """
         INSERT INTO market_trade
           (importer, year, trade_value_million_usd, quantity_tons)
@@ -291,36 +339,48 @@ with engine.begin() as conn:
           trade_value_million_usd = VALUES(trade_value_million_usd),
           quantity_tons           = VALUES(quantity_tons);
     """
-    mt_rows = [
-        (str(row.Importer), int(row.Year),
-         None if pd.isna(row.trade_value_million_usd) else float(row.trade_value_million_usd),
-         None if pd.isna(row.quantity_tons) else float(row.quantity_tons))
+    mt_rows: List[Tuple[str, int, Optional[float], Optional[float]]] = [
+        (
+            str(row.Importer),
+            int(row.Year),
+            None if pd.isna(row.trade_value_million_usd) else float(row.trade_value_million_usd),
+            None if pd.isna(row.quantity_tons) else float(row.quantity_tons)
+        )
         for row in mt.itertuples(index=False)
     ]
     if mt_rows:
         raw3 = conn.connection
         with raw3.cursor() as cur:
             cur.executemany(upsert_mt_sql, mt_rows)
+        print(f"  ✅ Inserted {len(mt_rows)} market trade records")
 
 
-    # ===== 8) Report nhanh =====
-    total_long = conn.execute(text("SELECT COUNT(*) FROM coffee_long")).scalar()
-    total_w    = conn.execute(text("SELECT COUNT(*) FROM weather")).scalar()
-    total_p    = conn.execute(text("SELECT COUNT(*) FROM production")).scalar()
-    total_e    = conn.execute(text("SELECT COUNT(*) FROM coffee_export")).scalar()
-    print(f"coffee_long rows: {total_long}")
-    print(f"weather rows:     {total_w}")
-    print(f"production rows:  {total_p}")
-    print(f"coffee_export rows:{total_e}")
-
-    print("\nSample weather:")
-    for r in conn.execute(text("SELECT * FROM weather ORDER BY year LIMIT 5")):
-        print(r)
+    # ===== Final Report =====
+    print("\n📊 Data Sync Summary:")
+    print("=" * 60)
     
+    total_long = conn.execute(text("SELECT COUNT(*) FROM coffee_long")).scalar()
+    total_w = conn.execute(text("SELECT COUNT(*) FROM weather")).scalar()
+    total_p = conn.execute(text("SELECT COUNT(*) FROM production")).scalar()
+    total_e = conn.execute(text("SELECT COUNT(*) FROM coffee_export")).scalar()
     total_mt = conn.execute(text("SELECT COUNT(*) FROM market_trade")).scalar()
-    print(f"market_trade rows:  {total_mt}")
-    print("\nSample market_trade:")
-    for r in conn.execute(text("SELECT * FROM market_trade ORDER BY year, importer LIMIT 5")):
-        print(r)
+    
+    print(f"✅ coffee_long:     {total_long:,} rows")
+    print(f"✅ weather:         {total_w:,} rows")
+    print(f"✅ production:      {total_p:,} rows")
+    print(f"✅ coffee_export:   {total_e:,} rows")
+    print(f"✅ market_trade:    {total_mt:,} rows")
+    
+    print("\n📋 Sample Data:")
+    print("\nWeather (first 3 records):")
+    for r in conn.execute(text("SELECT * FROM weather ORDER BY year LIMIT 3")):
+        print(f"  {r}")
+    
+    print("\nMarket Trade (first 3 records):")
+    for r in conn.execute(text("SELECT * FROM market_trade ORDER BY year, importer LIMIT 3")):
+        print(f"  {r}")
+    
+    print("\n" + "=" * 60)
+    print("✅ Data synchronization completed successfully!")
 
 
