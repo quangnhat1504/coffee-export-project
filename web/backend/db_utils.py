@@ -19,7 +19,7 @@ def create_database_engine(
     ca_cert: Optional[str] = None
 ) -> Engine:
     """
-    Create database engine with robust fallback strategies.
+    Create database engine with robust fallback strategies and optimized connection pooling.
     
     Args:
         host: Database host
@@ -37,6 +37,16 @@ def create_database_engine(
     """
     base_url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
     
+    # Optimized connection pool settings for better performance
+    pool_settings = {
+        "pool_pre_ping": True,
+        "pool_recycle": 3600,  # Recycle connections after 1 hour
+        "pool_size": 20,  # Increased from 10 for better concurrency
+        "max_overflow": 40,  # Increased from 20 for handling spikes
+        "pool_timeout": 30,  # Wait up to 30s for connection
+        "echo": False
+    }
+    
     # Strategy 1: Try without SSL (most reliable for Aiven)
     try:
         engine = create_engine(
@@ -47,11 +57,7 @@ def create_database_engine(
                 "read_timeout": 30,
                 "write_timeout": 30
             },
-            pool_pre_ping=True,
-            pool_recycle=1800,
-            pool_size=10,
-            max_overflow=20,
-            echo=False
+            **pool_settings
         )
         # Test connection
         with engine.connect() as conn:
@@ -73,11 +79,7 @@ def create_database_engine(
                     "ssl": {"ca": cert_file},
                     "connect_timeout": 30
                 },
-                pool_pre_ping=True,
-                pool_recycle=3600,
-                pool_size=5,
-                max_overflow=10,
-                echo=False
+                **pool_settings
             )
             # Test connection
             with engine.connect() as conn:
@@ -91,11 +93,7 @@ def create_database_engine(
         engine = create_engine(
             base_url,
             connect_args={"connect_timeout": 30},
-            pool_pre_ping=True,
-            pool_recycle=3600,
-            pool_size=5,
-            max_overflow=10,
-            echo=False
+            **pool_settings
         )
         # Test connection
         with engine.connect() as conn:
