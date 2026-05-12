@@ -88,17 +88,10 @@ app = Flask(__name__,
             template_folder='../templates',
             static_folder='../static')
 
-<<<<<<< HEAD
-=======
-# Enable CORS for all API endpoints
-CORS(app, resources={r"/api/*": {"origins": "*"}})
-
->>>>>>> origin/main
 # Disable template caching for development
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
-<<<<<<< HEAD
 # Add after_request to disable all caching
 @app.after_request
 def add_header(response):
@@ -108,8 +101,6 @@ def add_header(response):
     response.headers['Expires'] = '-1'
     return response
 
-=======
->>>>>>> origin/main
 # Configure Caching (Simple in-memory cache)
 app.config['CACHE_TYPE'] = 'SimpleCache'
 app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # 5 minutes default
@@ -164,17 +155,6 @@ PROVINCE_NAMES = {
     'DakNong': 'Dak Nong',
     'LamDong': 'Lam Dong'
 }
-# ==========================================================
-# 🧩 TEST DATABASE CONNECTION (for debug)
-# ==========================================================
-try:
-    engine = create_db_engine()
-    with engine.connect() as conn:
-        conn.execute(text("SELECT NOW()"))
-    print("✅ Successfully connected to Aiven MySQL database!")
-except Exception as e:
-    print("❌ Failed to connect to Aiven database.")
-    print(f"Error details: {e}")
 
 # ============================================================================
 # ERROR HANDLERS & HELPER FUNCTIONS
@@ -970,7 +950,15 @@ def get_export_data():
             'success': False,
             'error': str(e)
         }), 500
-<<<<<<< HEAD
+
+import time
+
+news_cache = {
+    "data": None,
+    "timestamp": 0
+}
+
+CACHE_DURATION = 600  # 10 phút = 600 giây
 
 # ==========================================================
 # ☕ COFFEE PRICES ENDPOINT - Daily prices by province (last 7 days)
@@ -985,40 +973,6 @@ def get_recent_coffee_prices():
         - days: Number of recent days to fetch (default: 7)
     Returns: List of provinces with their daily prices
     """
-=======
-        
-import time
-
-news_cache = {
-    "data": None,
-    "timestamp": 0
-}
-   
-CACHE_DURATION = 600  # 10 phút = 600 giây
-# ==========================================================
-# 📢 NEWS ENDPOINT - Crawl tin tức cà phê từ Báo Mới (Cập nhật chuẩn HTML 2025)
-# ==========================================================
-@app.route('/api/news', methods=['GET'])
-def get_coffee_news():
-    """
-    Lấy 9 bài viết mới nhất liên quan đến cà phê từ Baomoi.com
-    """
-    import requests
-    from bs4 import BeautifulSoup
-    import random
-    import re
-
-    # --- 1️⃣ Kiểm tra cache ---
-    current_time = time.time()
-    if news_cache["data"] and (current_time - news_cache["timestamp"] < CACHE_DURATION):
-        return jsonify({
-            "success": True,
-            "cached": True,
-            "count": len(news_cache["data"]),
-            "data": news_cache["data"]
-        })
-    
->>>>>>> origin/main
     try:
         # Get days parameter from query string (default 7)
         days = request.args.get('days', 7, type=int)
@@ -1088,7 +1042,6 @@ def get_coffee_news():
             # CRITICAL: Skip KonTum and any other unwanted provinces
             if region not in ALLOWED_PROVINCES:
                 continue
-<<<<<<< HEAD
             
             date_val = row[1]
             price = float(row[2]) if row[2] else None
@@ -1106,62 +1059,6 @@ def get_coffee_news():
             provinces_data[region]['prices'].append({
                 'date': date_str,
                 'price': price
-=======
-            title = a_tag.get("title").strip()
-            href = a_tag.get("href")
-            link = "https://baomoi.com" + href if href and href.startswith("/") else href
-
-            # --- Ảnh (Cập nhật dò đa tầng + fallback regex) ---
-            import re
-
-            img = None
-
-            # 1️⃣ Ưu tiên <img src> hoặc <img data-src>
-            img_tag = card.select_one("img")
-            if img_tag:
-                img = img_tag.get("src") or img_tag.get("data-src")
-
-            # 2️⃣ Nếu chưa có, tìm <source srcset> hoặc <source data-srcset>
-            if not img:
-                source_tag = card.select_one("source[srcset], source[data-srcset]")
-                if source_tag:
-                    srcset = source_tag.get("srcset") or source_tag.get("data-srcset")
-                    if srcset:
-                        img = srcset.split()[0]
-
-            # 3️⃣ Nếu vẫn không có, thử regex tìm đường dẫn ảnh từ HTML (phòng khi HTML rút gọn)
-            if not img:
-                match = re.search(r"https://photo-baomoi\.bmcdn\.me/[^\s\"']+\.(jpg|webp|avif)", str(card))
-                if match:
-                    img = match.group(0)
-
-            # 4️⃣ Nếu vẫn không có, dùng ảnh fallback ngẫu nhiên
-            if not img:
-                fallback_images = [
-                    "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?w=400&h=300&fit=crop",
-                    "https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=400&h=300&fit=crop"
-                ]
-                img = random.choice(fallback_images)
-
-            # --- Nguồn báo ---
-            source_tag = card.select_one(".bm-card-source")
-            source = source_tag.get("title") if source_tag else "Báo Mới"
-
-            # --- Thời gian đăng ---
-            time_tag = card.select_one("time")
-            time_text = time_tag.get_text(strip=True) if time_tag else ""
-
-            # --- Ghi lại dữ liệu ---
-            articles.append({
-                "title": title,
-                "url": link,
-                "image": img,
-                "source": source,
-                "time": time_text
->>>>>>> origin/main
             })
         
         # Get only the most recent N days (to ensure exactly 'days' parameter is used)

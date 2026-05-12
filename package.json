@@ -8,10 +8,20 @@
     "prestart": "python -c \"import flask, flask_cors, flask_caching, flask_compress\" || npm run postinstall",
     "start": "npm run dev",
     "dev": "cd web/backend && python api.py",
+    "dev:new": "python -m app.main",
     "api": "cd web/backend && python api.py",
+    "api:new": "python -m app.main",
     "api:debug": "cd web/backend && set FLASK_DEBUG=1 && python api.py",
     "health": "curl http://localhost:5000/api/health",
     "test:api": "curl http://localhost:5000/api/health && curl http://localhost:5000/api/production",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "etl:core": "python -m data.scripts.sync_core",
+    "etl:prices": "python -m data.scripts.sync_prices",
+    "etl:all": "python -m data.scripts.sync_all",
+    "etl:dry-run": "python -m data.scripts.sync_all --dry-run",
+    "etl:public": "python -m data.scripts.sync_public_sources",
+    "etl:public:dry-run": "python -m data.scripts.sync_public_sources --dry-run",
     "update:data": "python scripts/auto_update_data.py",
     "clean": "rm -rf node_modules package-lock.json && rm -rf web/backend/__pycache__",
     "reinstall": "npm run clean && npm install"
@@ -28,6 +38,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "concurrently": "^8.2.2",
     "http-server": "^14.1.1"
   }

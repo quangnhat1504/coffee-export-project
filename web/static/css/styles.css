@@ -69,15 +69,10 @@ body {
     right: 0;
     height: 70px;
     background: #ffffff;
-<<<<<<< HEAD
-    border-bottom: 2px solid #e6d9cc;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-=======
     background-color: #ffffff !important;
     opacity: 1 !important;
     border-bottom: 1px solid var(--border-color);
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
->>>>>>> origin/main
     z-index: 1100;
     transition: all 0.3s ease;
 }
@@ -1529,23 +1524,6 @@ body.enable-snap section.hero {
 .prod-checkbox-label {
     display: flex;
     align-items: center;
-<<<<<<< HEAD
-    gap: 0.6rem;
-    cursor: pointer;
-    user-select: none;
-    padding: 0.65rem 1rem;
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(250, 244, 237, 0.8));
-    border: 1.5px solid rgba(216, 194, 166, 0.3);
-    box-shadow: 0 2px 6px rgba(107, 63, 0, 0.04);
-}
-
-.prod-checkbox-label:hover {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(254, 248, 240, 0.95));
-    border-color: rgba(196, 127, 78, 0.4);
-    box-shadow: 0 4px 12px rgba(196, 127, 78, 0.12);
-=======
     gap: 0.625rem;
     cursor: pointer;
     user-select: none;
@@ -1561,7 +1539,6 @@ body.enable-snap section.hero {
     background-color: #FFF5EC;
     border-color: rgba(196, 127, 78, 0.2);
     box-shadow: 0 2px 6px rgba(196, 127, 78, 0.12);
->>>>>>> origin/main
     transform: translateY(-1px);
 }
 
@@ -1576,19 +1553,11 @@ body.enable-snap section.hero {
     height: 22px;
     border: 2.5px solid #d8c2a6;
     border-radius: 6px;
-<<<<<<< HEAD
-    background: linear-gradient(135deg, #ffffff, #FFF9F0);
-    position: relative;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    flex-shrink: 0;
-    box-shadow: inset 0 1px 3px rgba(107, 63, 0, 0.08);
-=======
     background: white;
     position: relative;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
->>>>>>> origin/main
 }
 
 .checkbox-custom::after {
@@ -1601,19 +1570,6 @@ body.enable-snap section.hero {
     border: solid white;
     border-width: 0 2.5px 2.5px 0;
     transform: rotate(45deg) scale(0);
-<<<<<<< HEAD
-    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-    opacity: 0;
-}
-
-.prod-checkbox:checked + .checkbox-custom {
-    background: linear-gradient(135deg, #D2691E, #B8860B);
-    border-color: #A0522D;
-    box-shadow: 
-        0 4px 12px rgba(210, 105, 30, 0.35),
-        inset 0 1px 3px rgba(0, 0, 0, 0.15);
-    transform: scale(1.05);
-=======
     transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1621,7 +1577,6 @@ body.enable-snap section.hero {
     background: linear-gradient(135deg, #c47f4e 0%, #a65e2e 100%);
     border-color: #a65e2e;
     box-shadow: 0 3px 10px rgba(196, 127, 78, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.2);
->>>>>>> origin/main
 }
 
 .prod-checkbox:checked + .checkbox-custom::after {
@@ -1639,36 +1594,6 @@ body.enable-snap section.hero {
     font-weight: 600;
     color: #6B3F00;
     letter-spacing: 0.3px;
-<<<<<<< HEAD
-    transition: all 0.3s ease;
-}
-
-.prod-checkbox:checked ~ .checkbox-text {
-    color: #D2691E;
-    font-weight: 700;
-}
-
-.prod-checkbox-label:hover .checkbox-text {
-    color: #8B4513;
-}
-
-/* Add subtle pulse animation when checked */
-@keyframes checkbox-pulse {
-    0%, 100% {
-        box-shadow: 
-            0 4px 12px rgba(210, 105, 30, 0.35),
-            inset 0 1px 3px rgba(0, 0, 0, 0.15);
-    }
-    50% {
-        box-shadow: 
-            0 6px 18px rgba(210, 105, 30, 0.5),
-            inset 0 1px 3px rgba(0, 0, 0, 0.15);
-    }
-}
-
-.prod-checkbox:checked + .checkbox-custom {
-    animation: checkbox-pulse 2s ease-in-out infinite;
-=======
     transition: color 0.3s ease;
 }
 
@@ -1782,7 +1707,6 @@ body.enable-snap section.hero {
 
 .market-checkbox[data-dataset="vnPrice"]:checked ~ .checkbox-text {
     color: #DC3C3C;
->>>>>>> origin/main
 }
 
 /* Remove old button styles */

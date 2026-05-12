@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vietnam Coffee Data Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script type="module" src="/static/js/main.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="/">
+      <span class="brand-mark" aria-hidden="true">C</span>
+      <span>
+        <strong>Vietnam Coffee Data Portal</strong>
+        <small>Market, export, climate, forecast</small>
+      </span>
+    </a>
+    <nav class="top-nav" aria-label="Primary navigation">
+      <a href="#market">Market</a>
+      <a href="#exports">Exports</a>
+      <a href="#weather">Weather</a>
+      <a href="#insight">AI Insight</a>
+    </nav>
+  </header>
+
+  <main class="page-shell">
+    <section class="toolbar" aria-label="System status">
+      <div>
+        <h1>Coffee Intelligence Dashboard</h1>
+        <p id="statusSummary">Checking backend status...</p>
+      </div>
+      <div class="status-pills">
+        <span class="status-pill" id="apiStatus">API</span>
+        <span class="status-pill" id="dbStatus">Database</span>
+        <span class="status-pill" id="aiStatus">AI</span>
+      </div>
+    </section>
+
+    <section class="kpi-grid" aria-label="Key metrics">
+      <article class="kpi-card">
+        <span class="kpi-label">Production</span>
+        <strong id="kpiProduction">--</strong>
+        <small id="kpiProductionMeta">Latest year</small>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">Export Value</span>
+        <strong id="kpiExportValue">--</strong>
+        <small id="kpiExportMeta">Annual value</small>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">World Price</span>
+        <strong id="kpiWorldPrice">--</strong>
+        <small id="kpiWorldPriceMeta">USD per ton</small>
+      </article>
+      <article class="kpi-card">
+        <span class="kpi-label">Domestic Price</span>
+        <strong id="kpiProvincePrice">--</strong>
+        <small id="kpiProvincePriceMeta">Latest province price</small>
+      </article>
+    </section>
+
+    <section class="dashboard-grid" id="market">
+      <article class="panel panel-wide">
+        <div class="panel-header">
+          <div>
+            <h2>Market Overview</h2>
+            <p>Production, export value, and price movement</p>
+          </div>
+        </div>
+        <div class="chart-box">
+          <canvas id="marketChart"></canvas>
+        </div>
+      </article>
+
+      <article class="panel" id="exports">
+        <div class="panel-header">
+          <div>
+            <h2>Top Importers</h2>
+            <p id="exportYearLabel">Latest year</p>
+          </div>
+          <select id="exportLimit" aria-label="Number of countries">
+            <option value="5">Top 5</option>
+            <option value="9" selected>Top 9</option>
+            <option value="12">Top 12</option>
+          </select>
+        </div>
+        <div class="chart-box compact">
+          <canvas id="exportChart"></canvas>
+        </div>
+        <div class="country-list" id="countryList"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Province Prices</h2>
+            <p>Recent VND/kg observations</p>
+          </div>
+        </div>
+        <div class="chart-box compact">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </article>
+
+      <article class="panel" id="weather">
+        <div class="panel-header">
+          <div>
+            <h2>Weather Impact</h2>
+            <p>Rainfall and temperature by province</p>
+          </div>
+          <select id="provinceSelect" aria-label="Province">
+            <option value="DakLak">Dak Lak</option>
+            <option value="GiaLai">Gia Lai</option>
+            <option value="DakNong">Dak Nong</option>
+            <option value="LamDong">Lam Dong</option>
+          </select>
+        </div>
+        <div class="chart-box compact">
+          <canvas id="weatherChart"></canvas>
+        </div>
+      </article>
+
+      <article class="panel panel-wide" id="insight">
+        <div class="panel-header">
+          <div>
+            <h2>AI Insight</h2>
+            <p>Generated through 9Router and the configured model combo</p>
+          </div>
+          <button class="primary-button" id="generateInsightButton" type="button">Generate</button>
+        </div>
+        <div class="insight-output" id="insightOutput">Waiting for dashboard data...</div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
