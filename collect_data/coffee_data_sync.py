@@ -24,15 +24,8 @@ try:
 except Exception:
     pass
 
-<<<<<<< HEAD
-# ===== 0) Load .env =====
-# Find .env in parent directory (project root)
-env_path = Path(__file__).parent.parent / '.env'
-load_dotenv(dotenv_path=env_path)
-=======
 # ===== Load Environment Variables =====
 load_dotenv(dotenv_path='../.env')
->>>>>>> origin/main
 HOST = os.getenv("HOST")
 PORT = os.getenv("PORT", "3306")
 USER = os.getenv("USER")

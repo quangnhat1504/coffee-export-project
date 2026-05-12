@@ -201,63 +201,9 @@ document.addEventListener('DOMContentLoaded', function() {
 // ================================================================
 // 📢 Load Coffee News from Flask API (/api/news)
 // ================================================================
-<<<<<<< HEAD
-async function loadCoffeeNews() {
-    const container = document.querySelector(".news-list");
-    if (!container) return;
-    container.innerHTML = "<p>🔄 Đang tải tin tức mới nhất từ nhiều nguồn...</p>";
-
-    // Fallback images array
-    const fallbackImages = [
-        "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400&h=300&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=400&h=300&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&h=300&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1610889556528-9a770e32642f?w=400&h=300&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1511920170033-f8396924c348?w=400&h=300&fit=crop&q=80",
-        "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?w=400&h=300&fit=crop&q=80",
-    ];
-
-    // Function to get random fallback image
-    function getRandomFallbackImage() {
-        return fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
-    }
-
-    // Function to validate and fix image URL
-    function validateImageUrl(url) {
-        if (!url) return getRandomFallbackImage();
-        
-        // Check if it's a valid URL
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            return getRandomFallbackImage();
-        }
-        
-        // Check if it's a data URL or placeholder
-        if (url.startsWith('data:') || url.includes('placeholder')) {
-            return getRandomFallbackImage();
-        }
-        
-        return url;
-    }
-
-    // Function to get category CSS class based on source
-    function getCategoryClass(source) {
-        const sourceMap = {
-            'VOV': 'vov',
-            'Báo Mới': 'baomoi',
-            'VnExpress': 'vnexpress',
-            'CafeControl': 'cafecontrol',
-            'Thanh Niên': 'thanhnien',
-            'Tuổi Trẻ': 'tuoitre'
-        };
-        return sourceMap[source] || 'default';
-    }
-=======
 async function loadCoffeeNews(category = "gia-ca-phe") {
   const container = document.querySelector(".news-list");
   const updatedText = document.getElementById("news-updated-time");
->>>>>>> origin/main
 
   container.innerHTML = "<p>🔄 Đang tải tin tức...</p>";
 
@@ -265,47 +211,6 @@ async function loadCoffeeNews(category = "gia-ca-phe") {
     const res = await fetch(`${API_BASE_URL}/news/${category}`);
     const data = await res.json();
 
-<<<<<<< HEAD
-        container.innerHTML = "";
-        data.data.forEach((item, index) => {
-            // Validate and ensure image URL is proper
-            const imageUrl = validateImageUrl(item.image);
-            const categoryClass = getCategoryClass(item.source);
-            
-            const newsElement = document.createElement('article');
-            newsElement.className = 'news-item';
-            newsElement.innerHTML = `
-                <div class="news-thumbnail">
-                    <img src="${imageUrl}" 
-                         alt="${item.title}" 
-                         onerror="this.onerror=null; this.src='${getRandomFallbackImage()}';"
-                         loading="lazy">
-                    <div class="news-category ${categoryClass}">${item.source}</div>
-                </div>
-                <div class="news-item-content">
-                    <h3 class="news-item-title">
-                        <a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.title}</a>
-                    </h3>
-                    <p class="news-item-desc">
-                        <i class="fas fa-newspaper"></i> ${item.source} • 
-                        <i class="fas fa-clock"></i> ${item.time}
-                    </p>
-                </div>
-            `;
-            container.appendChild(newsElement);
-        });
-        
-        console.log(`✅ Loaded ${data.data.length} news items from multiple sources`);
-    } catch (err) {
-        console.error('❌ Error loading news:', err);
-        container.innerHTML = `
-            <div style="padding: 2rem; text-align: center; color: #dc3545;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-                <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">Lỗi khi tải tin tức</p>
-                <p style="font-size: 0.9rem; opacity: 0.8;">${err.message}</p>
-            </div>
-        `;
-=======
     if (!data.success) throw new Error("Không lấy được dữ liệu tin tức");
 
     // 🕓 Hiển thị thời gian cập nhật
@@ -314,7 +219,6 @@ async function loadCoffeeNews(category = "gia-ca-phe") {
         (data.cached ? " (từ bộ nhớ đệm)" : " (vừa cập nhật)");
     } else {
       updatedText.textContent = "";
->>>>>>> origin/main
     }
 
     // Hiển thị bài báo
@@ -2245,18 +2149,6 @@ let productionData = null;
 
 async function loadProductionData() {
     try {
-<<<<<<< HEAD
-        console.log('🔄 Fetching production data from:', `${API_BASE_URL}/production`);
-        const response = await fetch(`${API_BASE_URL}/production`);
-        const result = await response.json();
-        
-        console.log('📦 Production API response:', result);
-        
-        if (result.success && result.data && result.data.length > 0) {
-            productionData = result.data;
-            console.log('✅ Production data loaded:', productionData.length, 'years');
-            console.log('📊 Sample data:', productionData[0]);
-=======
         console.log('🔄 Fetching production data from API...');
         const response = await fetch(`${API_BASE_URL}/production`);
         const result = await response.json();
@@ -2265,7 +2157,6 @@ async function loadProductionData() {
             productionData = result.data;
             console.log('✅ Production data loaded:', productionData.length, 'years');
             console.log('   Latest year:', productionData[productionData.length - 1]);
->>>>>>> origin/main
             
             // Update chart with real data
             updateTrendsChartWithData();
@@ -2273,21 +2164,12 @@ async function loadProductionData() {
             // Update production cards
             updateProductionCards(productionData);
         } else {
-<<<<<<< HEAD
-            console.error('❌ Failed to load production data:', result.error || 'No data');
-            console.log('Using fallback generated data');
-        }
-    } catch (error) {
-        console.error('❌ Error loading production data:', error);
-        console.log('Using fallback generated data');
-=======
             console.error('❌ Failed to load production data:', result.error || 'No data returned');
             console.log('   Using default values from HTML');
         }
     } catch (error) {
         console.error('❌ Error loading production data:', error);
         console.log('   Using default values from HTML');
->>>>>>> origin/main
     }
 }
 
@@ -3208,376 +3090,6 @@ function updateWeatherCards(stats) {
         }
     }
 }
-<<<<<<< HEAD
-
-// ==========================================================
-// ☕ PROVINCE COFFEE PRICES CHART (Last 7 Days) - Multi-line Chart
-// ==========================================================
-
-let provincePricesChart = null;
-
-/**
- * Fetch recent coffee prices by province from API
- */
-async function fetchProvincePrices(days = 7) {
-    console.log('🔵 fetchProvincePrices called - v5.0');
-    try {
-        const url = `${API_BASE_URL}/coffee-prices/recent?days=${days}`;
-        console.log('🔵 Fetching from:', url);
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        console.log('🔵 API Response:', data);
-        
-        if (data.success && data.provinces) {
-            console.log('🔵 Initializing chart with', data.provinces.length, 'provinces');
-            
-            // Update info cards first
-            updateProvincePriceCards(data.provinces);
-            
-            // Then initialize chart
-            initializeProvincePricesChart(data.provinces);
-        } else {
-            console.error('❌ Failed to load province prices:', data.error);
-        }
-    } catch (error) {
-        console.error('❌ Error fetching province prices:', error);
-    }
-}
-
-/**
- * Update province price info cards with latest data
- */
-function updateProvincePriceCards(provinces) {
-    console.log('💳 Updating province price cards:', provinces);
-    
-    const provinceMapping = {
-        'DakLak': 'daklak',
-        'DakNong': 'daknong',
-        'GiaLai': 'gialai',
-        'LamDong': 'lamdong'
-    };
-    
-    provinces.forEach(province => {
-        const cardId = provinceMapping[province.name];
-        if (!cardId) return;
-        
-        // Get DOM elements
-        const priceElement = document.getElementById(`price-${cardId}`);
-        const changeElement = document.getElementById(`change-${cardId}`);
-        const dateElement = document.getElementById(`date-${cardId}`);
-        
-        if (!priceElement || !changeElement || !dateElement) {
-            console.warn(`⚠️ Card elements not found for ${cardId}`);
-            return;
-        }
-        
-        // Update price
-        const currentPrice = province.current_price || 0;
-        const formattedPrice = new Intl.NumberFormat('vi-VN').format(Math.round(currentPrice));
-        priceElement.innerHTML = `₫${formattedPrice}`;
-        
-        // Update change percentage
-        const changePercent = province.price_change_percent || 0;
-        const changeValue = province.price_change || 0;
-        const isPositive = changePercent > 0;
-        const isNegative = changePercent < 0;
-        const isNeutral = changePercent === 0;
-        
-        // Remove all classes
-        changeElement.classList.remove('positive', 'negative', 'neutral');
-        
-        // Add appropriate class
-        if (isPositive) {
-            changeElement.classList.add('positive');
-            changeElement.innerHTML = `<i class="fas fa-arrow-up"></i><span>+${changePercent.toFixed(2)}%</span>`;
-        } else if (isNegative) {
-            changeElement.classList.add('negative');
-            changeElement.innerHTML = `<i class="fas fa-arrow-down"></i><span>${changePercent.toFixed(2)}%</span>`;
-        } else {
-            changeElement.classList.add('neutral');
-            changeElement.innerHTML = `<i class="fas fa-minus"></i><span>0.0%</span>`;
-        }
-        
-        // Update date (get most recent date from prices)
-        if (province.prices && province.prices.length > 0) {
-            const mostRecentDate = province.prices[0].date; // Already sorted DESC
-            const dateObj = new Date(mostRecentDate);
-            const formattedDate = dateObj.toLocaleDateString('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-            });
-            dateElement.textContent = formattedDate;
-        }
-        
-        console.log(`✅ Updated card for ${province.name}:`, {
-            price: formattedPrice,
-            change: changePercent,
-            date: dateElement.textContent
-        });
-    });
-}
-
-/**
- * Initialize province prices line chart (4 lines, 1 per province)
- */
-function initializeProvincePricesChart(provinces) {
-    console.log('🟢 initializeProvincePricesChart called with:', provinces);
-    
-    // Color palette for provinces
-    const provinceColors = {
-        'DakLak': { border: '#8B4513', bg: 'rgba(139, 69, 19, 0.1)' },
-        'DakNong': { border: '#D2691E', bg: 'rgba(210, 105, 30, 0.1)' },
-        'GiaLai': { border: '#CD853F', bg: 'rgba(205, 133, 63, 0.1)' },
-        'LamDong': { border: '#A0522D', bg: 'rgba(160, 82, 45, 0.1)' }
-    };
-    
-    // Get all unique dates and sort them
-    const allDates = new Set();
-    provinces.forEach(province => {
-        province.prices.forEach(p => allDates.add(p.date));
-    });
-    const sortedDates = Array.from(allDates).sort();
-    
-    console.log('🟢 All unique dates:', sortedDates);
-    console.log('🟢 Provinces data:', provinces.map(p => ({
-        name: p.name,
-        priceCount: p.prices.length,
-        dates: p.prices.map(x => x.date)
-    })));
-    
-    // Format labels (MM/DD)
-    const labels = sortedDates.map(dateStr => {
-        const date = new Date(dateStr);
-        return `${date.getMonth() + 1}/${date.getDate()}`;
-    });
-    
-    // Create datasets (one line per province)
-    const datasets = provinces.map(province => {
-        // Create price array matching sorted dates (sortedDates is ASC)
-        // Need to map each date in sortedDates to corresponding price from province.prices
-        const priceData = sortedDates.map(date => {
-            // Find price object for this specific date
-            const priceObj = province.prices.find(p => p.date === date);
-            if (!priceObj) {
-                console.warn(`⚠️ ${province.name}: No price found for date ${date}`);
-                return null;
-            }
-            return priceObj.price;
-        });
-        
-        // DEBUG: Detailed log for LamDong
-        if (province.name === 'LamDong') {
-            console.log('🔴 LAMDONG DEBUG:');
-            console.log('  - Total dates in sortedDates:', sortedDates.length);
-            console.log('  - SortedDates:', JSON.stringify(sortedDates));
-            console.log('  - Province.prices length:', province.prices.length);
-            console.log('  - Province.prices:', JSON.stringify(province.prices));
-            console.log('  - Mapping check:');
-            sortedDates.forEach((date, idx) => {
-                const found = province.prices.find(p => p.date === date);
-                console.log(`    ${date} → ${found ? found.price : 'NULL'} (index ${idx})`);
-            });
-            console.log('  - Final PriceData array:', JSON.stringify(priceData));
-            console.log('  - Non-null count:', priceData.filter(p => p !== null).length);
-        }
-        
-        console.log(`🟢 ${province.name} price data:`, priceData);
-        
-        const color = provinceColors[province.name] || { 
-            border: '#666', 
-            bg: 'rgba(102, 102, 102, 0.1)' 
-        };
-        
-        return {
-            label: province.name,
-            data: priceData,
-            borderColor: color.border,
-            backgroundColor: color.bg,
-            borderWidth: 3,
-            fill: false,  // Changed from true - disable fill to avoid overlap issues
-            tension: 0.4,
-            spanGaps: true,  // Draw line even when there are null values
-            pointRadius: 5,  // Increased from 4
-            pointHoverRadius: 7,  // Increased from 6
-            pointBackgroundColor: color.border,
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2,
-            pointHoverBackgroundColor: '#fff',
-            pointHoverBorderColor: color.border,
-            pointHoverBorderWidth: 3
-        };
-    });
-    
-    // Calculate min/max for Y-axis with expanded range (to flatten the curves)
-    let allPrices = [];
-    datasets.forEach(dataset => {
-        const validPrices = dataset.data.filter(v => v !== null && v !== undefined);
-        allPrices = allPrices.concat(validPrices);
-    });
-    
-    const minPrice = Math.min(...allPrices);
-    const maxPrice = Math.max(...allPrices);
-    const priceRange = maxPrice - minPrice;
-    
-    // Expand range by 50% on each side to make curves appear flatter
-    const expandedMin = Math.floor(minPrice - (priceRange * 0.5));
-    const expandedMax = Math.ceil(maxPrice + (priceRange * 0.5));
-    
-    console.log('📊 Y-axis range adjustment:', {
-        dataMin: minPrice,
-        dataMax: maxPrice,
-        range: priceRange,
-        chartMin: expandedMin,
-        chartMax: expandedMax
-    });
-    
-    // Chart configuration
-    const config = {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: datasets
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: 'index',
-                intersect: false
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        font: {
-                            size: 13,
-                            weight: '600',
-                            family: "'Inter', sans-serif"
-                        },
-                        color: '#2c3e50',
-                        padding: 15,
-                        usePointStyle: true,
-                        pointStyle: 'circle'
-                    }
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    titleColor: '#fff',
-                    bodyColor: '#fff',
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    padding: 12,
-                    displayColors: true,
-                    borderColor: 'rgba(255, 255, 255, 0.2)',
-                    borderWidth: 1,
-                    callbacks: {
-                        label: function(context) {
-                            const label = context.dataset.label || '';
-                            const value = context.parsed.y;
-                            return `${label}: ${formatNumber(value)} ₫/kg`;
-                        }
-                    }
-                },
-                title: {
-                    display: false
-                }
-            },
-            scales: {
-                x: {
-                    grid: {
-                        display: true,
-                        color: 'rgba(0, 0, 0, 0.05)',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 12,
-                            family: "'Inter', sans-serif"
-                        },
-                        color: '#666',
-                        maxRotation: 0,
-                        autoSkip: false
-                    },
-                    title: {
-                        display: true,
-                        text: 'Date',
-                        font: {
-                            size: 13,
-                            weight: '600'
-                        },
-                        color: '#2c3e50'
-                    }
-                },
-                y: {
-                    min: expandedMin,
-                    max: expandedMax,
-                    beginAtZero: false,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)',
-                        drawBorder: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 12,
-                            family: "'Inter', sans-serif"
-                        },
-                        color: '#666',
-                        callback: function(value) {
-                            return formatNumber(value);
-                        }
-                    },
-                    title: {
-                        display: true,
-                        text: 'Price (₫/kg)',
-                        font: {
-                            size: 13,
-                            weight: '600'
-                        },
-                        color: '#2c3e50'
-                    }
-                }
-            }
-        }
-    };
-    
-    // Initialize chart (Market Overview section only)
-    const canvas1 = document.getElementById('provincePricesChart');
-    
-    console.log('🟢 Canvas element:', { canvas1: !!canvas1 });
-    
-    if (canvas1) {
-        console.log('🟢 Creating province prices chart');
-        if (provincePricesChart) provincePricesChart.destroy();
-        const ctx1 = canvas1.getContext('2d');
-        provincePricesChart = new Chart(ctx1, config);
-        console.log('✅ Chart created successfully');
-    } else {
-        console.error('❌ Canvas provincePricesChart not found!');
-    }
-}
-
-/**
- * Format number with thousand separators
- */
-function formatNumber(num) {
-    if (num === null || num === undefined) return 'N/A';
-    return Math.round(num).toLocaleString('en-US');
-}
-
-// Initialize province prices chart on page load
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🟡 DOM loaded - calling fetchProvincePrices (v5.0)');
-    fetchProvincePrices(7);
-});
-=======
 // ================================================================
 // 🗂 CATEGORY BUTTONS HANDLER
 // ================================================================
@@ -3593,4 +3105,3 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
->>>>>>> origin/main
