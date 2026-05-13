@@ -112,6 +112,40 @@ FLASK_PORT=5000
 FLASK_DEBUG=0
 ```
 
+## Vercel Deployment
+
+The project uses Flask as both the API server and the static dashboard server. For
+Vercel, `api/index.py` exposes the Flask `app`, and `vercel.json` rewrites all
+requests to that serverless entrypoint.
+
+In Vercel Project Settings:
+
+```text
+Root Directory: Project_ADY_201m
+```
+
+Add the same required database variables from `.env` to Vercel Environment
+Variables. Vercel does not read your local `.env` file:
+
+```env
+HOST=...
+PORT=3306
+USER=...
+PASSWORD=...
+DB=...
+CA_PEM=...     # only if your database requires a CA certificate
+```
+
+After redeploying, verify:
+
+```text
+https://your-app.vercel.app/api/health
+```
+
+If `database.connected` is `false`, the API is deployed but the Vercel database
+environment is missing or cannot connect to the database. If `/api/health` is
+`404`, Vercel is not using this project root or the Flask serverless entrypoint.
+
 ## API Surface
 
 Base URL:
