@@ -4,14 +4,9 @@
   "description": "Vietnam Coffee Export Data Analytics Portal - Professional dashboard with real-time data visualization",
   "main": "index.js",
   "scripts": {
-    "postinstall": "python -m pip install --upgrade pip && pip install -r requirements.txt && node scripts/postinstall.js",
-    "prestart": "python -c \"import flask, flask_cors, flask_caching, flask_compress\" || npm run postinstall",
     "start": "npm run dev",
-    "dev": "cd web/backend && python api.py",
-    "dev:new": "python -m app.main",
-    "api": "cd web/backend && python api.py",
-    "api:new": "python -m app.main",
-    "api:debug": "cd web/backend && set FLASK_DEBUG=1 && python api.py",
+    "dev": "python -m app.main",
+    "api": "python -m app.main",
     "health": "curl http://localhost:5000/api/health",
     "test:api": "curl http://localhost:5000/api/health && curl http://localhost:5000/api/production",
     "test:e2e": "playwright test",
@@ -23,7 +18,7 @@
     "etl:public": "python -m data.scripts.sync_public_sources",
     "etl:public:dry-run": "python -m data.scripts.sync_public_sources --dry-run",
     "update:data": "python scripts/auto_update_data.py",
-    "clean": "rm -rf node_modules package-lock.json && rm -rf web/backend/__pycache__",
+    "clean": "node -e \"const fs=require('fs'); for (const p of ['node_modules','playwright-report','test-results']) fs.rmSync(p,{recursive:true,force:true});\"",
     "reinstall": "npm run clean && npm install"
   },
   "keywords": [
@@ -38,8 +33,6 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.60.0",
-    "concurrently": "^8.2.2",
-    "http-server": "^14.1.1"
+    "@playwright/test": "^1.60.0"
   }
 }

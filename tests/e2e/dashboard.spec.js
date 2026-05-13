@@ -1,6 +1,4 @@
 const { test, expect } = require("@playwright/test");
-const fs = require("node:fs");
-const path = require("node:path");
 
 test.describe("API data readiness", () => {
   test("health reports backend and database are available", async ({ request }) => {
@@ -52,6 +50,8 @@ test.describe("Dashboard UI", () => {
     await expect(page.locator("#kpiExportValue")).not.toHaveText("--");
     await expect(page.locator("#kpiWorldPrice")).not.toHaveText("--");
     await expect(page.locator("#kpiProvincePrice")).not.toHaveText("--");
+    await expect(page.locator(".kpi-trend")).toHaveCount(4);
+    await expect(page.locator(".kpi-card.loading")).toHaveCount(0);
     await expect(page.locator("#countryList .country-row")).toHaveCount(9);
 
     for (const canvasId of ["marketChart", "exportChart", "priceChart", "weatherChart"]) {
@@ -66,6 +66,18 @@ test.describe("Dashboard UI", () => {
     expect(consoleErrors.filter((text) => !text.includes("favicon"))).toEqual([]);
   });
 
+  test("refreshes data and updates importer ranking size", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#countryList .country-row")).toHaveCount(9);
+
+    await page.locator("#exportLimit").selectOption("5");
+    await expect(page.locator("#countryList .country-row")).toHaveCount(5);
+
+    await page.getByRole("button", { name: "Refresh" }).click();
+    await expect(page.getByRole("button", { name: "Refresh" })).toBeEnabled();
+    await expect(page.locator("#countryList .country-row")).toHaveCount(5);
+  });
+
   test("is usable on a mobile viewport", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/");
@@ -73,12 +85,5 @@ test.describe("Dashboard UI", () => {
     await expect(page.getByRole("heading", { name: "Coffee Intelligence Dashboard" })).toBeVisible();
     await expect(page.locator(".kpi-card")).toHaveCount(4);
     await expect(page.locator("#marketChart")).toBeVisible();
-  });
-});
-
-test.describe("Legacy template quality gate", () => {
-  test("legacy Flask template must not contain unresolved merge conflicts", async () => {
-    const html = fs.readFileSync(path.join(process.cwd(), "web/templates/index.html"), "utf8");
-    expect(html).not.toMatch(/^(<<<<<<<|=======|>>>>>>>) /m);
   });
 });
