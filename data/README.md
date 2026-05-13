@@ -1,6 +1,6 @@
 # Data Pipeline
 
-Clean ETL commands live in `data/scripts/`. Legacy scripts in `collect_data/` are kept for reference until the rebuilt pipeline fully replaces them.
+ETL commands live in `data/scripts/`. Source files are stored in `data/raw/`.
 
 ## Commands
 
@@ -42,7 +42,7 @@ npm run etl:public:dry-run
 
 ## Inputs
 
-The scripts prefer files in `data/raw/` and fall back to the legacy `collect_data/` directory.
+The scripts read CSV inputs from `data/raw/` unless an explicit path is passed.
 
 Current inputs:
 

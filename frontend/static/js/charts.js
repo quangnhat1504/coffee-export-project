@@ -26,22 +26,28 @@ function mountChart(id, config) {
 }
 
 function baseOptions(extra = {}) {
+  const { legend, tooltip, ...pluginExtras } = extra.plugins || {};
+
   return {
     responsive: true,
     maintainAspectRatio: false,
     animation: { duration: 450 },
     interaction: { mode: "index", intersect: false },
+    ...extra,
     plugins: {
       legend: {
         labels: {
           usePointStyle: true,
           boxWidth: 8,
         },
+        ...(legend || {}),
       },
       tooltip: {
         padding: 12,
-        callbacks: extra.tooltipCallbacks || {},
+        callbacks: extra.tooltipCallbacks || tooltip?.callbacks || {},
+        ...(tooltip || {}),
       },
+      ...pluginExtras,
     },
     scales: extra.scales || {},
   };
@@ -103,42 +109,48 @@ export function renderExportChart(countries = []) {
   if (!countries.length) return null;
 
   return mountChart("exportChart", {
-    type: "doughnut",
+    type: "bar",
     data: {
       labels: countries.map((country) => country.name),
       datasets: [
         {
-          data: countries.map((country) => country.percentage),
-          backgroundColor: [
-            palette.blue,
-            palette.green,
-            palette.amber,
-            palette.coffee,
-            palette.teal,
-            palette.violet,
-            palette.rose,
-            palette.cyan,
-            palette.slate,
-          ],
-          borderWidth: 0,
+          label: "Share (%)",
+          data: countries.map((country) => Number(country.percentage || 0)),
+          backgroundColor: "rgba(37, 99, 235, 0.18)",
+          borderColor: palette.blue,
+          borderWidth: 1,
+          borderRadius: 6,
+          barThickness: 18,
         },
       ],
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "62%",
+    options: baseOptions({
+      indexAxis: "y",
       plugins: {
         legend: { display: false },
         tooltip: {
           callbacks: {
             label(context) {
-              return `${context.label}: ${context.parsed}%`;
+              const country = countries[context.dataIndex] || {};
+              const volume = Math.round(Number(country.volume || 0)).toLocaleString("en-US");
+              return `${context.parsed.x.toFixed(1)}% - ${volume} t`;
             },
           },
         },
       },
-    },
+      scales: {
+        x: {
+          beginAtZero: true,
+          grid: { color: "rgba(148, 163, 184, 0.22)" },
+          ticks: {
+            callback(value) {
+              return `${value}%`;
+            },
+          },
+        },
+        y: { grid: { display: false } },
+      },
+    }),
   });
 }
 

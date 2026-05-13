@@ -34,32 +34,39 @@
         <h1>Coffee Intelligence Dashboard</h1>
         <p id="statusSummary">Checking backend status...</p>
       </div>
-      <div class="status-pills">
-        <span class="status-pill" id="apiStatus">API</span>
-        <span class="status-pill" id="dbStatus">Database</span>
-        <span class="status-pill" id="aiStatus">AI</span>
+      <div class="toolbar-actions">
+        <div class="status-pills">
+          <span class="status-pill" id="apiStatus">API</span>
+          <span class="status-pill" id="dbStatus">Database</span>
+          <span class="status-pill" id="aiStatus">AI</span>
+        </div>
+        <button class="secondary-button" id="refreshDashboardButton" type="button">Refresh</button>
       </div>
     </section>
 
     <section class="kpi-grid" aria-label="Key metrics">
-      <article class="kpi-card">
+      <article class="kpi-card loading">
         <span class="kpi-label">Production</span>
         <strong id="kpiProduction">--</strong>
+        <span class="kpi-trend" id="kpiProductionTrend">Loading...</span>
         <small id="kpiProductionMeta">Latest year</small>
       </article>
-      <article class="kpi-card">
+      <article class="kpi-card loading">
         <span class="kpi-label">Export Value</span>
         <strong id="kpiExportValue">--</strong>
+        <span class="kpi-trend" id="kpiExportTrend">Loading...</span>
         <small id="kpiExportMeta">Annual value</small>
       </article>
-      <article class="kpi-card">
+      <article class="kpi-card loading">
         <span class="kpi-label">World Price</span>
         <strong id="kpiWorldPrice">--</strong>
+        <span class="kpi-trend" id="kpiWorldPriceTrend">Loading...</span>
         <small id="kpiWorldPriceMeta">USD per ton</small>
       </article>
-      <article class="kpi-card">
+      <article class="kpi-card loading">
         <span class="kpi-label">Domestic Price</span>
         <strong id="kpiProvincePrice">--</strong>
+        <span class="kpi-trend" id="kpiProvincePriceTrend">Loading...</span>
         <small id="kpiProvincePriceMeta">Latest province price</small>
       </article>
     </section>

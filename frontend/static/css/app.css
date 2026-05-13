@@ -131,6 +131,13 @@ h2 {
   gap: 8px;
 }
 
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -186,6 +193,16 @@ h2 {
   padding: 18px;
 }
 
+.kpi-card.loading strong,
+.kpi-card.loading .kpi-trend,
+.kpi-card.loading small {
+  color: transparent;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #edf1f3 25%, #f7f9fa 37%, #edf1f3 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.15s ease-in-out infinite;
+}
+
 .kpi-label {
   display: block;
   margin-bottom: 12px;
@@ -197,9 +214,38 @@ h2 {
 
 .kpi-card strong {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   font-size: clamp(1.35rem, 2.2vw, 2rem);
   letter-spacing: 0;
+}
+
+.kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.kpi-trend.up {
+  background: rgba(31, 138, 95, 0.1);
+  color: var(--green);
+}
+
+.kpi-trend.down {
+  background: rgba(194, 65, 12, 0.1);
+  color: var(--red);
+}
+
+.kpi-trend.flat {
+  background: rgba(99, 112, 122, 0.1);
+  color: var(--muted);
 }
 
 .dashboard-grid {
@@ -265,7 +311,19 @@ select {
   cursor: pointer;
 }
 
-.primary-button:disabled {
+.secondary-button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
   cursor: progress;
   opacity: 0.72;
 }
@@ -320,6 +378,27 @@ select {
   text-align: center;
 }
 
+.chart-message {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.chart-box.is-loading canvas,
+.chart-box.has-message canvas {
+  opacity: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: 0 0;
+  }
+}
+
 @media (max-width: 980px) {
   .app-header,
   .toolbar {
@@ -330,6 +409,16 @@ select {
   .top-nav {
     width: 100%;
     overflow-x: auto;
+  }
+
+  .toolbar-actions {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .status-pills {
+    justify-content: flex-start;
   }
 
   .kpi-grid,
