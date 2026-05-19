@@ -16,6 +16,8 @@ yarn-error.log*
 # Test artifacts
 test-results/
 playwright-report/
+.coverage
+htmlcov/
 
 # Python
 __pycache__/
