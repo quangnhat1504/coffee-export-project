@@ -114,37 +114,45 @@ FLASK_DEBUG=0
 
 ## Vercel Deployment
 
-The project uses Flask as both the API server and the static dashboard server. For
-Vercel, `api/index.py` exposes the Flask `app`, and `vercel.json` rewrites all
-requests to that serverless entrypoint.
+The project uses Flask as both the API server and the static dashboard server. For Vercel, `api/index.py` exposes the Flask `app`, and `vercel.json` rewrites all requests to that serverless entrypoint.
 
-In Vercel Project Settings:
+### 1. Vercel Project Settings
+In the Vercel Project dashboard, set:
+* **Root Directory**: `Project_ADY_201m`
 
-```text
-Root Directory: Project_ADY_201m
-```
-
-Add the same required database variables from `.env` to Vercel Environment
-Variables. Vercel does not read your local `.env` file:
+### 2. Environment Variables
+Add the following Environment Variables in **Vercel Settings -> Environment Variables** (Vercel does not read your local `.env` file):
 
 ```env
-HOST=...
+HOST=your-database-host.com
 PORT=3306
-USER=...
-PASSWORD=...
-DB=...
-CA_PEM=...     # only if your database requires a CA certificate
+USER=your-username
+PASSWORD=your-password
+DB=your-database-name
+CA_CERT=-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----
 ```
 
-After redeploying, verify:
+> [!TIP]
+> **CA Certificate Configuration:**
+> * You can use either `CA_CERT` or `CA_PEM` as the key.
+> * When pasting the certificate value, copy the entire block including `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----`.
+> * The backend is designed to handle both actual newlines and literal escaped newlines (`\n` or `\\n`) robustly.
 
+### 3. Database Firewall (Crucial for Aiven/Cloud DBs)
+Since Vercel uses dynamic IP addresses, you **must allow connections from all IPs** in your database firewall settings:
+* In your **Aiven Console** (or other DB provider), go to **IP Allowlist** / **Allowed IP Addresses**.
+* Add the rule `0.0.0.0/0` (with a description like `Vercel Serverless`).
+* Without this, Vercel will time out trying to connect and return `503 Service Unavailable`.
+
+### 4. Verification
+After deploying/redeploying, verify your setup by visiting:
 ```text
 https://your-app.vercel.app/api/health
 ```
 
-If `database.connected` is `false`, the API is deployed but the Vercel database
-environment is missing or cannot connect to the database. If `/api/health` is
-`404`, Vercel is not using this project root or the Flask serverless entrypoint.
+* **If `database.connected` is `true`**: Deployment is fully successful!
+* **If `database.connected` is `false`**: Check the `database.message` in the JSON response or view Vercel's **Runtime Logs** for the connection error trace.
+* **If `/api/health` returns `404`**: Vercel is not using the correct project root directory or the Flask entrypoint.
 
 ## API Surface
 
