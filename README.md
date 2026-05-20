@@ -168,9 +168,8 @@ Since Vercel uses dynamic IP addresses, you **must allow connections from all IP
 
 ### 4. Verification
 After deploying/redeploying, verify your setup by visiting:
-```text
-https://your-app.vercel.app/api/health
-```
+* **Live Dashboard:** [https://coffee-export-project-5qurw1a6k.vercel.app/](https://coffee-export-project-5qurw1a6k.vercel.app/)
+* **API Health Check:** [https://coffee-export-project-5qurw1a6k.vercel.app/api/health](https://coffee-export-project-5qurw1a6k.vercel.app/api/health)
 
 * **If `database.connected` is `true`**: Deployment is fully successful!
 * **If `database.connected` is `false`**: Check the `database.message` in the JSON response or view Vercel's **Runtime Logs** for the connection error trace.
