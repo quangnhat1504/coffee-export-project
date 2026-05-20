@@ -67,13 +67,35 @@ npm run update:data         # Check and append fresh daily price records
 
 ## Project Layout
 
+Below is the structured directory tree of the project with a brief description of each component:
+
 ```text
-app/                    Flask application, routes, services, DB setup
-frontend/               Dashboard HTML, CSS, and browser JavaScript
-data/raw/               Source CSV/cache files for ETL
-data/scripts/           Clean ETL pipeline
-scripts/                Operational helper scripts
-tests/e2e/              Playwright API and UI tests
+Project_ADY_201m/
+├── app/                      👉 BACKEND (Flask Application Core)
+│   ├── routes/               │   ├── API endpoint routes serving frontend data requests
+│   ├── services/             │   ├── Business logic processors (AI, Weather, Price, Production)
+│   ├── utils/                │   ├── Helper utilities (serialization, timeseries processing)
+│   ├── config.py             │   ├── App settings loaded from environmental variables
+│   ├── db.py                 │   └── SQL connection pool & engine setup for Aiven MySQL
+│   └── __init__.py           └── Flask factory, register blueprints & error handlers
+│
+├── frontend/                 👉 FRONTEND (Dashboard Interface)
+│   ├── static/               │   ├── Client assets: custom CSS and modular vanilla JS scripts
+│   └── index.html            └── Single Page Dashboard containing KPI nodes & Chart containers
+│
+├── api/                      👉 VERCEL INTEGRATION
+│   └── index.py              └── Entrypoint wrapper exposing WSGI Flask app for Serverless
+│
+├── data/                     👉 DATA INGESTION & ETL PIPELINES
+│   ├── raw/                  │   ├── Source spreadsheets (.csv, .xlsx, .zip)
+│   ├── processed/            │   ├── Output directory for parsed local data (tracked via .gitkeep)
+│   └── scripts/              └── Core, price, and public source ETL ingestion scripts
+│
+├── tests/                    👉 TESTING SUITE
+│   └── e2e/                  └── E2E Web integration tests built with Playwright
+│
+├── scripts/                  👉 OPERATIONAL UTILITIES
+│   └── auto_update_data.py   └── Service scripts (e.g. daily cron to fetch province coffee prices)
 ```
 
 ## Required Data Files
