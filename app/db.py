@@ -46,12 +46,17 @@ def create_database_engine(settings: Settings) -> Engine | None:
     cert_file: str | None = None
     if settings.db_ca_cert:
         ca_value = settings.db_ca_cert.strip()
-        if Path(ca_value).exists():
-            cert_file = ca_value
-        elif "BEGIN CERTIFICATE" in ca_value:
+        if "BEGIN CERTIFICATE" in ca_value:
+            normalized_ca = ca_value.replace("\\n", "\n")
             with NamedTemporaryFile(mode="w", delete=False, suffix=".pem", encoding="utf-8") as tmp:
-                tmp.write(ca_value)
+                tmp.write(normalized_ca)
                 cert_file = tmp.name
+        else:
+            try:
+                if len(ca_value) < 260 and Path(ca_value).exists():
+                    cert_file = ca_value
+            except Exception:
+                pass
         if cert_file:
             strategies.insert(1, {"connect_args": {"ssl": {"ca": cert_file}, "connect_timeout": 20}})
 
